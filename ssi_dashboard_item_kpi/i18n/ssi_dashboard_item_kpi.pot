@@ -1,0 +1,126 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* ssi_dashboard_item_kpi
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: ssi_dashboard_item_kpi
+#: model:ir.model.fields,help:ssi_dashboard_item_kpi.field_dashboard_item__kpi_layout
+msgid ""
+"Arrangement the browser renders this KPI in. Only used when 'Type' is 'KPI'."
+" 'KPI With Target' compares 'Value' against today's target (see 'Goal Type' "
+"/ '_get_goal_value') and requires 'Goal Type' to be set to something other "
+"than 'No Target'. 'Data Comparison' compares 'Value' against the first "
+"comparison range of 'Data Source', and requires 'Data Source''s 'Comparison'"
+" to be set to something other than 'No Comparison'."
+msgstr ""
+
+#. module: ssi_dashboard_item_kpi
+#: model:ir.model,name:ssi_dashboard_item_kpi.model_dashboard_item
+msgid "Dashboard Item"
+msgstr ""
+
+#. module: ssi_dashboard_item_kpi
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_kpi.selection__dashboard_item__kpi_layout__comparison
+msgid "Data Comparison"
+msgstr ""
+
+#. module: ssi_dashboard_item_kpi
+#: model:ir.model.fields,field_description:ssi_dashboard_item_kpi.field_dashboard_item__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: ssi_dashboard_item_kpi
+#: model:ir.model.fields,field_description:ssi_dashboard_item_kpi.field_dashboard_item__id
+msgid "ID"
+msgstr ""
+
+#. module: ssi_dashboard_item_kpi
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_kpi.selection__dashboard_item__type__kpi
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard_item_kpi.dashboard_item_view_form
+msgid "KPI"
+msgstr ""
+
+#. module: ssi_dashboard_item_kpi
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_kpi.selection__dashboard_item__kpi_layout__target
+msgid "KPI With Target"
+msgstr ""
+
+#. module: ssi_dashboard_item_kpi
+#: model:ir.model.fields,help:ssi_dashboard_item_kpi.field_dashboard_item__type
+msgid ""
+"Kind of tile rendered by the browser. Extension modules add more choices via"
+" 'selection_add' and may implement a matching "
+"'_prepare_render_payload_<type>' method."
+msgstr ""
+
+#. module: ssi_dashboard_item_kpi
+#: model:ir.model.fields,field_description:ssi_dashboard_item_kpi.field_dashboard_item__kpi_display
+msgid "Kpi Display"
+msgstr ""
+
+#. module: ssi_dashboard_item_kpi
+#: model:ir.model.fields,field_description:ssi_dashboard_item_kpi.field_dashboard_item__kpi_invert_direction
+msgid "Kpi Invert Direction"
+msgstr ""
+
+#. module: ssi_dashboard_item_kpi
+#: model:ir.model.fields,field_description:ssi_dashboard_item_kpi.field_dashboard_item__kpi_layout
+msgid "Kpi Layout"
+msgstr ""
+
+#. module: ssi_dashboard_item_kpi
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_kpi.selection__dashboard_item__kpi_display__number
+msgid "Number"
+msgstr ""
+
+#. module: ssi_dashboard_item_kpi
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_kpi.selection__dashboard_item__kpi_display__percentage
+msgid "Percentage"
+msgstr ""
+
+#. module: ssi_dashboard_item_kpi
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_kpi.selection__dashboard_item__kpi_display__ratio
+msgid "Ratio"
+msgstr ""
+
+#. module: ssi_dashboard_item_kpi
+#: model:ir.model.fields,help:ssi_dashboard_item_kpi.field_dashboard_item__kpi_display
+msgid ""
+"Shape of the comparison number shown alongside 'Value'. Only used when "
+"'Type' is 'KPI'."
+msgstr ""
+
+#. module: ssi_dashboard_item_kpi
+#. odoo-javascript
+#: code:addons/ssi_dashboard_item_kpi/static/src/dashboard_item_kpi/dashboard_item_kpi.xml:0
+msgid "Target:"
+msgstr ""
+
+#. module: ssi_dashboard_item_kpi
+#: model:ir.model.fields,help:ssi_dashboard_item_kpi.field_dashboard_item__kpi_invert_direction
+msgid ""
+"Tick when a decrease in 'Value' is actually an improvement, e.g. a count of "
+"complaints, so the movement marker is flipped. Only used when 'Type' is "
+"'KPI'."
+msgstr ""
+
+#. module: ssi_dashboard_item_kpi
+#: model:ir.model.fields,field_description:ssi_dashboard_item_kpi.field_dashboard_item__type
+msgid "Type"
+msgstr ""
+
+#. module: ssi_dashboard_item_kpi
+#. odoo-javascript
+#: code:addons/ssi_dashboard_item_kpi/static/src/dashboard_item_kpi/dashboard_item_kpi.xml:0
+msgid "vs"
+msgstr ""
