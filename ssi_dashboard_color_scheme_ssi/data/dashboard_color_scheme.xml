@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <!-- SSI Light -->
+    <record id="dashboard_color_scheme_ssi_light" model="dashboard.color_scheme">
+        <field name="name">SSI Light</field>
+        <field name="code">ssi_light</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_light_color_primary"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_light" />
+        <field name="key">primary</field>
+        <field name="value">#1f6feb</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_light_color_secondary"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_light" />
+        <field name="key">secondary</field>
+        <field name="value">#6c757d</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_light_color_success"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_light" />
+        <field name="key">success</field>
+        <field name="value">#198754</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_light_color_warning"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_light" />
+        <field name="key">warning</field>
+        <field name="value">#ffc107</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_light_color_danger"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_light" />
+        <field name="key">danger</field>
+        <field name="value">#dc3545</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_light_color_background"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_light" />
+        <field name="key">background</field>
+        <field name="value">#ffffff</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_light_color_surface"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_light" />
+        <field name="key">surface</field>
+        <field name="value">#f5f7fa</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_light_color_text"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_light" />
+        <field name="key">text</field>
+        <field name="value">#1a1a1a</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_light_color_text_muted"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_light" />
+        <field name="key">text_muted</field>
+        <field name="value">#6b7280</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_light_color_border"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_light" />
+        <field name="key">border</field>
+        <field name="value">#d0d5dd</field>
+    </record>
+
+    <!-- SSI Dark -->
+    <record id="dashboard_color_scheme_ssi_dark" model="dashboard.color_scheme">
+        <field name="name">SSI Dark</field>
+        <field name="code">ssi_dark</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_dark_color_primary"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
+        <field name="key">primary</field>
+        <field name="value">#58a6ff</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_dark_color_secondary"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
+        <field name="key">secondary</field>
+        <field name="value">#8b949e</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_dark_color_success"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
+        <field name="key">success</field>
+        <field name="value">#3fb950</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_dark_color_warning"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
+        <field name="key">warning</field>
+        <field name="value">#d29922</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_dark_color_danger"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
+        <field name="key">danger</field>
+        <field name="value">#f85149</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_dark_color_background"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
+        <field name="key">background</field>
+        <field name="value">#0d1117</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_dark_color_surface"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
+        <field name="key">surface</field>
+        <field name="value">#161b22</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_dark_color_text"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
+        <field name="key">text</field>
+        <field name="value">#e6edf3</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_dark_color_text_muted"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
+        <field name="key">text_muted</field>
+        <field name="value">#9198a1</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_dark_color_border"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
+        <field name="key">border</field>
+        <field name="value">#30363d</field>
+    </record>
+
+    <!-- SSI Corporate Blue -->
+    <record
+        id="dashboard_color_scheme_ssi_corporate_blue"
+        model="dashboard.color_scheme"
+    >
+        <field name="name">SSI Corporate Blue</field>
+        <field name="code">ssi_corporate_blue</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_blue_color_primary"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_corporate_blue" />
+        <field name="key">primary</field>
+        <field name="value">#0b5ed7</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_blue_color_secondary"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_corporate_blue" />
+        <field name="key">secondary</field>
+        <field name="value">#495464</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_blue_color_success"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_corporate_blue" />
+        <field name="key">success</field>
+        <field name="value">#157347</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_blue_color_warning"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_corporate_blue" />
+        <field name="key">warning</field>
+        <field name="value">#b45309</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_blue_color_danger"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_corporate_blue" />
+        <field name="key">danger</field>
+        <field name="value">#b91c1c</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_blue_color_background"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_corporate_blue" />
+        <field name="key">background</field>
+        <field name="value">#eef3fb</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_blue_color_surface"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_corporate_blue" />
+        <field name="key">surface</field>
+        <field name="value">#ffffff</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_blue_color_text"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_corporate_blue" />
+        <field name="key">text</field>
+        <field name="value">#16233a</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_blue_color_text_muted"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_corporate_blue" />
+        <field name="key">text_muted</field>
+        <field name="value">#5b6b82</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_blue_color_border"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_corporate_blue" />
+        <field name="key">border</field>
+        <field name="value">#c7d2e0</field>
+    </record>
+
+    <!-- SSI Corporate Green -->
+    <record
+        id="dashboard_color_scheme_ssi_corporate_green"
+        model="dashboard.color_scheme"
+    >
+        <field name="name">SSI Corporate Green</field>
+        <field name="code">ssi_corporate_green</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_green_color_primary"
+        model="dashboard.color_scheme.color"
+    >
+        <field
+            name="color_scheme_id"
+            ref="dashboard_color_scheme_ssi_corporate_green"
+        />
+        <field name="key">primary</field>
+        <field name="value">#1e7145</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_green_color_secondary"
+        model="dashboard.color_scheme.color"
+    >
+        <field
+            name="color_scheme_id"
+            ref="dashboard_color_scheme_ssi_corporate_green"
+        />
+        <field name="key">secondary</field>
+        <field name="value">#4a5a52</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_green_color_success"
+        model="dashboard.color_scheme.color"
+    >
+        <field
+            name="color_scheme_id"
+            ref="dashboard_color_scheme_ssi_corporate_green"
+        />
+        <field name="key">success</field>
+        <field name="value">#1a7431</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_green_color_warning"
+        model="dashboard.color_scheme.color"
+    >
+        <field
+            name="color_scheme_id"
+            ref="dashboard_color_scheme_ssi_corporate_green"
+        />
+        <field name="key">warning</field>
+        <field name="value">#b7791f</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_green_color_danger"
+        model="dashboard.color_scheme.color"
+    >
+        <field
+            name="color_scheme_id"
+            ref="dashboard_color_scheme_ssi_corporate_green"
+        />
+        <field name="key">danger</field>
+        <field name="value">#b91c1c</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_green_color_background"
+        model="dashboard.color_scheme.color"
+    >
+        <field
+            name="color_scheme_id"
+            ref="dashboard_color_scheme_ssi_corporate_green"
+        />
+        <field name="key">background</field>
+        <field name="value">#eef7f0</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_green_color_surface"
+        model="dashboard.color_scheme.color"
+    >
+        <field
+            name="color_scheme_id"
+            ref="dashboard_color_scheme_ssi_corporate_green"
+        />
+        <field name="key">surface</field>
+        <field name="value">#ffffff</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_green_color_text"
+        model="dashboard.color_scheme.color"
+    >
+        <field
+            name="color_scheme_id"
+            ref="dashboard_color_scheme_ssi_corporate_green"
+        />
+        <field name="key">text</field>
+        <field name="value">#16241b</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_green_color_text_muted"
+        model="dashboard.color_scheme.color"
+    >
+        <field
+            name="color_scheme_id"
+            ref="dashboard_color_scheme_ssi_corporate_green"
+        />
+        <field name="key">text_muted</field>
+        <field name="value">#55705f</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_corporate_green_color_border"
+        model="dashboard.color_scheme.color"
+    >
+        <field
+            name="color_scheme_id"
+            ref="dashboard_color_scheme_ssi_corporate_green"
+        />
+        <field name="key">border</field>
+        <field name="value">#c3d8c9</field>
+    </record>
+</odoo>

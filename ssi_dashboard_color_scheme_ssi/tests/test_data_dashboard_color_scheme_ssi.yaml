@@ -1,0 +1,57 @@
+scenarios:
+  - name: "SSI Dark color scheme is seeded and findable by XML ID"
+    steps:
+      - step: "Get ssi_dark color scheme by XML ID"
+        action: "ref"
+        xml_id: "ssi_dashboard_color_scheme_ssi.dashboard_color_scheme_ssi_dark"
+        save_as: "scheme"
+      - step: "Assert record found with a name"
+        action: "assert"
+        target: "scheme"
+        asserts:
+          id:
+            type: "value"
+            operator: "is_truthy"
+          name:
+            type: "value"
+            expected: "SSI Dark"
+          code:
+            type: "value"
+            expected: "ssi_dark"
+
+  - name: "SSI Light color scheme has ten color rows"
+    steps:
+      - step: "Get ssi_light color scheme by XML ID"
+        action: "ref"
+        xml_id: "ssi_dashboard_color_scheme_ssi.dashboard_color_scheme_ssi_light"
+        save_as: "scheme"
+      - step: "Assert ten colors"
+        action: "assert"
+        target: "scheme"
+        asserts:
+          color_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 10
+
+  - name: "Assigning ssi_corporate_blue to a dashboard sets its color scheme"
+    steps:
+      - step: "Get ssi_corporate_blue color scheme by XML ID"
+        action: "ref"
+        xml_id: "ssi_dashboard_color_scheme_ssi.dashboard_color_scheme_ssi_corporate_blue"
+        save_as: "scheme"
+      - step: "Create a dashboard using that color scheme"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Sales Overview"
+          code: "DASH-CS-01"
+          color_scheme_id: "REC: scheme.id"
+      - step: "Assert dashboard color scheme"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          color_scheme_id:
+            type: "m2o"
+            expected: "REC: scheme"
