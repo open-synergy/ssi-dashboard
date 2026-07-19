@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="ssi_dashboard.DashboardAction">
+        <div class="o_ssi_dashboard" t-att-style="rootStyle">
+            <div class="o_ssi_dashboard_header">
+                <h2 class="o_ssi_dashboard_title" t-esc="dashboard.name" />
+            </div>
+            <div class="o_ssi_dashboard_grid">
+                <DashboardItem
+                    t-foreach="dashboard.items"
+                    t-as="item"
+                    t-key="item.id"
+                    item="item"
+                />
+            </div>
+        </div>
+    </t>
+</templates>

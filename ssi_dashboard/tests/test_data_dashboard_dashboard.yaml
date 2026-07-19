@@ -110,3 +110,55 @@ scenarios:
             type: "o2m"
             check: "count"
             expected_count: 2
+
+  - name: "Dashboard References Its Color Scheme"
+    steps:
+      - step: "Create color scheme"
+        action: "create"
+        model: "dashboard.color_scheme"
+        save_as: "color_scheme"
+        values:
+          name: "Ocean"
+          code: "DASH-CS-REF-01"
+      - step: "Create dashboard with color scheme"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Styled Dashboard"
+          code: "DASH-CS-REF-DASH-01"
+          color_scheme_id: "REC: color_scheme.id"
+      - step: "Assert color scheme reference"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          color_scheme_id:
+            type: "m2o"
+            expected: "REC: color_scheme"
+
+  - name: "Reading Dashboard Without Dashboard Group Is Denied"
+    steps:
+      - step: "Create user without dashboard access"
+        action: "create"
+        model: "res.users"
+        save_as: "restricted_user"
+        values:
+          name: "No Dashboard Access"
+          login: "no-dashboard-access@example.com"
+          groups_id: [[6, 0, ["REF: base.group_user"]]]
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Restricted Dashboard"
+          code: "DASH-ACCESS-01"
+      - step: "Restricted user cannot read dashboard"
+        action: "call"
+        target: "dashboard"
+        method: "read"
+        args:
+          - ["name"]
+        as_user: "restricted_user"
+        expect_error:
+          type: "AccessError"

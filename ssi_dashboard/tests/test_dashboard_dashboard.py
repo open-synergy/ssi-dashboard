@@ -65,6 +65,23 @@ class TestDashboardDashboard(YamlTransactionCase):
         self.assertEqual(len(payload["items"]), 1)
         self.assertEqual(payload["items"][0]["name"], "Item A")
 
+    def test_action_open_dashboard_returns_client_action(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        `action_open_dashboard` diuji lewat nilai balik method (dict
+        `ir.actions.client`), sedangkan `action: call` di YAML membuang
+        nilai balik method (L-01) dan sisi actual sebuah assert selalu
+        berupa dotted `getattr` pada record, bukan pada dict hasil method
+        (L-02).
+        """
+        dashboard = self.env["dashboard.dashboard"].create(
+            {"name": "Action Dashboard", "code": "DASH-ACTION-01"}
+        )
+        action = dashboard.action_open_dashboard()
+        self.assertEqual(action["type"], "ir.actions.client")
+        self.assertEqual(action["tag"], "ssi_dashboard.dashboard_view")
+        self.assertEqual(action["context"]["dashboard_id"], dashboard.id)
+
     def test_unlink_referenced_color_scheme_raises_integrity_error(self):
         """Python murni — pemicu P5 (L-22).
 
