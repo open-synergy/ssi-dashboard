@@ -608,6 +608,51 @@ class TestDashboardDataSource(YamlTransactionCase):
         self.assertEqual(rows[0]["__count"], 1)
 
     @freeze_time("2026-07-19 10:00:00")
+    def test_prepare_domain_substitutes_uid(self):
+        """Python murni — pemicu P1 (L-01).
+
+        Nilai balik `_prepare_domain()` (list domain dengan placeholder
+        `%UID` tersubstitusi) hanya bisa diverifikasi dengan meng-assert
+        hasil pemanggilan method langsung — `action: call` YAML membuang
+        nilai baliknya (L-01).
+        """
+        partner_model = self.env.ref("base.model_res_partner")
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "My Tickets",
+                "code": "DASH-PLACEHOLDER-UID-01",
+                "type": "orm",
+                "model_id": partner_model.id,
+                "domain": "[('user_id', '=', %UID)]",
+            }
+        )
+        self.assertEqual(
+            data_source._prepare_domain(), [("user_id", "=", self.env.uid)]
+        )
+
+    def test_prepare_domain_substitutes_mycompany(self):
+        """Python murni — pemicu P1 (L-01).
+
+        Sama seperti `test_prepare_domain_substitutes_uid`, kali ini
+        untuk placeholder `%MYCOMPANY`. Nilai balik `_prepare_domain()`
+        hanya bisa diverifikasi dengan meng-assert hasil pemanggilan
+        method langsung (L-01).
+        """
+        partner_model = self.env.ref("base.model_res_partner")
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "My Company Partners",
+                "code": "DASH-PLACEHOLDER-MYCOMPANY-01",
+                "type": "orm",
+                "model_id": partner_model.id,
+                "domain": "[('company_id', '=', %MYCOMPANY)]",
+            }
+        )
+        self.assertEqual(
+            data_source._prepare_domain(),
+            [("company_id", "=", self.env.company.id)],
+        )
+
     def test_fetch_data_orm_filters_by_date_field_today(self):
         """Python murni — pemicu P6 (L-16).
 

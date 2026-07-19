@@ -394,6 +394,72 @@ scenarios:
           date_start: 2026-03-31
           date_end: 2026-03-01
 
+  - name: "Create Data Source With Model And Empty Domain Succeeds"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Create data source without domain configured"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Empty Domain Source"
+          code: "DS-DOMAIN-EMPTY-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Assert created without error and domain still empty"
+        action: "assert"
+        target: "data_source"
+        asserts:
+          id:
+            type: "value"
+            operator: "is_truthy"
+          domain:
+            type: "value"
+            operator: "is_falsy"
+
+  - name: "Domain With Broken Syntax Is Rejected"
+    steps:
+      - step: "Create data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Generic Source"
+          code: "DS-DOMAIN-BADSYNTAX-01"
+      - step: "Write domain with broken Python syntax"
+        action: "write"
+        target: "data_source"
+        expect_error:
+          type: "ValidationError"
+        values:
+          domain: '[("name","=",]'
+
+  - name: "Domain Referencing Missing Field Is Rejected"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Create data source targeting res.partner"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Generic Source"
+          code: "DS-DOMAIN-BADFIELD-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Write domain referencing a field that does not exist on model_id"
+        action: "write"
+        target: "data_source"
+        expect_error:
+          type: "ValidationError"
+        values:
+          domain: "[('field_tidak_ada', '=', 1)]"
+
   - name: "Create Measure With Non Numeric Field Is Rejected"
     steps:
       - step: "Create data source"

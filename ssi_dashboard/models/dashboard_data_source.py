@@ -185,6 +185,41 @@ class DashboardDataSource(models.Model):
                 "datetime",
             )
 
+    @api.constrains("domain", "model_id")
+    def _check_domain(self):
+        for record in self:
+            try:
+                domain = record._prepare_domain()
+            except Exception as error:
+                error_message = f"""
+Context: Configure dashboard data source domain
+Database ID: {record.id}
+Problem: 'Domain' cannot be evaluated as a domain expression
+Solution: Fix the domain syntax. Original error: {error}
+"""
+                raise ValidationError(error_message) from error
+            if not isinstance(domain, list):
+                error_message = f"""
+Context: Configure dashboard data source domain
+Database ID: {record.id}
+Problem: 'Domain' does not evaluate to a list
+Solution: Write 'Domain' as a Python list of domain tuples/leaves
+"""
+                raise ValidationError(error_message)
+            if not record.model_id:
+                continue
+            try:
+                record.env[record.model_id.model].sudo().search_count(domain, limit=0)
+            except Exception as error:
+                error_message = f"""
+Context: Configure dashboard data source domain
+Database ID: {record.id}
+Problem: 'Domain' is not valid for Model '{record.model_id.name}'
+Solution: Fix 'Domain' so it only refers to fields that exist on \
+'{record.model_id.name}'. Original error: {error}
+"""
+                raise ValidationError(error_message) from error
+
     @api.constrains("date_range", "date_start", "date_end")
     def _check_date_range_custom(self):
         for record in self:
@@ -742,12 +777,44 @@ Solution: Install a module that implements this 'Date Range' value
         )
         return [spec], {spec: spec}
 
+    def _prepare_domain(self):
+        """Build the domain applied on :attr:`model_id`, substituting the
+        placeholders recognized in the raw :attr:`domain` string before
+        evaluating it.
+
+        Two placeholders are substituted directly on the **string**,
+        before ``safe_eval`` runs on it:
+
+        - ``%UID`` — the current user id (``self.env.uid``).
+        - ``%MYCOMPANY`` — the current company id (``self.env.company.id``).
+
+        Any other ``%``-prefixed token is left untouched, so it fails
+        ``safe_eval`` and is caught by :meth:`_check_domain` instead of
+        silently being ignored.
+
+        :return: domain, ready to use with ``search``/``_read_group``.
+        :rtype: list
+        :raises Exception: whatever ``safe_eval`` raises when
+            :attr:`domain` (after substitution) is not valid Python
+            domain syntax — left uncaught here so callers such as
+            :meth:`_check_domain` can turn it into a ``ValidationError``.
+        """
+        self.ensure_one()
+        if not self.domain:
+            return []
+        domain_str = self.domain.replace("%UID", str(self.env.uid)).replace(
+            "%MYCOMPANY", str(self.env.company.id)
+        )
+        return safe_eval(domain_str)
+
     def _fetch_data_orm(self, item):
         """Fetch data for the 'orm' data source type.
 
-        Reads :attr:`model_id` through ``_read_group`` filtered by
-        :attr:`domain`. ``read_group`` is deprecated since 19.0 in favor
-        of ``_read_group``/``formatted_read_group``; ``_read_group`` is
+        Reads :attr:`model_id` through ``_read_group`` filtered by the
+        domain built by :meth:`_prepare_domain` (that is, :attr:`domain`
+        with its ``%UID`` / ``%MYCOMPANY`` placeholders substituted).
+        ``read_group`` is deprecated since 19.0 in favor of
+        ``_read_group``/``formatted_read_group``; ``_read_group`` is
         used here and its tuple result is turned back into the list of
         dict this method's contract promises.
 
@@ -782,8 +849,7 @@ Problem: Data source type is 'orm' but no target Model is configured
 Solution: Set the Model field on this data source
 """
             raise UserError(error_message)
-        domain = safe_eval(self.domain) if self.domain else []
-        domain = domain + self._prepare_date_domain()
+        domain = self._prepare_domain() + self._prepare_date_domain()
         model = self.env[self.model_id.model].sudo()
         aggregates, column_names = self._prepare_aggregate_spec()
         groupby = self._prepare_groupby_spec()
