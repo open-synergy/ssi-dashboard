@@ -1268,3 +1268,90 @@ class TestDashboardDataSource(YamlTransactionCase):
         self.assertEqual(counts_by_label.get("February 2026"), 0)
         self.assertEqual(counts_by_label.get("March 2026"), 1)
         self.assertEqual(counts_by_label.get("April 2026"), 0)
+
+    def test_prepare_comparison_date_range_none_returns_empty_list(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        `_prepare_comparison_date_range` mengembalikan `list` yang hanya
+        bisa diverifikasi dengan meng-assert nilai balik method secara
+        langsung; YAML tidak menyimpan nilai balik `action: call` (L-01)
+        dan tidak bisa meng-assert ekspresi bebas seperti panjang list
+        (L-02). `comparison` defaultnya `none`, jadi data source ini
+        tidak perlu `date_field_id`.
+        """
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "No Comparison Source",
+                "code": "DASH-COMPARISON-NONE-01",
+            }
+        )
+        self.assertEqual(data_source._prepare_comparison_date_range(), [])
+
+    def test_prepare_comparison_date_range_previous_period_shifts_by_duration(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Sama seperti di atas: nilai balik `_prepare_comparison_date_range`
+        (2-tuple tanggal pembanding) hanya bisa diverifikasi dengan
+        meng-assert nilai balik method secara langsung. Rentang berjalan
+        1-31 Januari 2026 dibandingkan dengan rentang sepanjang yang
+        sama tepat sebelum 1 Januari 2026, yaitu 1-31 Desember 2025 —
+        membuktikan pergeserannya dihitung dari durasi hasil
+        `_prepare_date_range()`, bukan dari kalender bulan.
+        """
+        currency_rate_model = self.env.ref("base.model_res_currency_rate")
+        date_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.currency.rate"), ("name", "=", "name")],
+            limit=1,
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Previous Period Source",
+                "code": "DASH-COMPARISON-PREVPERIOD-01",
+                "type": "orm",
+                "model_id": currency_rate_model.id,
+                "date_field_id": date_field.id,
+                "date_range": "custom",
+                "date_start": "2026-01-01",
+                "date_end": "2026-01-31",
+                "comparison": "previous_period",
+            }
+        )
+        self.assertEqual(
+            data_source._prepare_comparison_date_range(),
+            [(datetime.date(2025, 12, 1), datetime.date(2025, 12, 31))],
+        )
+
+    def test_prepare_comparison_date_range_previous_year_two_ranges(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        `comparison_year_count` = 2 harus menghasilkan dua tuple
+        rentang, satu per tahun ke belakang, dengan tanggal awal/akhir
+        yang sama persis — hanya bisa diverifikasi lewat nilai balik
+        method (lihat docstring test di atas).
+        """
+        currency_rate_model = self.env.ref("base.model_res_currency_rate")
+        date_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.currency.rate"), ("name", "=", "name")],
+            limit=1,
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Previous Year Source",
+                "code": "DASH-COMPARISON-PREVYEAR-01",
+                "type": "orm",
+                "model_id": currency_rate_model.id,
+                "date_field_id": date_field.id,
+                "date_range": "custom",
+                "date_start": "2026-03-01",
+                "date_end": "2026-03-31",
+                "comparison": "previous_year",
+                "comparison_year_count": 2,
+            }
+        )
+        self.assertEqual(
+            data_source._prepare_comparison_date_range(),
+            [
+                (datetime.date(2025, 3, 1), datetime.date(2025, 3, 31)),
+                (datetime.date(2024, 3, 1), datetime.date(2024, 3, 31)),
+            ],
+        )

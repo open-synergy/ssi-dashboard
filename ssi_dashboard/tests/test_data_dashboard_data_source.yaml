@@ -624,3 +624,127 @@ scenarios:
           aggregate: "sum"
           field_id: "REC: char_field.id"
           name: "Total"
+
+  - name: "Comparison Without Date Field Is Rejected"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Create data source with comparison but no date field is rejected"
+        action: "create"
+        model: "dashboard.data_source"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Bad Comparison No Date Field"
+          code: "DS-COMPARISON-NODATEFIELD-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+          comparison: "previous_period"
+
+  - name: "Comparison Year Count Zero Is Rejected"
+    steps:
+      - step: "Create data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Generic Source"
+          code: "DS-COMPARISON-YEARCOUNT-ZERO-01"
+      - step: "Write comparison_year_count out of range (0)"
+        action: "write"
+        target: "data_source"
+        expect_error:
+          type: "ValidationError"
+        values:
+          comparison_year_count: 0
+
+  - name: "Comparison Year Count Above Five Is Rejected"
+    steps:
+      - step: "Create data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Generic Source"
+          code: "DS-COMPARISON-YEARCOUNT-SIX-01"
+      - step: "Write comparison_year_count out of range (6)"
+        action: "write"
+        target: "data_source"
+        expect_error:
+          type: "ValidationError"
+        values:
+          comparison_year_count: 6
+
+  - name: "Invalid Comparison Value Is Rejected"
+    steps:
+      - step: "Create data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Generic Source"
+          code: "DS-COMPARISON-BADVALUE-01"
+      - step: "Write invalid comparison value"
+        action: "write"
+        target: "data_source"
+        expect_error:
+          type: "ValueError"
+        values:
+          comparison: "next_period"
+
+  - name: "Comparison Defaults To None"
+    steps:
+      - step: "Create data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Generic Source"
+          code: "DS-COMPARISON-DEFAULT-01"
+      - step: "Assert comparison defaults to none and year count to one"
+        action: "assert"
+        target: "data_source"
+        asserts:
+          comparison:
+            type: "value"
+            expected: "none"
+          comparison_year_count:
+            type: "value"
+            expected: 1
+
+  - name: "Changing Comparison Away From Previous Year Resets Year Count"
+    steps:
+      - step: "Get res.currency.rate model"
+        action: "ref"
+        xml_id: "base.model_res_currency_rate"
+        save_as: "model_a"
+      - step: "Find the 'name' (date) field on res.currency.rate"
+        action: "search"
+        model: "ir.model.fields"
+        domain: [["model", "=", "res.currency.rate"], ["name", "=", "name"]]
+        save_as: "date_field"
+        limit: 1
+      - step: "Fill form: set previous_year with a custom count, then switch away"
+        action: "form"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        save: true
+        ops:
+          - set: {name: "Form Comparison Source"}
+          - set: {code: "DS-COMPARISON-FORM-01"}
+          - set: {type: "orm"}
+          - set: {model_id: "REC: model_a"}
+          - set: {date_field_id: "REC: date_field"}
+          - set: {comparison: "previous_year"}
+          - set: {comparison_year_count: 3}
+          - assert:
+              comparison_year_count:
+                type: "value"
+                expected: 3
+          - set: {comparison: "previous_period"}
+          - assert:
+              comparison_year_count:
+                type: "value"
+                expected: 1

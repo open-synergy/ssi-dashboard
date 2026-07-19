@@ -239,6 +239,27 @@ class DashboardDataSource(models.Model):
     date_end = fields.Date(
         help="Custom period end (inclusive). Only used when 'Date Range' is 'Custom'.",
     )
+    comparison = fields.Selection(
+        selection=[
+            ("none", "No Comparison"),
+            ("previous_period", "Previous Period"),
+            ("previous_year", "Same Period Previous Year"),
+        ],
+        required=True,
+        default="none",
+        help="Comparison range computed alongside the current period and "
+        "returned separately (see 'comparison_data'). 'Previous Period' "
+        "shifts the current range (from 'Date Range') backward by its "
+        "own duration. 'Same Period Previous Year' shifts the current "
+        "range backward by 'Comparison Year Count' years, keeping the "
+        "same start/end day. Requires 'Date Field' to be set.",
+    )
+    comparison_year_count = fields.Integer(
+        default=1,
+        help="Number of years back to compare against, one comparison "
+        "range per year. Only used when 'Comparison' is 'Same Period "
+        "Previous Year'. Must be between 1 and 5.",
+    )
 
     @api.depends("group_by_field_id.ttype")
     def _compute_group_by_field_is_date(self):
@@ -350,6 +371,34 @@ Solution: Set 'Date Start' to a date on or before 'Date End'
 """
                 raise ValidationError(error_message)
 
+    @api.constrains("comparison_year_count")
+    def _check_comparison_year_count(self):
+        for record in self:
+            if not 1 <= record.comparison_year_count <= 5:
+                error_message = f"""
+Context: Configure dashboard data source comparison
+Database ID: {record.id}
+Problem: 'Comparison Year Count' ({record.comparison_year_count}) is out \
+of range
+Solution: Set 'Comparison Year Count' between 1 and 5
+"""
+                raise ValidationError(error_message)
+
+    @api.constrains("comparison", "date_field_id")
+    def _check_comparison_date_field_id(self):
+        for record in self:
+            if record.comparison == "none":
+                continue
+            if not record.date_field_id:
+                error_message = f"""
+Context: Configure dashboard data source comparison
+Database ID: {record.id}
+Problem: 'Comparison' is set to '{record.comparison}' but 'Date Field' \
+is empty
+Solution: Set 'Date Field', or change 'Comparison' back to 'No Comparison'
+"""
+                raise ValidationError(error_message)
+
     @api.onchange("model_id")
     def onchange_measure_field_id(self):
         self.measure_field_id = False
@@ -384,6 +433,11 @@ Solution: Set 'Date Start' to a date on or before 'Date End'
     def onchange_sub_group_by_field_id(self):
         if not self.group_by_field_id:
             self.sub_group_by_field_id = False
+
+    @api.onchange("comparison")
+    def onchange_comparison_year_count(self):
+        if self.comparison != "previous_year":
+            self.comparison_year_count = 1
 
     @api.onchange("sub_group_by_field_id")
     def onchange_sub_group_by_granularity(self):
@@ -1091,21 +1145,35 @@ Solution: Install a module that implements this 'Date Range' value
         local_dt = tz.localize(datetime.datetime.combine(value, time_of_day))
         return local_dt.astimezone(pytz.utc).replace(tzinfo=None)
 
-    def _prepare_date_domain(self):
+    def _prepare_date_domain(self, date_range_override=None):
         """Build the domain fragment date filtering contributes to
         :meth:`_fetch_data_orm`.
 
+        :param date_range_override: optional 2-tuple ``(date_start,
+            date_end)`` to build the domain from directly, bypassing
+            :attr:`date_range`/:meth:`_prepare_date_range` entirely —
+            used by :meth:`_fetch_comparison_data` to filter on a
+            comparison range instead of the current one. Either side
+            may be ``None`` for an open-ended bound. When omitted
+            (default), the domain is built from :attr:`date_range` as
+            before this parameter existed.
+        :type date_range_override: tuple or None
         :return: list of domain tuples on :attr:`date_field_id`, meant
             to be ANDed (implicit ``&``) with the rest of the domain
             built in :meth:`_fetch_data_orm`. Empty when
-            :attr:`date_field_id` is not set or :attr:`date_range` is
-            ``all_time``.
+            :attr:`date_field_id` is not set, or (with no override)
+            :attr:`date_range` is ``all_time``.
         :rtype: list
         """
         self.ensure_one()
-        if not self.date_field_id or self.date_range == "all_time":
+        if not self.date_field_id:
             return []
-        date_start, date_end = self._prepare_date_range()
+        if date_range_override is not None:
+            date_start, date_end = date_range_override
+        else:
+            if self.date_range == "all_time":
+                return []
+            date_start, date_end = self._prepare_date_range()
         field_name = self.date_field_id.name
         is_datetime = self.date_field_id.ttype == "datetime"
         domain = []
@@ -1205,7 +1273,7 @@ Solution: Install a module that implements this 'Date Range' value
         )
         return safe_eval(domain_str)
 
-    def _fetch_data_orm(self, item):
+    def _fetch_data_orm(self, item, date_range_override=None):
         """Fetch data for the 'orm' data source type.
 
         Reads :attr:`model_id` through ``_read_group`` filtered by the
@@ -1245,6 +1313,13 @@ Solution: Install a module that implements this 'Date Range' value
         :attr:`limit`, in that order.
 
         :param item: ``dashboard.item`` record requesting the data.
+        :param date_range_override: optional 2-tuple ``(date_start,
+            date_end)`` passed straight through to
+            :meth:`_prepare_date_domain` — used by
+            :meth:`_fetch_comparison_data` to read a comparison range
+            instead of the current one. Omitted (default) for the
+            current-period read done by :meth:`_fetch_data`.
+        :type date_range_override: tuple or None
         :return: list of dict, one per group returned by ``_read_group``,
             after :meth:`_postprocess_rows`.
         :rtype: list
@@ -1260,7 +1335,7 @@ Problem: Data source type is 'orm' but no target Model is configured
 Solution: Set the Model field on this data source
 """
             raise UserError(error_message)
-        domain = self._prepare_domain() + self._prepare_date_domain()
+        domain = self._prepare_domain() + self._prepare_date_domain(date_range_override)
         model = self.env[self.model_id.model].sudo()
         aggregates, column_names = self._prepare_aggregate_spec()
         groupby = self._prepare_groupby_spec()
@@ -1294,3 +1369,130 @@ Solution: Set the Model field on this data source
                 )
             result.append(row_dict)
         return self._postprocess_rows(result)
+
+    def _prepare_comparison_date_range(self):
+        """Build the comparison date range(s) matching :attr:`comparison`.
+
+        :return: list of 2-tuple ``(date_start, date_end)``. Empty when
+            :attr:`comparison` is ``none``. Exactly one element for
+            ``previous_period``, shifted backward from the current
+            range (see :meth:`_prepare_date_range`) by that range's own
+            duration — e.g. 1-31 Jan compares against 1-31 Dec the
+            previous year. Exactly :attr:`comparison_year_count`
+            elements for ``previous_year``, one per year back, keeping
+            the same start/end day. Either side of a tuple is ``None``
+            when the current range has that side open-ended (or
+            :attr:`date_range` is ``all_time``) — no meaningful shift
+            can be computed in that case.
+        :rtype: list
+        """
+        self.ensure_one()
+        if self.comparison == "none":
+            return []
+        date_start, date_end = self._prepare_date_range()
+        if self.comparison == "previous_period":
+            return [
+                self._prepare_comparison_date_range_previous_period(
+                    date_start, date_end
+                )
+            ]
+        return [
+            self._prepare_comparison_date_range_previous_year(
+                date_start, date_end, year_offset
+            )
+            for year_offset in range(1, self.comparison_year_count + 1)
+        ]
+
+    def _prepare_comparison_date_range_previous_period(self, date_start, date_end):
+        """Build the single comparison range for :attr:`comparison` =
+        ``previous_period``. See :meth:`_prepare_comparison_date_range`.
+
+        The comparison range ends the day before ``date_start`` and has
+        exactly the same duration (in days) as ``[date_start,
+        date_end]`` — computed from the boundaries themselves, not from
+        calendar months, so it also works for ranges that do not align
+        with a month.
+
+        :param date_start: current range start, from
+            :meth:`_prepare_date_range`.
+        :type date_start: datetime.date or None
+        :param date_end: current range end, from
+            :meth:`_prepare_date_range`.
+        :type date_end: datetime.date or None
+        :return: 2-tuple ``(date_start, date_end)`` of the comparison
+            range. ``(None, None)`` when either side of the current
+            range is open-ended.
+        :rtype: tuple
+        """
+        self.ensure_one()
+        if date_start is None or date_end is None:
+            return None, None
+        duration = date_end - date_start
+        comparison_end = date_start - datetime.timedelta(days=1)
+        comparison_start = comparison_end - duration
+        return comparison_start, comparison_end
+
+    def _prepare_comparison_date_range_previous_year(
+        self, date_start, date_end, year_offset
+    ):
+        """Build one comparison range for :attr:`comparison` =
+        ``previous_year``. See :meth:`_prepare_comparison_date_range`.
+
+        :param date_start: current range start, from
+            :meth:`_prepare_date_range`.
+        :type date_start: datetime.date or None
+        :param date_end: current range end, from
+            :meth:`_prepare_date_range`.
+        :type date_end: datetime.date or None
+        :param year_offset: number of years back this comparison range
+            is shifted, from ``1`` to :attr:`comparison_year_count`.
+        :type year_offset: int
+        :return: 2-tuple ``(date_start, date_end)`` shifted back
+            ``year_offset`` years, same start/end day. ``(None, None)``
+            when either side of the current range is open-ended.
+        :rtype: tuple
+        """
+        self.ensure_one()
+        if date_start is None or date_end is None:
+            return None, None
+        return (
+            date_start - relativedelta(years=year_offset),
+            date_end - relativedelta(years=year_offset),
+        )
+
+    def _fetch_comparison_data(self, item):
+        """Fetch comparison data for a dashboard item.
+
+        Reuses the same ``_fetch_data_<type>`` read path as
+        :meth:`_fetch_data`, called once per comparison range from
+        :meth:`_prepare_comparison_date_range`, with the date domain
+        shifted to that range instead of the current one (via
+        ``date_range_override`` — see :meth:`_fetch_data_orm`). The
+        contract of :meth:`_fetch_data` itself is unchanged: it never
+        calls this method, so a data source with :attr:`comparison` =
+        ``none`` pays no extra query cost.
+
+        :param item: ``dashboard.item`` record requesting the data.
+        :return: list of list of dict — one list of rows per
+            comparison range, in :meth:`_prepare_comparison_date_range`
+            order. Empty when :attr:`comparison` is ``none``.
+        :rtype: list
+        :raises UserError: when no ``_fetch_data_<type>`` method exists
+            for :attr:`type` — same guard as :meth:`_fetch_data`.
+        """
+        self.ensure_one()
+        method_name = f"_fetch_data_{self.type}"
+        method = getattr(self, method_name, None)
+        if method is None:
+            error_message = f"""
+Document Type: {self._description}
+Context: Fetch dashboard item comparison data
+Database ID: {self.id}
+Problem: No data fetch implementation for data source type '{self.type}'
+Solution: Install a module that implements {method_name}
+"""
+            raise UserError(error_message)
+        return [
+            method(item, date_range_override=date_range)
+            for date_range in self._prepare_comparison_date_range()
+        ]

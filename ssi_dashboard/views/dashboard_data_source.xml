@@ -81,6 +81,11 @@
                                 invisible="date_range != 'custom'"
                             />
                             <field name="date_end" invisible="date_range != 'custom'" />
+                            <field name="comparison" />
+                            <field
+                                name="comparison_year_count"
+                                invisible="comparison != 'previous_year'"
+                            />
                         </group>
                     </page>
                     <page name="measures" string="Measures">
