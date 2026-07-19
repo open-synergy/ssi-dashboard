@@ -19,6 +19,7 @@ msgid "# Color Scheme"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__dashboard_id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__dashboard_id
 msgid "# Dashboard"
 msgstr ""
@@ -283,6 +284,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__create_uid
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__create_uid
 msgid "Created by"
@@ -294,6 +296,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__create_date
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__create_date
 msgid "Created on"
@@ -363,6 +366,11 @@ msgid "Dashboard Data Source - Measure"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model,name:ssi_dashboard.model_dashboard_filter
+msgid "Dashboard Filter"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model,name:ssi_dashboard.model_dashboard_item
 #: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_item_view_form
 msgid "Dashboard Item"
@@ -376,6 +384,11 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item_goal__item_id
 msgid "Dashboard item this dated target belongs to."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_filter__dashboard_id
+msgid "Dashboard this filter belongs to."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -426,6 +439,7 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__date_range
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_filter__filter_type__date
 msgid "Date Range"
 msgstr ""
 
@@ -461,8 +475,18 @@ msgid "Day"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__default_active
+msgid "Default Active"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sort_order__desc
 msgid "Descending"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_filter__sequence
+msgid "Determines the display order of filters on the filter bar."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -490,6 +514,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__display_name
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__display_name
 msgid "Display Name"
@@ -497,7 +522,23 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__domain
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__domain
 msgid "Domain"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_filter__default_active
+msgid ""
+"Enable so this filter is already active the first time the dashboard is "
+"opened, i.e. when 'get_dashboard_payload' is called without an explicit "
+"'active_filters' argument."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__filter_ids
+msgid ""
+"Entries of this dashboard's global filter bar. Each active filter narrows "
+"every item's data on top of that item's own data source configuration."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -514,7 +555,21 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__field_id
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__field_id
 msgid "Field"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_filter__filter_type__field
+msgid "Field Value"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_filter__field_id
+msgid ""
+"Field checked for a non-empty value when this filter is active. Only used, "
+"and required, when 'Filter Type' is 'Field Value'. Data sources whose "
+"'Model' does not have this field skip this filter instead of failing."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -536,6 +591,17 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__fill_temporal
 msgid "Fill Temporal"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__filter_type
+msgid "Filter Type"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__filter_ids
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_dashboard_view_form
+msgid "Filters"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -574,6 +640,12 @@ msgstr ""
 msgid ""
 "Free-form unit text shown alongside the value, e.g. 'kg', 'pcs', '%'. Only "
 "used, and required, when 'Unit Type' is 'Custom Text'."
+msgstr ""
+
+#. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_filter_bar/dashboard_filter_bar.esm.js:0
+msgid "From"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -689,6 +761,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__id
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__id
 msgid "ID"
@@ -758,6 +831,16 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_filter__filter_type
+msgid ""
+"Kind of filter. 'Predefined Domain' applies 'Domain' as-is to every 'orm' "
+"data source. 'Field Value' requires 'Field' to have a value, and is skipped "
+"for any data source whose model does not have that field. 'Date Range' "
+"requires neither and carries no domain of its own — it only marks this "
+"dashboard as showing the global date range picker."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__goal_type
 msgid ""
 "Kind of target this item is measured against. 'No Target' carries no target "
@@ -795,6 +878,11 @@ msgstr ""
 msgid ""
 "Label of this measure. Used as the key its aggregate value is stored under "
 "in each row of data returned by the data source."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_filter__name
+msgid "Label shown for this filter on the filter bar."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -838,6 +926,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__write_uid
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__write_uid
 msgid "Last Updated by"
@@ -849,6 +938,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__write_date
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__write_date
 msgid "Last Updated on"
@@ -1021,6 +1111,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__name
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__name
 msgid "Name"
 msgstr ""
@@ -1163,6 +1254,14 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_filter__domain
+msgid ""
+"Odoo domain (Python list syntax) applied when this filter is active. Only "
+"used, and required, when 'Filter Type' is 'Predefined Domain'. Supports the "
+"same '%UID'/'%MYCOMPANY' placeholders as a data source's own 'Domain'."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__model_id
 msgid ""
 "Odoo model to read data from. Only used when 'Type' is 'Odoo Model' (orm)."
@@ -1210,6 +1309,11 @@ msgid "Precision Digits"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_filter__filter_type__domain
+msgid "Predefined Domain"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__date_range
 msgid ""
 "Predefined period the data is filtered on, computed in the current user's "
@@ -1239,6 +1343,12 @@ msgid "Reporting"
 msgstr ""
 
 #. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_filter_bar/dashboard_filter_bar.esm.js:0
+msgid "Reset"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__activity_user_id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__activity_user_id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__activity_user_id
@@ -1257,6 +1367,7 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__sequence
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__sequence
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__sequence
 msgid "Sequence"
 msgstr ""
@@ -1364,6 +1475,12 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__item_ids
 msgid "Tiles placed on this dashboard."
+msgstr ""
+
+#. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_filter_bar/dashboard_filter_bar.esm.js:0
+msgid "To"
 msgstr ""
 
 #. module: ssi_dashboard
