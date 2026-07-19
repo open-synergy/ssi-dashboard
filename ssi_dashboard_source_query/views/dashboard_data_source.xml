@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="dashboard_data_source_view_form" model="ir.ui.view">
+        <field name="name">dashboard.data_source - form - query</field>
+        <field name="model">dashboard.data_source</field>
+        <field name="inherit_id" ref="ssi_dashboard.dashboard_data_source_view_form" />
+        <field name="arch" type="xml">
+            <data>
+                <xpath
+                    expr="//group[@name='dashboard_data_source_configuration']"
+                    position="after"
+                >
+                    <group
+                        name="dashboard_data_source_query_configuration"
+                        string="SQL Query"
+                        invisible="type != 'query'"
+                    >
+                        <field
+                            name="query"
+                            nolabel="1"
+                            colspan="2"
+                            placeholder="SELECT ... AS group_label, ... FROM ... WHERE date_column BETWEEN %%(date_start)s AND %%(date_end)s"
+                        />
+                    </group>
+                </xpath>
+            </data>
+        </field>
+    </record>
+</odoo>
