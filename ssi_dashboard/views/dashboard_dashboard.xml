@@ -77,6 +77,25 @@
                             <field name="color_scheme_id" />
                             <field name="group_ids" widget="many2many_tags" />
                         </group>
+                        <group name="dashboard_dashboard_menu" string="Menu">
+                            <field name="generate_menu" />
+                            <field name="menu_name" invisible="not generate_menu" />
+                            <field
+                                name="parent_menu_id"
+                                invisible="not generate_menu"
+                            />
+                            <field name="menu_sequence" invisible="not generate_menu" />
+                            <field
+                                name="menu_id"
+                                invisible="not generate_menu"
+                                readonly="1"
+                            />
+                            <field
+                                name="client_action_id"
+                                invisible="not generate_menu"
+                                readonly="1"
+                            />
+                        </group>
                     </page>
                 </xpath>
             </data>

@@ -162,3 +162,199 @@ scenarios:
         as_user: "restricted_user"
         expect_error:
           type: "AccessError"
+
+  - name: "Generate Menu Creates Menu And Client Action"
+    steps:
+      - step: "Create dashboard with generate_menu enabled"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Menu Enabled Dashboard"
+          code: "DASH-MENU-CREATE-01"
+          generate_menu: true
+          parent_menu_id: "ssi_dashboard.menu_dashboard_configuration"
+      - step: "Assert menu and client action generated"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          menu_id:
+            type: "value"
+            operator: "is_truthy"
+          client_action_id:
+            type: "value"
+            operator: "is_truthy"
+          menu_id.name:
+            type: "value"
+            expected: "Menu Enabled Dashboard"
+          menu_id.parent_id:
+            type: "m2o"
+            expected_xml_id: "ssi_dashboard.menu_dashboard_configuration"
+          menu_id.sequence:
+            type: "value"
+            expected: 10
+          client_action_id.tag:
+            type: "value"
+            expected: "ssi_dashboard.dashboard_view"
+
+  - name: "Generate Menu Disabled Produces No Menu"
+    steps:
+      - step: "Create dashboard with generate_menu left at default"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Menu Disabled Dashboard"
+          code: "DASH-MENU-NONE-01"
+      - step: "Assert no menu or client action generated"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          menu_id:
+            type: "value"
+            operator: "is_falsy"
+          client_action_id:
+            type: "value"
+            operator: "is_falsy"
+
+  - name: "Renaming Dashboard Updates Generated Menu Name"
+    steps:
+      - step: "Create dashboard with generate_menu enabled"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Old Name"
+          code: "DASH-MENU-RENAME-01"
+          generate_menu: true
+          parent_menu_id: "ssi_dashboard.menu_dashboard_configuration"
+      - step: "Rename dashboard"
+        action: "write"
+        target: "dashboard"
+        values:
+          name: "New Name"
+      - step: "Assert generated menu name follows dashboard name"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          menu_id.name:
+            type: "value"
+            expected: "New Name"
+
+  - name: "Disabling Generate Menu Removes Menu And Client Action"
+    steps:
+      - step: "Create dashboard with generate_menu enabled"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Disable Me"
+          code: "DASH-MENU-DISABLE-01"
+          menu_name: "Disable Me Menu"
+          generate_menu: true
+          parent_menu_id: "ssi_dashboard.menu_dashboard_configuration"
+      - step: "Assert menu generated before disabling"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          menu_id:
+            type: "value"
+            operator: "is_truthy"
+      - step: "Disable generate_menu"
+        action: "write"
+        target: "dashboard"
+        values:
+          generate_menu: false
+      - step: "Assert menu and client action cleared from dashboard"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          menu_id:
+            type: "value"
+            operator: "is_falsy"
+          client_action_id:
+            type: "value"
+            operator: "is_falsy"
+      - step: "Verify generated menu no longer exists"
+        action: "search"
+        model: "ir.ui.menu"
+        domain: [["name", "=", "Disable Me Menu"]]
+        save_as: "leftover_menu"
+        expect_count: 0
+
+  - name: "Deleting Dashboard Removes Generated Menu And Client Action"
+    steps:
+      - step: "Create dashboard with generate_menu enabled"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Delete Me"
+          code: "DASH-MENU-DELETE-01"
+          menu_name: "Delete Me Menu"
+          generate_menu: true
+          parent_menu_id: "ssi_dashboard.menu_dashboard_configuration"
+      - step: "Assert menu generated before deleting"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          menu_id:
+            type: "value"
+            operator: "is_truthy"
+      - step: "Delete dashboard"
+        action: "unlink"
+        target: "dashboard"
+      - step: "Verify generated menu no longer exists"
+        action: "search"
+        model: "ir.ui.menu"
+        domain: [["name", "=", "Delete Me Menu"]]
+        save_as: "leftover_menu"
+        expect_count: 0
+      - step: "Verify generated client action no longer exists"
+        action: "search"
+        model: "ir.actions.client"
+        domain:
+          [
+            ["name", "=", "Delete Me Menu"],
+            ["tag", "=", "ssi_dashboard.dashboard_view"],
+          ]
+        save_as: "leftover_action"
+        expect_count: 0
+
+  - name: "Generated Menu Groups Mirror Dashboard Allowed Groups"
+    steps:
+      - step: "Get dashboard user group"
+        action: "ref"
+        xml_id: "ssi_dashboard.group_dashboard_user"
+        save_as: "allowed_group"
+      - step: "Create dashboard restricted to that group"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Group Mirrored Dashboard"
+          code: "DASH-MENU-GROUPS-01"
+          generate_menu: true
+          parent_menu_id: "ssi_dashboard.menu_dashboard_configuration"
+          group_ids: [[6, 0, ["REC: allowed_group.id"]]]
+      - step: "Assert generated menu groups match dashboard allowed groups"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          menu_id.group_ids:
+            type: "m2m"
+            check: "exact"
+            expected_records:
+              - "REC: allowed_group"
+
+  - name: "Generate Menu Without Parent Menu Is Rejected"
+    steps:
+      - step: "Create dashboard with generate_menu enabled but no parent"
+        action: "create"
+        model: "dashboard.dashboard"
+        expect_error:
+          type: "UserError"
+        values:
+          name: "Missing Parent"
+          code: "DASH-MENU-NOPARENT-01"
+          generate_menu: true
