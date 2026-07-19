@@ -172,3 +172,91 @@ class TestDashboardDataSource(YamlTransactionCase):
         counts = {row["group_label"]: row["__count"] for row in rows}
         self.assertEqual(counts.get("2022"), 2)
         self.assertEqual(counts.get("2023"), 1)
+
+    def test_fetch_data_orm_groups_by_datetime_field_year_granularity(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Menguji `group_by_granularity = "year"` pada field bertipe
+        `datetime` (`mail.message.date`, selalu tersedia karena
+        `ssi_master_data_mixin` bergantung pada modul `mail`) — jalur kode
+        berbeda dari test grouping field `date` di atas (format lewat
+        `babel.dates.format_datetime`, bukan `format_date`). Nilai balik
+        `_fetch_data_orm` hanya bisa diverifikasi dengan meng-assert hasil
+        pemanggilan method langsung (L-01/L-02).
+        """
+        message_model = self.env.ref("mail.model_mail_message")
+        date_field = self.env["ir.model.fields"].search(
+            [("model", "=", "mail.message"), ("name", "=", "date")],
+            limit=1,
+        )
+        messages = self.env["mail.message"].create(
+            [
+                {"body": "Group by datetime 1", "date": "2022-05-01 10:00:00"},
+                {"body": "Group by datetime 2", "date": "2022-07-20 08:00:00"},
+                {"body": "Group by datetime 3", "date": "2023-02-01 09:00:00"},
+            ]
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Messages By Year",
+                "code": "DASH-GROUPBY-DATETIME-01",
+                "type": "orm",
+                "model_id": message_model.id,
+                "domain": f"[('id', 'in', {messages.ids!r})]",
+                "group_by_field_id": date_field.id,
+                "group_by_granularity": "year",
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 2)
+        counts = {row["group_label"]: row["__count"] for row in rows}
+        self.assertEqual(counts.get("2022"), 2)
+        self.assertEqual(counts.get("2023"), 1)
+
+    def test_fetch_data_orm_groups_by_selection_field_with_empty_group(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Menguji pengelompokan pada field bertipe Selection —
+        `dashboard.data_source.group_by_granularity` dipakai di sini
+        sekaligus sebagai field TARGET grouping pada model
+        `dashboard.data_source` itu sendiri (field itu tidak `required`,
+        jadi bisa dikosongkan lewat `write` biasa untuk menghasilkan grup
+        kosong tanpa perlu bypass SQL). Ini melatih jalur kode berbeda
+        dari test grouping relasional/tanggal di atas: label selection dan
+        label "None" untuk grup kosong. Nilai balik `_fetch_data_orm`
+        (jumlah baris, `group_label` per grup) hanya bisa diverifikasi
+        dengan meng-assert hasil pemanggilan method langsung (L-01/L-02).
+        """
+        data_source_model = self.env["ir.model"].search(
+            [("model", "=", "dashboard.data_source")], limit=1
+        )
+        granularity_field = self.env["ir.model.fields"].search(
+            [
+                ("model", "=", "dashboard.data_source"),
+                ("name", "=", "group_by_granularity"),
+            ],
+            limit=1,
+        )
+        sources = self.env["dashboard.data_source"].create(
+            [
+                {"name": "Sel Src Month A", "code": "DASH-SEL-01"},
+                {"name": "Sel Src Month B", "code": "DASH-SEL-02"},
+                {"name": "Sel Src Empty", "code": "DASH-SEL-03"},
+            ]
+        )
+        sources[2].write({"group_by_granularity": False})
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Group By Selection Meta",
+                "code": "DASH-GROUPBY-SEL-01",
+                "type": "orm",
+                "model_id": data_source_model.id,
+                "domain": f"[('id', 'in', {sources.ids!r})]",
+                "group_by_field_id": granularity_field.id,
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 2)
+        counts = {row["group_label"]: row["__count"] for row in rows}
+        self.assertEqual(counts.get("Month"), 2)
+        self.assertEqual(counts.get("None"), 1)
