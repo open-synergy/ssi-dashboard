@@ -192,6 +192,7 @@ msgid "Created on"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.actions.client,name:ssi_dashboard.dashboard_dashboard_client_action
 #: model:ir.model,name:ssi_dashboard.model_dashboard_dashboard
 #: model:ir.module.category,name:ssi_dashboard.dashboard_module_category
 #: model:res.groups.privilege,name:ssi_dashboard.res_groups_privilege_dashboard
@@ -543,6 +544,12 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_dashboard_view_form
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_dashboard_view_list
+msgid "Open Dashboard"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__type__placeholder
 msgid "Placeholder"
 msgstr ""
@@ -596,6 +603,12 @@ msgstr ""
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__activity_exception_decoration
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__activity_exception_decoration
 msgid "Type of the exception activity on record."
+msgstr ""
+
+#. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_item_fallback/dashboard_item_fallback.xml:0
+msgid "Unsupported item type:"
 msgstr ""
 
 #. module: ssi_dashboard
