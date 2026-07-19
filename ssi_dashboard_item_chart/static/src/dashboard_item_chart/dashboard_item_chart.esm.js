@@ -4,16 +4,22 @@ import {registry} from "@web/core/registry";
 
 /* global Chart */
 
+const SLICED_CHART_TYPES = ["pie", "doughnut", "polar"];
+
 /**
- * Renders a "chart" dashboard item — a bar, line or pie chart built with
+ * Renders a "chart" dashboard item — one of seven chart kinds, built with
  * Odoo's bundled Chart.js ("web.chartjs_lib"). Registered under
  * registry.category("ssi_dashboard.item_widgets") for the "dashboard.item"
  * type "chart" (see ssi_dashboard_item_chart/models/dashboard_item.py,
  * _prepare_render_payload_chart()).
  *
  * The "item" prop is one entry of "items" from
- * dashboard.dashboard.get_dashboard_payload(), enriched with "chart_type"
- * and "chart_data" (labels + datasets) by _prepare_render_payload_chart().
+ * dashboard.dashboard.get_dashboard_payload(), enriched with a "chart" key
+ * by _prepare_render_payload_chart() — {type, labels, datasets, show_legend}.
+ * "datasets" already carries one entry per second dimension value or per
+ * measure, built server-side; this component only maps "type" to a Chart.js
+ * type/option and assigns series colors — no aggregation happens here.
+ *
  * Series colors are read from the dashboard's own
  * "--ssi-dashboard-chart-<n>" CSS custom properties (set by DashboardAction
  * from dashboard.color_scheme) at mount time — this component carries no
@@ -53,21 +59,70 @@ export class DashboardItemChart extends Component {
         return colors;
     }
 
+    /**
+     * Maps this item's server-side "chart.type" (all seven kinds from
+     * ssi_dashboard_item_chart/models/dashboard_item.py) to the Chart.js
+     * chart "type" plus any extra chart/dataset options that mapping
+     * needs. "horizontal_bar" is a Chart.js "bar" chart with
+     * `indexAxis: "y"`. "area" is a Chart.js "line" chart with `fill:
+     * true` on every dataset. "polar" is Chart.js' "polarArea" (its exact
+     * spelling). Every other value ("bar", "line", "pie", "doughnut") is
+     * already a valid Chart.js type and needs no mapping.
+     *
+     * @param {String} chartType
+     * @returns {Object} {chartJsType, chartOptions, datasetOptions}
+     */
+    mapChartType(chartType) {
+        if (chartType === "horizontal_bar") {
+            return {
+                chartJsType: "bar",
+                chartOptions: {indexAxis: "y"},
+                datasetOptions: {},
+            };
+        }
+        if (chartType === "area") {
+            return {
+                chartJsType: "line",
+                chartOptions: {},
+                datasetOptions: {fill: true},
+            };
+        }
+        if (chartType === "polar") {
+            return {chartJsType: "polarArea", chartOptions: {}, datasetOptions: {}};
+        }
+        return {chartJsType: chartType, chartOptions: {}, datasetOptions: {}};
+    }
+
     renderChart() {
-        const {chart_type: chartType, chart_data: chartData} = this.props.item;
-        const isSliced = chartType === "pie";
-        const datasets = (chartData.datasets || []).map((dataset) => {
-            const colors = this.getSeriesColors(isSliced ? dataset.data.length : 1);
-            return isSliced
-                ? {...dataset, backgroundColor: colors}
-                : {...dataset, backgroundColor: colors[0], borderColor: colors[0]};
+        const {chart} = this.props.item;
+        const {chartJsType, chartOptions, datasetOptions} = this.mapChartType(
+            chart.type
+        );
+        const isSliced = SLICED_CHART_TYPES.includes(chart.type);
+        const seriesColors = isSliced
+            ? null
+            : this.getSeriesColors(chart.datasets.length);
+        const datasets = chart.datasets.map((dataset, index) => {
+            if (isSliced) {
+                const colors = this.getSeriesColors(dataset.data.length);
+                return {...dataset, ...datasetOptions, backgroundColor: colors};
+            }
+            const color = seriesColors[index];
+            return {
+                ...dataset,
+                ...datasetOptions,
+                backgroundColor: color,
+                borderColor: color,
+            };
         });
         this.chart = new Chart(this.canvasRef.el, {
-            type: chartType,
-            data: {labels: chartData.labels, datasets},
+            type: chartJsType,
+            data: {labels: chart.labels, datasets},
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                ...chartOptions,
+                plugins: {legend: {display: chart.show_legend}},
             },
         });
     }

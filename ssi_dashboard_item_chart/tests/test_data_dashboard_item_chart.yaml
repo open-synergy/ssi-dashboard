@@ -1,11 +1,17 @@
 scenarios:
-  - name: "Create Chart Item on an ORM-sourced Dashboard"
+  - name: "Create Chart Item Defaults chart_type and chart_show_legend"
     steps:
       - step: "Get res.partner model"
         action: "ref"
         xml_id: "base.model_res_partner"
         save_as: "res_partner_model"
-      - step: "Create ORM data source"
+      - step: "Find country_id field on res.partner"
+        action: "search"
+        model: "ir.model.fields"
+        domain: [["model", "=", "res.partner"], ["name", "=", "country_id"]]
+        save_as: "group_by_field"
+        limit: 1
+      - step: "Create ORM data source with a Group By Field"
         action: "create"
         model: "dashboard.data_source"
         save_as: "data_source"
@@ -14,6 +20,7 @@ scenarios:
           code: "DASH-CHART-DS-01"
           type: "orm"
           model_id: "REC: res_partner_model.id"
+          group_by_field_id: "REC: group_by_field.id"
       - step: "Create dashboard"
         action: "create"
         model: "dashboard.dashboard"
@@ -21,7 +28,7 @@ scenarios:
         values:
           name: "Chart Dashboard"
           code: "DASH-CHART-01"
-      - step: "Create chart item"
+      - step: "Create chart item without setting chart_type"
         action: "create"
         model: "dashboard.item"
         save_as: "item"
@@ -30,22 +37,27 @@ scenarios:
           dashboard_id: "REC: dashboard.id"
           type: "chart"
           data_source_id: "REC: data_source.id"
-          config: '{"group_by": "country_id"}'
-      - step: "Assert item type is chart"
+      - step: "Assert chart_type defaults to bar and chart_show_legend to True"
         action: "assert"
         target: "item"
         asserts:
           type:
             type: "value"
             expected: "chart"
+          chart_type:
+            type: "value"
+            expected: "bar"
+          chart_show_legend:
+            type: "value"
+            expected: true
 
-  - name: "Rendering a Chart Item With Invalid Config JSON Raises UserError"
+  - name: "Chart Item On Data Source Without Group By Field Is Rejected"
     steps:
       - step: "Get res.partner model"
         action: "ref"
         xml_id: "base.model_res_partner"
         save_as: "res_partner_model"
-      - step: "Create ORM data source"
+      - step: "Create ORM data source without a Group By Field"
         action: "create"
         model: "dashboard.data_source"
         save_as: "data_source"
@@ -61,30 +73,58 @@ scenarios:
         values:
           name: "Chart Dashboard"
           code: "DASH-CHART-02"
-      - step: "Create chart item with invalid config"
+      - step: "Create chart item on a data source without Group By Field is rejected"
         action: "create"
         model: "dashboard.item"
-        save_as: "item"
+        expect_error:
+          type: "ValidationError"
         values:
           name: "Broken Chart"
           dashboard_id: "REC: dashboard.id"
           type: "chart"
           data_source_id: "REC: data_source.id"
-          config: "{not valid json"
-      - step: "Rendering payload raises UserError"
-        action: "call"
-        target: "item"
-        method: "_prepare_render_payload"
-        expect_error:
-          type: "UserError"
 
-  - name: "Rendering a Chart Item With Unsupported chart_type Raises UserError"
+  - name: "Chart Item Combining Multiple Measures With Sub Group By Field Is Rejected"
     steps:
       - step: "Get res.partner model"
         action: "ref"
         xml_id: "base.model_res_partner"
         save_as: "res_partner_model"
-      - step: "Create ORM data source"
+      - step: "Find country_id field on res.partner"
+        action: "search"
+        model: "ir.model.fields"
+        domain: [["model", "=", "res.partner"], ["name", "=", "country_id"]]
+        save_as: "group_by_field"
+        limit: 1
+      - step: "Find company_type field on res.partner"
+        action: "search"
+        model: "ir.model.fields"
+        domain: [["model", "=", "res.partner"], ["name", "=", "company_type"]]
+        save_as: "sub_group_by_field"
+        limit: 1
+      - step: "Find a numeric field on res.partner (lowest id)"
+        action: "search"
+        model: "ir.model.fields"
+        domain:
+          [
+            ["model", "=", "res.partner"],
+            ["ttype", "in", ["integer", "float", "monetary"]],
+          ]
+        save_as: "numeric_field_a"
+        order: "id asc"
+        limit: 1
+      - step: "Find a numeric field on res.partner (highest id)"
+        action: "search"
+        model: "ir.model.fields"
+        domain:
+          [
+            ["model", "=", "res.partner"],
+            ["ttype", "in", ["integer", "float", "monetary"]],
+          ]
+        save_as: "numeric_field_b"
+        order: "id desc"
+        limit: 1
+      - step: "Create data source with Sub Group By Field and two Measures"
         action: "create"
         model: "dashboard.data_source"
         save_as: "data_source"
@@ -93,6 +133,19 @@ scenarios:
           code: "DASH-CHART-DS-03"
           type: "orm"
           model_id: "REC: res_partner_model.id"
+          group_by_field_id: "REC: group_by_field.id"
+          sub_group_by_field_id: "REC: sub_group_by_field.id"
+          measure_ids:
+            - - 0
+              - 0
+              - name: "Measure A"
+                aggregate: "sum"
+                field_id: "REC: numeric_field_a.id"
+            - - 0
+              - 0
+              - name: "Measure B"
+                aggregate: "sum"
+                field_id: "REC: numeric_field_b.id"
       - step: "Create dashboard"
         action: "create"
         model: "dashboard.dashboard"
@@ -100,19 +153,13 @@ scenarios:
         values:
           name: "Chart Dashboard"
           code: "DASH-CHART-03"
-      - step: "Create chart item with unsupported chart_type"
+      - step: "Create chart item combining multi-measure with sub group by is rejected"
         action: "create"
         model: "dashboard.item"
-        save_as: "item"
+        expect_error:
+          type: "ValidationError"
         values:
-          name: "Broken Chart Type"
+          name: "Broken Multi Measure Chart"
           dashboard_id: "REC: dashboard.id"
           type: "chart"
           data_source_id: "REC: data_source.id"
-          config: '{"chart_type": "radar", "group_by": "country_id"}'
-      - step: "Rendering payload raises UserError"
-        action: "call"
-        target: "item"
-        method: "_prepare_render_payload"
-        expect_error:
-          type: "UserError"

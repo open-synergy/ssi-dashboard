@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <!-- Adds the 'chart' fields as two more inline-editable columns on the
+         dashboard form's embedded 'Items' list, following the same
+         per-row invisible pattern already used there for 'goal_value'
+         (ssi_dashboard/views/dashboard_dashboard.xml). Unlike
+         ssi_dashboard_item_tile's fields, 'chart_type'/'chart_show_legend'
+         are plain Selection/Boolean fields — no nested one2many involved
+         — so they need no standalone dialog form of their own, and this
+         module does not touch the 'action_open_item_goals' button's
+         visibility. -->
+    <record id="dashboard_dashboard_view_form" model="ir.ui.view">
+        <field name="name">dashboard.dashboard - form - chart</field>
+        <field name="model">dashboard.dashboard</field>
+        <field name="inherit_id" ref="ssi_dashboard.dashboard_dashboard_view_form" />
+        <field name="arch" type="xml">
+            <data>
+                <xpath
+                    expr="//field[@name='item_ids']/list/field[@name='goal_value']"
+                    position="after"
+                >
+                    <field name="chart_type" invisible="type != 'chart'" />
+                    <field name="chart_show_legend" invisible="type != 'chart'" />
+                </xpath>
+            </data>
+        </field>
+    </record>
+</odoo>
