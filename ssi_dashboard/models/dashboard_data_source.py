@@ -140,7 +140,40 @@ class DashboardDataSource(models.Model):
     )
     limit = fields.Integer(
         default=0,
-        help="Maximum number of rows to return. 0 means no limit.",
+        help="Maximum number of rows to return, applied after 'Sort By' "
+        "sorts the rows. 0 means no limit. Negative values are rejected.",
+    )
+    sort_by = fields.Selection(
+        selection=[
+            ("none", "Unsorted"),
+            ("label", "Group Label"),
+            ("measure", "Measure Value"),
+        ],
+        required=True,
+        default="none",
+        help="Field rows are sorted by before 'Limit' cuts them off. "
+        "'Group Label' sorts by the row's group label. 'Measure Value' "
+        "sorts by the first measure in 'Measures' order, or the single "
+        "measure built from 'Measure Field' / 'Aggregate' when "
+        "'Measures' is empty. Ignored when set to 'Unsorted'.",
+    )
+    sort_order = fields.Selection(
+        selection=[
+            ("asc", "Ascending"),
+            ("desc", "Descending"),
+        ],
+        required=True,
+        default="desc",
+        help="Sort direction applied when 'Sort By' is not 'Unsorted'. "
+        "Ignored when 'Sort By' is 'Unsorted'.",
+    )
+    fill_temporal = fields.Boolean(
+        default=False,
+        help="When enabled and 'Group By Field' is a date/datetime field, "
+        "empty periods between the smallest and largest period with data "
+        "are added as zero-value rows, so a time series chart does not "
+        "break its line. Silently ignored when 'Group By Field' is not a "
+        "date/datetime field.",
     )
     measure_ids = fields.One2many(
         string="Measures",
@@ -219,6 +252,18 @@ Solution: Fix 'Domain' so it only refers to fields that exist on \
 '{record.model_id.name}'. Original error: {error}
 """
                 raise ValidationError(error_message) from error
+
+    @api.constrains("limit")
+    def _check_limit(self):
+        for record in self:
+            if record.limit < 0:
+                error_message = f"""
+Context: Configure dashboard data source limit
+Database ID: {record.id}
+Problem: 'Limit' ({record.limit}) is negative
+Solution: Set 'Limit' to zero (no limit) or a positive number
+"""
+                raise ValidationError(error_message)
 
     @api.constrains("date_range", "date_start", "date_end")
     def _check_date_range_custom(self):
@@ -384,6 +429,194 @@ Solution: Install a module that implements {method_name}
         if isinstance(value, datetime.datetime):
             return babel.dates.format_datetime(value, format=date_format, locale=locale)
         return babel.dates.format_date(value, format=date_format, locale=locale)
+
+    def _postprocess_rows(self, rows):
+        """Apply :attr:`fill_temporal`, then :attr:`sort_by`/
+        :attr:`sort_order`, then :attr:`limit` to the raw rows built by a
+        ``_fetch_data_<type>`` method — always in that order, so a chart
+        sees empty periods filled in before it is sorted and cut down to
+        size.
+
+        Not specific to the 'orm' type: every step here only reads
+        fields declared on :class:`DashboardDataSource` itself, so any
+        extension module implementing another ``_fetch_data_<type>`` can
+        call this as the last step of its own method too.
+
+        :param rows: raw rows, as built by a ``_fetch_data_<type>``
+            method.
+        :type rows: list
+        :return: rows after fill/sort/limit.
+        :rtype: list
+        """
+        self.ensure_one()
+        rows = self._fill_temporal_rows(rows)
+        rows = self._sort_rows(rows)
+        rows = self._limit_rows(rows)
+        return rows
+
+    def _prepare_zero_measure_values(self):
+        """Build a row dict with every configured measure column set to
+        ``0``, used by :meth:`_fill_temporal_rows` as the template for
+        the zero-value rows it adds for empty periods.
+
+        :return: dict keyed the same way a real data row is (see
+            :meth:`_prepare_aggregate_spec`), every value ``0``.
+        :rtype: dict
+        """
+        self.ensure_one()
+        _aggregates, column_names = self._prepare_aggregate_spec()
+        return {name: 0 for name in column_names.values()}
+
+    def _temporal_bucket_start(self, value, granularity):
+        """Floor a ``date`` to the start of its bucket for a given
+        :attr:`group_by_granularity`, mirroring the buckets ``_read_group``
+        produces for a date/datetime groupby field — so periods generated
+        by :meth:`_fill_temporal_rows` line up with real data buckets.
+
+        :param value: date to floor.
+        :type value: datetime.date
+        :param granularity: one of :attr:`group_by_granularity`'s values.
+        :type granularity: str
+        :return: start of the bucket ``value`` falls into.
+        :rtype: datetime.date
+        """
+        self.ensure_one()
+        if granularity == "week":
+            first_week_day = self._get_date_range_first_week_day()
+            return value - datetime.timedelta(
+                days=(value.weekday() - first_week_day) % 7
+            )
+        if granularity == "month":
+            return value.replace(day=1)
+        if granularity == "quarter":
+            start_month = ((value.month - 1) // 3) * 3 + 1
+            return value.replace(month=start_month, day=1)
+        if granularity == "year":
+            return value.replace(month=1, day=1)
+        return value  # "hour" / "day": a plain date is already the bucket start
+
+    def _temporal_bucket_next(self, value, granularity):
+        """Step a bucket-start ``date`` forward by one
+        :attr:`group_by_granularity` unit. See
+        :meth:`_temporal_bucket_start`.
+
+        :param value: bucket-start date to step forward from.
+        :type value: datetime.date
+        :param granularity: one of :attr:`group_by_granularity`'s values.
+        :type granularity: str
+        :return: start of the next bucket.
+        :rtype: datetime.date
+        """
+        self.ensure_one()
+        step_by_granularity = {
+            "hour": relativedelta(hours=1),
+            "day": relativedelta(days=1),
+            "week": relativedelta(weeks=1),
+            "month": relativedelta(months=1),
+            "quarter": relativedelta(months=3),
+            "year": relativedelta(years=1),
+        }
+        return value + step_by_granularity.get(granularity, relativedelta(months=1))
+
+    def _fill_temporal_rows(self, rows):
+        """Add zero-value rows for empty periods between the smallest
+        and largest period covered, when :attr:`fill_temporal` is
+        enabled and :attr:`group_by_field_id` is a date/datetime field.
+
+        The range filled follows :meth:`_prepare_date_range`; when
+        :attr:`date_range` is ``all_time`` (or leaves a side open-ended),
+        that side falls back to the smallest/largest period already
+        present in ``rows``. Silently returns ``rows`` unchanged when
+        :attr:`fill_temporal` is off, :attr:`group_by_field_id` is not a
+        date/datetime field, or there is no data to derive a fallback
+        range from.
+
+        :param rows: raw rows, as built by a ``_fetch_data_<type>``
+            method — rows for a date/datetime groupby carry a
+            ``group_key`` that is the bucket-start ``date``/``datetime``.
+        :type rows: list
+        :return: ``rows`` plus one zero-value row per empty period.
+        :rtype: list
+        """
+        self.ensure_one()
+        field = self.group_by_field_id
+        if (
+            not self.fill_temporal
+            or not field
+            or field.ttype
+            not in (
+                "date",
+                "datetime",
+            )
+        ):
+            return rows
+        granularity = self.group_by_granularity or "month"
+        data_dates = [
+            value.date() if isinstance(value, datetime.datetime) else value
+            for value in (row.get("group_key") for row in rows)
+            if value
+        ]
+        range_start, range_end = self._prepare_date_range()
+        if range_start is None:
+            if not data_dates:
+                return rows
+            range_start = min(data_dates)
+        if range_end is None:
+            if not data_dates:
+                return rows
+            range_end = max(data_dates)
+        bucket_end = self._temporal_bucket_start(range_end, granularity)
+        cursor = self._temporal_bucket_start(range_start, granularity)
+        existing_labels = {row.get("group_label") for row in rows}
+        zero_row_template = self._prepare_zero_measure_values()
+        filled_rows = list(rows)
+        while cursor <= bucket_end:
+            label = self._format_group_by_date_label(cursor)
+            if label not in existing_labels:
+                zero_row = dict(zero_row_template)
+                zero_row["group_key"] = False
+                zero_row["group_label"] = label
+                filled_rows.append(zero_row)
+                existing_labels.add(label)
+            cursor = self._temporal_bucket_next(cursor, granularity)
+        return filled_rows
+
+    def _sort_rows(self, rows):
+        """Sort rows according to :attr:`sort_by` / :attr:`sort_order`.
+
+        :param rows: rows to sort, after :meth:`_fill_temporal_rows`.
+        :type rows: list
+        :return: ``rows`` unchanged when :attr:`sort_by` is ``none``,
+            otherwise sorted by group label or first measure value.
+        :rtype: list
+        """
+        self.ensure_one()
+        if self.sort_by == "none":
+            return rows
+        reverse = self.sort_order != "asc"
+        if self.sort_by == "label":
+            return sorted(
+                rows, key=lambda row: row.get("group_label") or "", reverse=reverse
+            )
+        _aggregates, column_names = self._prepare_aggregate_spec()
+        first_measure_key = next(iter(column_names.values()))
+        return sorted(
+            rows, key=lambda row: row.get(first_measure_key) or 0, reverse=reverse
+        )
+
+    def _limit_rows(self, rows):
+        """Cut ``rows`` down to :attr:`limit` rows, after sorting.
+
+        :param rows: rows to limit, after :meth:`_sort_rows`.
+        :type rows: list
+        :return: ``rows`` unchanged when :attr:`limit` is ``0``,
+            otherwise the first :attr:`limit` rows.
+        :rtype: list
+        """
+        self.ensure_one()
+        if not self.limit:
+            return rows
+        return rows[: self.limit]
 
     def _get_date_range_tz(self):
         """Return the current user's timezone for :attr:`date_range`
@@ -834,8 +1067,13 @@ Solution: Install a module that implements this 'Date Range' value
         with :attr:`domain`. A data source without :attr:`date_field_id`
         set behaves exactly as before this fragment existed.
 
+        As a last step, :meth:`_postprocess_rows` applies
+        :attr:`fill_temporal`, :attr:`sort_by`/:attr:`sort_order`, and
+        :attr:`limit`, in that order.
+
         :param item: ``dashboard.item`` record requesting the data.
-        :return: list of dict, one per group returned by ``_read_group``.
+        :return: list of dict, one per group returned by ``_read_group``,
+            after :meth:`_postprocess_rows`.
         :rtype: list
         :raises UserError: when :attr:`model_id` is not configured.
         """
@@ -855,13 +1093,14 @@ Solution: Set the Model field on this data source
         groupby = self._prepare_groupby_spec()
         rows = model._read_group(domain, groupby=groupby, aggregates=aggregates)
         if not groupby:
-            return [
+            result = [
                 {
                     column_names[spec]: value
                     for spec, value in zip(aggregates, row, strict=True)
                 }
                 for row in rows
             ]
+            return self._postprocess_rows(result)
         result = []
         for row in rows:
             group_value, *aggregate_values = row
@@ -872,4 +1111,4 @@ Solution: Set the Model field on this data source
             row_dict["group_key"] = self._prepare_group_key(group_value)
             row_dict["group_label"] = self._prepare_group_label(group_value)
             result.append(row_dict)
-        return result
+        return self._postprocess_rows(result)

@@ -105,6 +105,15 @@ scenarios:
           limit:
             type: "value"
             expected: 0
+          sort_by:
+            type: "value"
+            expected: "none"
+          sort_order:
+            type: "value"
+            expected: "desc"
+          fill_temporal:
+            type: "value"
+            expected: false
 
   - name: "Changing Model Clears Measure And Group By Field"
     steps:
@@ -459,6 +468,40 @@ scenarios:
           type: "ValidationError"
         values:
           domain: "[('field_tidak_ada', '=', 1)]"
+
+  - name: "Negative Limit Is Rejected"
+    steps:
+      - step: "Create data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Generic Source"
+          code: "DS-LIMIT-NEG-01"
+      - step: "Write negative limit"
+        action: "write"
+        target: "data_source"
+        expect_error:
+          type: "ValidationError"
+        values:
+          limit: -1
+
+  - name: "Invalid Sort By Value Is Rejected"
+    steps:
+      - step: "Create data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Generic Source"
+          code: "DS-SORTBY-BAD-01"
+      - step: "Write invalid sort_by value"
+        action: "write"
+        target: "data_source"
+        expect_error:
+          type: "ValueError"
+        values:
+          sort_by: "random"
 
   - name: "Create Measure With Non Numeric Field Is Rejected"
     steps:
