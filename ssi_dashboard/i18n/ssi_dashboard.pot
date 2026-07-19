@@ -30,6 +30,12 @@ msgid "# Data Source"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__data_source_model_id
+msgid "# Data Source Model"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__item_id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__item_id
 msgid "# Item"
 msgstr ""
@@ -173,6 +179,12 @@ msgid "Another data source with that code already exists."
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.constraint,message:ssi_dashboard.constraint_dashboard_item_drilldown_item_id_sequence_uniq
+msgid ""
+"Another drill-down level with that 'Sequence' already exists on this item."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.constraint,message:ssi_dashboard.constraint_dashboard_data_source_measure_data_source_id_name_uniq
 msgid "Another measure with that name already exists on this data source."
 msgstr ""
@@ -198,6 +210,12 @@ msgstr ""
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__aggregate__avg
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source_measure__aggregate__avg
 msgid "Average"
+msgstr ""
+
+#. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_item/dashboard_item.esm.js:0
+msgid "Back"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -357,6 +375,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__create_uid
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__create_uid
 msgid "Created by"
 msgstr ""
@@ -369,6 +388,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__create_date
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__create_date
 msgid "Created on"
 msgstr ""
@@ -458,6 +478,11 @@ msgid "Dashboard Item"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model,name:ssi_dashboard.model_dashboard_item_drilldown
+msgid "Dashboard Item Drill-Down Level"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model,name:ssi_dashboard.model_dashboard_item_goal
 msgid "Dashboard Item Goal"
 msgstr ""
@@ -465,6 +490,11 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item_goal__item_id
 msgid "Dashboard item this dated target belongs to."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item_drilldown__item_id
+msgid "Dashboard item this drill-down level belongs to."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -552,6 +582,7 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__day
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sub_group_by_granularity__day
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item_drilldown__granularity__day
 msgid "Day"
 msgstr ""
 
@@ -590,6 +621,13 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item_drilldown__sequence
+msgid ""
+"Determines this level's position in 'Item''s drill-down chain, lowest first."
+" Must be unique within the same 'Item'."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme_color__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__display_name
@@ -597,6 +635,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__display_name
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__display_name
 msgid "Display Name"
 msgstr ""
@@ -611,6 +650,12 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/ssi_dashboard/static/src/dashboard_layout_editor/dashboard_layout_editor.esm.js:0
 msgid "Drag a tile to move it, or its bottom-right handle to resize it."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__drilldown_ids
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_item_view_form
+msgid "Drill-Down Chain"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -661,6 +706,7 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__field_id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__field_id
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__field_id
 msgid "Field"
 msgstr ""
 
@@ -675,6 +721,15 @@ msgid ""
 "Field checked for a non-empty value when this filter is active. Only used, "
 "and required, when 'Filter Type' is 'Field Value'. Data sources whose "
 "'Model' does not have this field skip this filter instead of failing."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item_drilldown__field_id
+msgid ""
+"Field of 'Item''s data source model that rows are grouped by at this drill-"
+"down level. Must belong to the same model as 'Item'.'Data Source'.'Model' — "
+"see '_check_field_id_belongs_to_data_source_model'. Deleting this field from"
+" its model deletes this drill-down level along with it."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -805,6 +860,19 @@ msgid "Goals"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__granularity
+msgid "Granularity"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item_drilldown__granularity
+msgid ""
+"Granularity used to group 'Field' when it is a date or datetime field. Must "
+"be left empty for any other field type — see "
+"'_check_granularity_requires_date_field'."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__group_by_granularity
 msgid ""
 "Granularity used to group 'Group By Field' when it is a date or datetime "
@@ -860,6 +928,7 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__hour
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sub_group_by_granularity__hour
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item_drilldown__granularity__hour
 msgid "Hour"
 msgstr ""
 
@@ -887,6 +956,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__id
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__id
 msgid "ID"
 msgstr ""
@@ -1072,6 +1142,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__write_uid
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__write_uid
 msgid "Last Updated by"
 msgstr ""
@@ -1084,6 +1155,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__write_date
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__write_date
 msgid "Last Updated on"
 msgstr ""
@@ -1101,6 +1173,12 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item_goal__date_end
 msgid "Last date (inclusive) this target's 'Value' applies to."
+msgstr ""
+
+#. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_item/dashboard_item.esm.js:0
+msgid "Level %s"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1230,6 +1308,7 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__month
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sub_group_by_granularity__month
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item_drilldown__granularity__month
 msgid "Month"
 msgstr ""
 
@@ -1433,6 +1512,15 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__drilldown_ids
+msgid ""
+"Ordered chain of grouping dimensions clicking into this item's data walks "
+"through before 'Open Records' takes over — see 'fetch_drilldown_data'. Left "
+"empty, clicking a value opens the list of records behind it straight away, "
+"exactly as before this field existed."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__parent_menu_id
 msgid "Parent Menu"
 msgstr ""
@@ -1489,6 +1577,7 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__quarter
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sub_group_by_granularity__quarter
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item_drilldown__granularity__quarter
 msgid "Quarter"
 msgstr ""
 
@@ -1552,6 +1641,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__sequence
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__sequence
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__sequence
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__sequence
 msgid "Sequence"
 msgstr ""
 
@@ -1645,6 +1735,13 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item_goal__value
 msgid "Target value that applies for the 'Date Start'/'Date End' range."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item_drilldown__data_source_model_id
+msgid ""
+"Technical field, not stored. 'Model' configured on 'Item''s 'Data Source', "
+"used only to filter 'Field''s selection in the form view."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1765,6 +1862,7 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__week
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sub_group_by_granularity__week
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item_drilldown__granularity__week
 msgid "Week"
 msgstr ""
 
@@ -1822,6 +1920,7 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__year
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sub_group_by_granularity__year
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item_drilldown__granularity__year
 msgid "Year"
 msgstr ""
 
