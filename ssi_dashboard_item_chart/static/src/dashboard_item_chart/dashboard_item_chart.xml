@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="ssi_dashboard_item_chart.DashboardItemChart">
+        <div class="o_ssi_dashboard_item_chart">
+            <canvas t-ref="canvas" />
+        </div>
+    </t>
+</templates>
