@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="ssi_dashboard_item_kpi.DashboardItemKpi">
+        <div class="o_ssi_dashboard_item_kpi">
+            <div class="o_ssi_dashboard_item_kpi_label" t-esc="props.item.name" />
+            <div class="o_ssi_dashboard_item_kpi_value" t-esc="formattedValue" />
+
+            <t t-if="kpi.layout === 'target'">
+                <div class="o_ssi_dashboard_item_kpi_progress">
+                    <div
+                        class="o_ssi_dashboard_item_kpi_progress_bar"
+                        t-att-style="progressBarStyle"
+                    />
+                </div>
+                <div class="o_ssi_dashboard_item_kpi_comparison">
+                    <span
+                        t-att-class="directionIconClass + ' ' + directionColorClass"
+                    />
+                    <span
+                        class="o_ssi_dashboard_item_kpi_comparison_text"
+                        t-esc="comparisonText"
+                    />
+                    <span class="o_ssi_dashboard_item_kpi_reference_label">Target: <t
+                        t-esc="formattedReference"
+                    /></span>
+                </div>
+            </t>
+
+            <t t-if="kpi.layout === 'comparison'">
+                <div class="o_ssi_dashboard_item_kpi_comparison">
+                    <span
+                        t-att-class="directionIconClass + ' ' + directionColorClass"
+                    />
+                    <span
+                        class="o_ssi_dashboard_item_kpi_comparison_text"
+                        t-esc="comparisonText"
+                    />
+                    <span class="o_ssi_dashboard_item_kpi_reference_label">vs <t
+                        t-esc="formattedReference"
+                    /></span>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>
