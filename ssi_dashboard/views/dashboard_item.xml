@@ -4,15 +4,25 @@
      License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
 <odoo>
     <!-- Standalone form, opened as a dialog by
-         dashboard.item.action_open_item_goals()/_open_item_goals() — the
+         dashboard.item.action_open_item_goals()/_open_item_goals() and,
+         since the quick-edit feature, also by the dashboard's own OWL
+         view (DashboardAction.onEditItemClick(), see
+         static/src/dashboard_action/dashboard_action.esm.js) — the
          dashboard form's 'Items' list is editable="bottom" so a nested
-         one2many ('Goals') cannot be edited inline there. -->
+         one2many ('Goals') cannot be edited inline there. Any field a
+         later module adds to this form automatically shows up in both
+         dialogs without further work on their side. -->
     <record id="dashboard_item_view_form" model="ir.ui.view">
         <field name="name">dashboard.item - form</field>
         <field name="model">dashboard.item</field>
         <field name="arch" type="xml">
             <form string="Dashboard Item">
                 <sheet>
+                    <!-- Live render preview of this item, kept in sync
+                         with the form's own (possibly unsaved) values —
+                         see dashboard.item.preview_render_payload() and
+                         static/src/dashboard_item_preview/. -->
+                    <widget name="ssi_dashboard.item_preview" />
                     <group name="dashboard_item_goal_header">
                         <field name="name" />
                         <field name="goal_type" />

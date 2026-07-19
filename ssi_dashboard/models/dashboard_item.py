@@ -2,7 +2,7 @@
 # Copyright 2026 PT. Simetri Sinergi Indonesia
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 from odoo import api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 
 class DashboardItem(models.Model):
@@ -560,4 +560,65 @@ another value
         enrich_method = getattr(self, f"_prepare_render_payload_{self.type}", None)
         if enrich_method is not None:
             payload = enrich_method(payload)
+        return payload
+
+    def preview_render_payload(self, vals):
+        """Build the render payload this item would have if ``vals`` were
+        already written, without ever touching the database.
+
+        Called from the browser's quick-edit dialog (see
+        ``static/src/dashboard_item_preview/dashboard_item_preview.esm.js``)
+        while a dashboard administrator is still editing the item's form,
+        so the tile's preview reflects the form's current, unsaved
+        values. Uses :meth:`new` with ``origin=self`` to build a virtual
+        record: any field present in ``vals`` overrides that field for
+        this call only, and every other field keeps reading through to
+        this record's own current value (including whatever is already
+        stored in the database) — the same mechanism the onchange/Form
+        API relies on. Nothing is written, and no savepoint/rollback is
+        involved, so this never locks the row or touches the caller's
+        transaction the way ``write()`` followed by a rollback would.
+
+        :param vals: dict of field name/value pairs, following the same
+            shape :meth:`write` accepts. Keys that are not an actual
+            field name on this model are dropped before being applied,
+            so a caller cannot smuggle in ORM-level tricks through an
+            unexpected key.
+        :type vals: dict
+        :return: same shape as :meth:`_prepare_render_payload`, with
+            ``id`` always this record's own id (never a virtual one), so
+            the browser can still match the result back to the tile it
+            belongs to. On failure (e.g. a data source that can no
+            longer be read, or whose configuration no longer resolves),
+            returns a dict with a single key ``error`` holding the error
+            message instead of raising, so the dialog can show a
+            readable message instead of breaking.
+        :rtype: dict
+        :raise UserError: when the current user is not a member of
+            ``ssi_dashboard.group_dashboard_admin`` — checked here, not
+            only hidden through the browser's own button visibility, so
+            an RPC call reaching this method directly cannot read data
+            through a data source the caller would not otherwise see.
+        """
+        self.ensure_one()
+        if not self.env.user.has_group("ssi_dashboard.group_dashboard_admin"):
+            error_message = f"""
+Context: Preview dashboard item configuration
+Database ID: {self.id}
+Problem: Current user is not a member of the 'Administrator' dashboard \
+group
+Solution: Ask a dashboard administrator to preview this item's \
+configuration
+"""
+            raise UserError(error_message)
+        allowed_fields = set(self._fields)
+        filtered_vals = {
+            key: value for key, value in vals.items() if key in allowed_fields
+        }
+        preview_item = self.new(filtered_vals, origin=self)
+        try:
+            payload = preview_item._prepare_render_payload()
+        except Exception as error:
+            return {"error": str(error)}
+        payload["id"] = self.id
         return payload

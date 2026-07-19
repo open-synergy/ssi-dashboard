@@ -37,6 +37,20 @@ import {user} from "@web/core/user";
  * calls dashboard.dashboard.save_layout(); 'Cancel' discards the
  * editor's local state without calling the server.
  *
+ * The same administrators get a per-tile 'Edit' button (see
+ * DashboardItem's "props.isAdmin"/"props.onEditClick") that opens that
+ * item's own form (models/dashboard_item.py's
+ * "dashboard_item_view_form", the same one already used by
+ * action_open_item_goals()) in a dialog — see onEditItemClick(). That
+ * form embeds a live preview widget calling
+ * dashboard.item.preview_render_payload() (see
+ * dashboard_item_preview.esm.js), so an administrator sees the tile's
+ * rendered result update as the dialog's fields change, before ever
+ * pressing 'Save'. Closing the dialog (Save or Discard) reloads only
+ * that one item (see reloadItem()) instead of the whole dashboard, so
+ * the rest of the grid — and the filter bar's current selection —
+ * stays untouched.
+ *
  * While mounted, the dashboard also re-fetches itself on a timer driven
  * by the payload's "refresh_interval" (seconds; 0 means auto-refresh is
  * off — see models/dashboard_dashboard.py's "refresh_interval" field).
@@ -60,6 +74,7 @@ export class DashboardAction extends Component {
 
     setup() {
         this.orm = useService("orm");
+        this.action = useService("action");
         this.gridRef = useRef("grid");
         this.rootRef = useRef("root");
         // Last "active_filters" selection sent to get_dashboard_payload
@@ -384,6 +399,71 @@ export class DashboardAction extends Component {
         this.state.editItems = [];
         this.state.editMode = false;
         await this.loadDashboard();
+    }
+
+    /**
+     * Bound to DashboardItem's "onEditClick" prop, only reachable when
+     * "state.isAdmin" (see DashboardItem's "props.isAdmin").
+     *
+     * Opens "itemId"'s own form — the same
+     * "ssi_dashboard.dashboard_item_view_form" already used by
+     * dashboard.item.action_open_item_goals()/_open_item_goals() — as a
+     * dialog ("target": "new"). "views: [[false, "form"]]" lets the web
+     * client resolve that model's own (only) form view instead of this
+     * component having to know its database id. Regardless of how the
+     * dialog is closed (Save or Discard), "onClose" fires and
+     * reloadItem() re-fetches this one item — cheap and idempotent even
+     * when nothing actually changed.
+     *
+     * @param {Number} itemId
+     */
+    onEditItemClick(itemId) {
+        this.action.doAction(
+            {
+                type: "ir.actions.act_window",
+                res_model: "dashboard.item",
+                res_id: itemId,
+                view_mode: "form",
+                views: [[false, "form"]],
+                target: "new",
+            },
+            {onClose: () => this.reloadItem(itemId)}
+        );
+    }
+
+    /**
+     * Re-fetches the whole dashboard payload (there is no
+     * single-item endpoint — "active_filters" resolution lives on
+     * dashboard.dashboard, see get_dashboard_payload()) but only
+     * merges "itemId"'s own entry into "dashboard.items", so the rest
+     * of the grid — and everything else in "state"/"dashboard" — is
+     * left exactly as it was. Reuses "currentFilters" so the merged
+     * entry reflects the same filter/date-range selection every other
+     * tile is currently showing.
+     *
+     * If "itemId" is no longer present in the result (e.g. it was
+     * deleted through the dialog), its tile is removed instead of
+     * being left showing stale data.
+     *
+     * @param {Number} itemId
+     */
+    async reloadItem(itemId) {
+        const payload = await this.orm.call(
+            "dashboard.dashboard",
+            "get_dashboard_payload",
+            [[this.dashboardId], this.currentFilters]
+        );
+        const updated = payload.items.find((item) => item.id === itemId);
+        const index = this.dashboard.items.findIndex((item) => item.id === itemId);
+        if (updated) {
+            if (index === -1) {
+                this.dashboard.items.push(updated);
+            } else {
+                this.dashboard.items[index] = updated;
+            }
+        } else if (index !== -1) {
+            this.dashboard.items.splice(index, 1);
+        }
     }
 }
 

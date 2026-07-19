@@ -46,6 +46,8 @@
                         t-key="item.id"
                         item="item"
                         useExplicitPosition="useExplicitPosition"
+                        isAdmin="state.isAdmin"
+                        onEditClick.bind="onEditItemClick"
                     />
                 </div>
             </t>

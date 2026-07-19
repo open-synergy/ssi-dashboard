@@ -34,6 +34,7 @@
             "ssi_dashboard/static/src/dashboard_grid/*",
             "ssi_dashboard/static/src/dashboard_item/*",
             "ssi_dashboard/static/src/dashboard_item_fallback/*",
+            "ssi_dashboard/static/src/dashboard_item_preview/*",
             "ssi_dashboard/static/src/dashboard_layout_editor/*",
         ],
     },

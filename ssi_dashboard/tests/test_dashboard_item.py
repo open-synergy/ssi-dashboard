@@ -443,3 +443,137 @@ class TestDashboardItem(YamlTransactionCase):
         payload = item._prepare_render_payload()
         self.assertEqual(payload["theme"]["name"], "custom")
         self.assertEqual(payload["theme"]["header_color"], "#ff0000")
+
+    def test_preview_render_payload_reflects_unsaved_vals_without_writing_db(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        `preview_render_payload` hanya bisa diverifikasi lewat nilai
+        balik method (dict payload) — `action: call` di YAML membuang
+        nilai baliknya (L-01) dan isi dict tidak bisa diperiksa lewat
+        assert dotted path (L-02). Payload harus memuat 'name' dari
+        'vals' yang belum disimpan, sementara record di basis data tetap
+        memakai nama lamanya — membuktikan pratinjau memakai `new()` di
+        atas record yang ada tanpa pernah menulis ke basis data
+        (Kriteria Penerimaan: 'Nilai pada vals terpakai di payload tanpa
+        tersimpan ke basis data').
+        """
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners",
+                "code": "DASH-ITEM-PREVIEW-DS-01",
+                "type": "orm",
+                "model_id": self.env["ir.model"]._get("res.partner").id,
+            }
+        )
+        dashboard = self.env["dashboard.dashboard"].create(
+            {"name": "Preview Dashboard", "code": "DASH-ITEM-PREVIEW-01"}
+        )
+        item = self.env["dashboard.item"].create(
+            {
+                "name": "Old Name",
+                "dashboard_id": dashboard.id,
+                "type": "placeholder",
+                "data_source_id": data_source.id,
+            }
+        )
+        payload = item.preview_render_payload({"name": "Judul Baru"})
+        self.assertEqual(payload["name"], "Judul Baru")
+        self.assertEqual(item.name, "Old Name")
+        self.assertEqual(payload["id"], item.id)
+
+    def test_preview_render_payload_ignores_unknown_keys(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Sama seperti di atas: nilai balik hanya bisa diperiksa lewat
+        pemanggilan method langsung. Kunci yang bukan field
+        'dashboard.item' harus diabaikan, bukan diteruskan ke ORM —
+        memverifikasi Kriteria Penerimaan 'Kunci pada vals yang bukan
+        field dashboard.item diabaikan'.
+        """
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners",
+                "code": "DASH-ITEM-PREVIEW-DS-02",
+                "type": "orm",
+                "model_id": self.env["ir.model"]._get("res.partner").id,
+            }
+        )
+        dashboard = self.env["dashboard.dashboard"].create(
+            {"name": "Preview Dashboard", "code": "DASH-ITEM-PREVIEW-02"}
+        )
+        item = self.env["dashboard.item"].create(
+            {
+                "name": "Item A",
+                "dashboard_id": dashboard.id,
+                "type": "placeholder",
+                "data_source_id": data_source.id,
+            }
+        )
+        payload = item.preview_render_payload({"kunci_ngawur": 1})
+        self.assertEqual(payload["name"], "Item A")
+
+    def test_preview_render_payload_empty_vals_matches_prepare_render_payload(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        'vals' kosong harus menghasilkan payload yang identik dengan
+        `_prepare_render_payload()` langsung — membuktikan
+        `preview_render_payload` tidak mengubah bentuk payload dasar
+        (Kriteria Penerimaan: '`preview_render_payload()` mengembalikan
+        payload berbentuk sama dengan `_prepare_render_payload()`').
+        """
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners",
+                "code": "DASH-ITEM-PREVIEW-DS-03",
+                "type": "orm",
+                "model_id": self.env["ir.model"]._get("res.partner").id,
+            }
+        )
+        dashboard = self.env["dashboard.dashboard"].create(
+            {"name": "Preview Dashboard", "code": "DASH-ITEM-PREVIEW-03"}
+        )
+        item = self.env["dashboard.item"].create(
+            {
+                "name": "Item A",
+                "dashboard_id": dashboard.id,
+                "type": "placeholder",
+                "data_source_id": data_source.id,
+            }
+        )
+        self.assertEqual(
+            item.preview_render_payload({}), item._prepare_render_payload()
+        )
+
+    def test_preview_render_payload_unreadable_data_source_returns_error_dict(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Nilai balik hanya bisa diperiksa lewat pemanggilan method
+        langsung. 'vals' menunjuk 'data_source_id' ke sebuah id yang
+        tidak ada di basis data, sehingga pengambilan data gagal
+        ('MissingError') saat pratinjau dihitung — method harus
+        menangkap kegagalan itu dan mengembalikan dict berkunci 'error',
+        bukan melempar traceback (Kriteria Penerimaan: 'Pratinjau atas
+        konfigurasi yang salah mengembalikan dict berkunci error').
+        """
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners",
+                "code": "DASH-ITEM-PREVIEW-DS-04",
+                "type": "orm",
+                "model_id": self.env["ir.model"]._get("res.partner").id,
+            }
+        )
+        dashboard = self.env["dashboard.dashboard"].create(
+            {"name": "Preview Dashboard", "code": "DASH-ITEM-PREVIEW-04"}
+        )
+        item = self.env["dashboard.item"].create(
+            {
+                "name": "Item A",
+                "dashboard_id": dashboard.id,
+                "type": "placeholder",
+                "data_source_id": data_source.id,
+            }
+        )
+        nonexistent_id = data_source.id + 1000000
+        payload = item.preview_render_payload({"data_source_id": nonexistent_id})
+        self.assertIn("error", payload)
