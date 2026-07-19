@@ -149,6 +149,11 @@ msgid "All Time"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__allow_export
+msgid "Allow Export"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__allow_open_records
 msgid "Allow Open Records"
 msgstr ""
@@ -362,6 +367,8 @@ msgid "Configure Goals"
 msgstr ""
 
 #. module: ssi_dashboard
+#. odoo-python
+#: code:addons/ssi_dashboard/models/dashboard_data_source.py:0
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__aggregate__count
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source_measure__aggregate__count
 msgid "Count"
@@ -694,6 +701,24 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/ssi_dashboard/static/src/dashboard_action/dashboard_action.esm.js:0
 msgid "Exit Fullscreen"
+msgstr ""
+
+#. module: ssi_dashboard
+#. odoo-python
+#: code:addons/ssi_dashboard/controllers/export.py:0
+msgid "Export"
+msgstr ""
+
+#. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_item/dashboard_item.esm.js:0
+msgid "Export CSV"
+msgstr ""
+
+#. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_item/dashboard_item.esm.js:0
+msgid "Export XLSX"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1908,6 +1933,15 @@ msgid ""
 "Whether the browser shows a button to display this dashboard in fullscreen "
 "mode, hiding the surrounding Odoo backend chrome while keeping the filter "
 "bar and reload button available."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__allow_export
+msgid ""
+"Whether this item's currently displayed data can be downloaded as XLSX/CSV "
+"(see 'prepare_export_data' and 'controllers/export.py'). Untick to disable "
+"download for this item — both export endpoints reject the request outright "
+"when this is off, regardless of what the browser shows."
 msgstr ""
 
 #. module: ssi_dashboard
