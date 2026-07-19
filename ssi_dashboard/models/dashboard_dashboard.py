@@ -105,6 +105,23 @@ class DashboardDashboard(models.Model):
         help="Client action generated for this dashboard's menu item. "
         "Managed by '_sync_menu', do not edit manually.",
     )
+    refresh_interval = fields.Selection(
+        string="Auto-Refresh Interval",
+        selection=[
+            ("0", "Off"),
+            ("30", "30 Seconds"),
+            ("60", "1 Minute"),
+            ("300", "5 Minutes"),
+            ("600", "10 Minutes"),
+            ("1800", "30 Minutes"),
+        ],
+        default="0",
+        required=True,
+        help="How often the browser automatically re-fetches this "
+        "dashboard's data while it is open. 'Off' disables automatic "
+        "refresh; the manual reload button is always available "
+        "regardless of this setting.",
+    )
 
     @api.constrains("generate_menu", "parent_menu_id")
     def _check_generate_menu_parent(self):
@@ -229,7 +246,9 @@ Solution: Set 'Parent Menu' or disable 'Generate Menu'
             results, ordered by ``sequence`` — the filter bar's
             definitions), ``active_filter_ids`` (the resolved
             ``filter_ids`` from :meth:`_resolve_active_filters`, so the
-            browser can pre-select them) and ``items`` (list of
+            browser can pre-select them), ``refresh_interval`` (int,
+            :attr:`refresh_interval` converted to seconds; ``0`` means
+            auto-refresh is off) and ``items`` (list of
             :meth:`dashboard.item._prepare_render_payload` results,
             ordered by ``sequence``, each filtered per
             ``active_filters``).
@@ -250,6 +269,7 @@ Solution: Set 'Parent Menu' or disable 'Generate Menu'
             "color_scheme": color_scheme,
             "filters": [filter_._prepare_filter_payload() for filter_ in filters],
             "active_filter_ids": resolved_filters["filter_ids"],
+            "refresh_interval": int(self.refresh_interval),
             "items": [
                 item._prepare_render_payload(active_filters=resolved_filters)
                 for item in items

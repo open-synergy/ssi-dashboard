@@ -109,6 +109,7 @@
                         <group name="dashboard_dashboard_configuration">
                             <field name="color_scheme_id" />
                             <field name="group_ids" widget="many2many_tags" />
+                            <field name="refresh_interval" />
                         </group>
                         <group name="dashboard_dashboard_menu" string="Menu">
                             <field name="generate_menu" />

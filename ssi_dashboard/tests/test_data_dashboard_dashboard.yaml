@@ -419,6 +419,79 @@ scenarios:
               column_width: 4
               row_height: 1
 
+  - name: "Creating Dashboard Defaults Refresh Interval To Off"
+    steps:
+      - step: "Create dashboard without setting refresh_interval"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Default Refresh Dashboard"
+          code: "DASH-REFRESH-DEFAULT-01"
+      - step: "Assert refresh_interval defaults to Off"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          refresh_interval:
+            type: "value"
+            expected: "0"
+
+  - name: "Writing A Valid Refresh Interval Is Accepted"
+    steps:
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Refresh Interval Dashboard"
+          code: "DASH-REFRESH-WRITE-01"
+      - step: "Write 30 minutes refresh interval"
+        action: "write"
+        target: "dashboard"
+        values:
+          refresh_interval: "1800"
+      - step: "Assert refresh_interval saved"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          refresh_interval:
+            type: "value"
+            expected: "1800"
+
+  - name: "Writing An Out Of Selection Refresh Interval Is Rejected"
+    steps:
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Invalid Refresh Interval Dashboard"
+          code: "DASH-REFRESH-INVALID-01"
+      - step: "Write a value outside the selection must be rejected"
+        action: "write"
+        target: "dashboard"
+        expect_error:
+          type: "ValueError"
+        values:
+          refresh_interval: "5"
+
+  - name: "Writing An Integer Refresh Interval Is Rejected"
+    steps:
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Integer Refresh Interval Dashboard"
+          code: "DASH-REFRESH-INT-01"
+      - step: "Write an integer instead of a selection string must be rejected"
+        action: "write"
+        target: "dashboard"
+        expect_error:
+          type: "ValueError"
+        values:
+          refresh_interval: 300
+
   - name: "Save Layout By Non Admin User Is Rejected"
     steps:
       - step: "Get res.partner model"

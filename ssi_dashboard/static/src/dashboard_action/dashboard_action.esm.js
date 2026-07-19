@@ -1,4 +1,11 @@
-import {Component, onWillStart, useRef, useState} from "@odoo/owl";
+import {
+    Component,
+    onMounted,
+    onWillStart,
+    onWillUnmount,
+    useRef,
+    useState,
+} from "@odoo/owl";
 import {
     gridColumnStep,
     gridRowStep,
@@ -29,6 +36,22 @@ import {user} from "@web/core/user";
  * DashboardLayoutEditor — dragging/resizing there and pressing 'Save'
  * calls dashboard.dashboard.save_layout(); 'Cancel' discards the
  * editor's local state without calling the server.
+ *
+ * While mounted, the dashboard also re-fetches itself on a timer driven
+ * by the payload's "refresh_interval" (seconds; 0 means auto-refresh is
+ * off — see models/dashboard_dashboard.py's "refresh_interval" field).
+ * The timer is armed in onMounted and always cleared in onWillUnmount
+ * (see startAutoRefresh()/stopAutoRefresh()) so navigating away from
+ * this action never leaves a background fetch loop running. Ticks are
+ * skipped while the browser tab is not visible ("document.hidden") and
+ * one catch-up fetch runs as soon as it becomes visible again (see
+ * autoRefreshTick()/onVisibilityChange()); a tick is also skipped
+ * outright while a previous refresh is still in flight
+ * ("state.isRefreshing"), rather than being queued. Every refresh —
+ * automatic or through the manual reload button — reuses whatever
+ * filter/date-range selection is currently active ("currentFilters"),
+ * and a failed refresh leaves the last successfully loaded data in
+ * place while flipping "state.refreshFailed" (see refreshDashboard()).
  */
 export class DashboardAction extends Component {
     static template = "ssi_dashboard.DashboardAction";
@@ -38,17 +61,28 @@ export class DashboardAction extends Component {
     setup() {
         this.orm = useService("orm");
         this.gridRef = useRef("grid");
+        // Last "active_filters" selection sent to get_dashboard_payload
+        // (see DashboardFilterBar's "onChange" prop) — not reactive
+        // state on purpose, it is only ever read back by
+        // refreshDashboard() to repeat the same selection, never
+        // rendered directly.
+        this.currentFilters = null;
+        this.refreshTimerId = null;
+        this.onVisibilityChange = this.onVisibilityChange.bind(this);
         this.dashboard = useState({
             name: "",
             color_scheme: {},
             filters: [],
             active_filter_ids: [],
+            refresh_interval: 0,
             items: [],
         });
         this.state = useState({
             isAdmin: false,
             editMode: false,
             editItems: [],
+            isRefreshing: false,
+            refreshFailed: false,
         });
         onWillStart(async () => {
             await this.loadDashboard();
@@ -56,6 +90,8 @@ export class DashboardAction extends Component {
                 "ssi_dashboard.group_dashboard_admin"
             );
         });
+        onMounted(() => this.startAutoRefresh());
+        onWillUnmount(() => this.stopAutoRefresh());
     }
 
     get dashboardId() {
@@ -68,15 +104,25 @@ export class DashboardAction extends Component {
      * the result into the reactive "dashboard" state, so the template
      * re-renders with the new data.
      *
+     * Used for the very first fetch (onWillStart) and whenever the
+     * filter bar's selection changes (onFilterChange) — errors are
+     * intentionally left to propagate here, same as before auto-refresh
+     * existed. For refreshing already-loaded data without wiping it on
+     * failure, see refreshDashboard() instead.
+     *
      * @param {Object} [activeFilters]
      */
     async loadDashboard(activeFilters = null) {
+        if (activeFilters !== null) {
+            this.currentFilters = activeFilters;
+        }
         const payload = await this.orm.call(
             "dashboard.dashboard",
             "get_dashboard_payload",
             [[this.dashboardId], activeFilters]
         );
         Object.assign(this.dashboard, payload);
+        this.state.refreshFailed = false;
     }
 
     /**
@@ -86,6 +132,108 @@ export class DashboardAction extends Component {
      */
     onFilterChange(activeFilters) {
         this.loadDashboard(activeFilters);
+    }
+
+    /**
+     * Re-fetches the dashboard with "currentFilters" — the selection
+     * currently active on the filter bar, so an automatic or manual
+     * refresh never silently drops it back to the server-side default
+     * (see models/dashboard_dashboard.py, get_dashboard_payload()'s
+     * docstring). Bound to the manual reload button and to the
+     * auto-refresh timer (autoRefreshTick()).
+     *
+     * Unlike loadDashboard(): skips outright when a previous refresh is
+     * still in flight ("state.isRefreshing") instead of queueing one,
+     * and swallows failures into "state.refreshFailed" instead of
+     * letting them propagate, so a flaky refresh never clears the tile
+     * grid — it keeps showing the last successfully loaded data.
+     */
+    async refreshDashboard() {
+        if (this.state.isRefreshing) {
+            return;
+        }
+        this.state.isRefreshing = true;
+        try {
+            await this.loadDashboard(this.currentFilters);
+        } catch {
+            this.state.refreshFailed = true;
+        } finally {
+            this.state.isRefreshing = false;
+        }
+    }
+
+    /**
+     * Bound to the manual reload button, always shown regardless of
+     * "refresh_interval".
+     */
+    onManualRefreshClick() {
+        this.refreshDashboard();
+    }
+
+    /**
+     * Arms the auto-refresh timer from "dashboard.refresh_interval"
+     * (seconds; 0 means off — no timer is armed at all) and starts
+     * listening for "visibilitychange" so a tick skipped while the tab
+     * was hidden is caught up once it is shown again. Called from
+     * onMounted(); always paired with stopAutoRefresh() in
+     * onWillUnmount().
+     */
+    startAutoRefresh() {
+        const intervalSeconds = this.dashboard.refresh_interval;
+        if (!intervalSeconds) {
+            return;
+        }
+        this.refreshTimerId = setInterval(
+            () => this.autoRefreshTick(),
+            intervalSeconds * 1000
+        );
+        document.addEventListener("visibilitychange", this.onVisibilityChange);
+    }
+
+    /**
+     * Clears the auto-refresh timer (if any) and removes the
+     * "visibilitychange" listener. Safe to call even when
+     * startAutoRefresh() never armed a timer (refresh_interval "0").
+     */
+    stopAutoRefresh() {
+        if (this.refreshTimerId) {
+            clearInterval(this.refreshTimerId);
+            this.refreshTimerId = null;
+        }
+        document.removeEventListener("visibilitychange", this.onVisibilityChange);
+    }
+
+    /**
+     * Auto-refresh timer callback. Skipped entirely while the browser
+     * tab is not visible, so dashboards left open in background tabs
+     * never hit the server on their own — see onVisibilityChange() for
+     * the catch-up fetch once the tab is shown again.
+     */
+    autoRefreshTick() {
+        if (document.hidden) {
+            return;
+        }
+        this.refreshDashboard();
+    }
+
+    /**
+     * Bound to the "visibilitychange" DOM event while auto-refresh is
+     * enabled (see startAutoRefresh()). Fires one refresh as soon as the
+     * tab becomes visible again — any tick that landed while it was
+     * hidden was skipped by autoRefreshTick().
+     */
+    onVisibilityChange() {
+        if (!document.hidden) {
+            this.refreshDashboard();
+        }
+    }
+
+    get refreshLabel() {
+        return _t("Reload");
+    }
+
+    get refreshFailedLabel() {
+        return _t("Refresh failed — showing last loaded data");
     }
 
     /**
