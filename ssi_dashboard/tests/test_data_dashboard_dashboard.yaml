@@ -145,7 +145,7 @@ scenarios:
         values:
           name: "No Dashboard Access"
           login: "no-dashboard-access@example.com"
-          groups_id: [[6, 0, ["REF: base.group_user"]]]
+          group_ids: [[6, 0, ["REF: base.group_user"]]]
       - step: "Create dashboard"
         action: "create"
         model: "dashboard.dashboard"
