@@ -610,6 +610,12 @@ msgstr ""
 
 #. module: ssi_dashboard
 #. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_item/dashboard_item.esm.js:0
+msgid "Edit"
+msgstr ""
+
+#. module: ssi_dashboard
+#. odoo-javascript
 #: code:addons/ssi_dashboard/static/src/dashboard_action/dashboard_action.esm.js:0
 msgid "Edit Layout"
 msgstr ""
@@ -1457,6 +1463,12 @@ msgid ""
 "Predefined period the data is filtered on, computed in the current user's "
 "timezone. 'All Time' applies no date filtering. 'Custom' uses 'Date Start' /"
 " 'Date End' instead."
+msgstr ""
+
+#. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_item_preview/dashboard_item_preview.esm.js:0
+msgid "Preview"
 msgstr ""
 
 #. module: ssi_dashboard
