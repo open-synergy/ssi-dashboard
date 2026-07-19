@@ -877,3 +877,276 @@ class TestDashboardDataSource(YamlTransactionCase):
         )
         rows = data_source._fetch_data(self.env["dashboard.item"])
         self.assertEqual(len(rows), 1)
+
+    def test_fetch_data_orm_fill_temporal_without_any_data_returns_empty(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        `fill_temporal` = `True` tanpa satu pun baris data (domain tidak
+        cocok apa pun) tidak boleh membangkitkan periode apa pun (tidak
+        ada batas rentang untuk diturunkan) — hanya bisa diverifikasi
+        dengan meng-assert hasil pemanggilan method langsung.
+        """
+        currency_rate_model = self.env.ref("base.model_res_currency_rate")
+        date_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.currency.rate"), ("name", "=", "name")],
+            limit=1,
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Rates Fill No Data",
+                "code": "DASH-FILLTEMPORAL-EMPTY-01",
+                "type": "orm",
+                "model_id": currency_rate_model.id,
+                "domain": "[('id', 'in', [])]",
+                "group_by_field_id": date_field.id,
+                "group_by_granularity": "month",
+                "fill_temporal": True,
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(rows, [])
+
+    def test_fetch_data_orm_fill_temporal_week_granularity_adds_missing_week(self):
+        """Python murni — pemicu P3 (L-02: baris tambahan hasil fill
+
+        hanya bisa diverifikasi lewat assert nilai balik method langsung).
+
+        Dua tanggal berjarak dua minggu (granularitas week) harus
+        menghasilkan satu baris nol untuk minggu di antaranya — melatih
+        jalur kode `_temporal_bucket_start`/`_temporal_bucket_next` untuk
+        granularitas `week`, berbeda dari jalur `month` yang sudah diuji
+        di atas.
+        """
+        currency_rate_model = self.env.ref("base.model_res_currency_rate")
+        date_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.currency.rate"), ("name", "=", "name")],
+            limit=1,
+        )
+        currency = self.env.ref("base.EUR")
+        rates = self.env["res.currency.rate"].create(
+            [
+                {"currency_id": currency.id, "name": "2026-01-05", "rate": 1.1},
+                {"currency_id": currency.id, "name": "2026-01-19", "rate": 1.3},
+            ]
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Rates By Week Filled",
+                "code": "DASH-FILLTEMPORAL-WEEK-01",
+                "type": "orm",
+                "model_id": currency_rate_model.id,
+                "domain": f"[('id', 'in', {rates.ids!r})]",
+                "group_by_field_id": date_field.id,
+                "group_by_granularity": "week",
+                "fill_temporal": True,
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 3)
+        self.assertEqual(sum(row["__count"] for row in rows), 2)
+        zero_rows = [row for row in rows if row["__count"] == 0]
+        self.assertEqual(len(zero_rows), 1)
+
+    def test_fetch_data_orm_fill_temporal_quarter_granularity_adds_missing_quarter(
+        self,
+    ):
+        """Python murni — pemicu P3 (L-02).
+
+        Dua tanggal berjarak dua kuartal (granularitas quarter) harus
+        menghasilkan satu baris nol untuk kuartal di antaranya — melatih
+        jalur kode `_temporal_bucket_start`/`_temporal_bucket_next` untuk
+        granularitas `quarter`.
+        """
+        currency_rate_model = self.env.ref("base.model_res_currency_rate")
+        date_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.currency.rate"), ("name", "=", "name")],
+            limit=1,
+        )
+        currency = self.env.ref("base.EUR")
+        rates = self.env["res.currency.rate"].create(
+            [
+                {"currency_id": currency.id, "name": "2026-01-15", "rate": 1.1},
+                {"currency_id": currency.id, "name": "2026-07-15", "rate": 1.3},
+            ]
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Rates By Quarter Filled",
+                "code": "DASH-FILLTEMPORAL-QUARTER-01",
+                "type": "orm",
+                "model_id": currency_rate_model.id,
+                "domain": f"[('id', 'in', {rates.ids!r})]",
+                "group_by_field_id": date_field.id,
+                "group_by_granularity": "quarter",
+                "fill_temporal": True,
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 3)
+        self.assertEqual(sum(row["__count"] for row in rows), 2)
+        zero_rows = [row for row in rows if row["__count"] == 0]
+        self.assertEqual(len(zero_rows), 1)
+
+    def test_fetch_data_orm_fill_temporal_year_granularity_adds_missing_year(self):
+        """Python murni — pemicu P3 (L-02).
+
+        Dua tanggal berjarak dua tahun (granularitas year) harus
+        menghasilkan satu baris nol untuk tahun di antaranya — melatih
+        jalur kode `_temporal_bucket_start`/`_temporal_bucket_next` untuk
+        granularitas `year`.
+        """
+        currency_rate_model = self.env.ref("base.model_res_currency_rate")
+        date_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.currency.rate"), ("name", "=", "name")],
+            limit=1,
+        )
+        currency = self.env.ref("base.EUR")
+        rates = self.env["res.currency.rate"].create(
+            [
+                {"currency_id": currency.id, "name": "2024-06-15", "rate": 1.1},
+                {"currency_id": currency.id, "name": "2026-06-15", "rate": 1.3},
+            ]
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Rates By Year Filled",
+                "code": "DASH-FILLTEMPORAL-YEAR-01",
+                "type": "orm",
+                "model_id": currency_rate_model.id,
+                "domain": f"[('id', 'in', {rates.ids!r})]",
+                "group_by_field_id": date_field.id,
+                "group_by_granularity": "year",
+                "fill_temporal": True,
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 3)
+        counts_by_label = {row["group_label"]: row["__count"] for row in rows}
+        self.assertEqual(counts_by_label.get("2025"), 0)
+
+    def test_fetch_data_orm_fill_temporal_day_granularity_adds_missing_day(self):
+        """Python murni — pemicu P3 (L-02).
+
+        Dua tanggal berjarak tiga hari (granularitas day) harus
+        menghasilkan dua baris nol untuk hari-hari di antaranya —
+        melatih jalur `_temporal_bucket_start` yang tidak punya aturan
+        floor sendiri untuk `day`/`hour` (baris terakhir yang
+        mengembalikan ``value`` apa adanya).
+        """
+        currency_rate_model = self.env.ref("base.model_res_currency_rate")
+        date_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.currency.rate"), ("name", "=", "name")],
+            limit=1,
+        )
+        currency = self.env.ref("base.EUR")
+        rates = self.env["res.currency.rate"].create(
+            [
+                {"currency_id": currency.id, "name": "2026-01-10", "rate": 1.1},
+                {"currency_id": currency.id, "name": "2026-01-13", "rate": 1.3},
+            ]
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Rates By Day Filled",
+                "code": "DASH-FILLTEMPORAL-DAY-01",
+                "type": "orm",
+                "model_id": currency_rate_model.id,
+                "domain": f"[('id', 'in', {rates.ids!r})]",
+                "group_by_field_id": date_field.id,
+                "group_by_granularity": "day",
+                "fill_temporal": True,
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 4)
+        self.assertEqual(sum(row["__count"] for row in rows), 2)
+        zero_rows = [row for row in rows if row["__count"] == 0]
+        self.assertEqual(len(zero_rows), 2)
+
+    def test_fetch_data_orm_sort_by_label_orders_rows_alphabetically(self):
+        """Python murni — pemicu P3 (L-02: urutan baris hasil harus
+        di-assert, tidak bisa diekspresikan lewat `expect_count`/assert
+        YAML biasa).
+
+        `sort_by` = `label`, `sort_order` = `asc` harus mengembalikan
+        baris terurut menaik berdasarkan `group_label` — jalur kode
+        berbeda dari `sort_by` = `measure` yang sudah diuji di atas.
+        """
+        partner_model = self.env.ref("base.model_res_partner")
+        country_id = self.env.ref("base.id")  # "Indonesia"
+        country_us = self.env.ref("base.us")  # "United States"
+        partners = self.env["res.partner"].create(
+            [
+                {"name": "Label Sort Partner US", "country_id": country_us.id},
+                {"name": "Label Sort Partner ID", "country_id": country_id.id},
+            ]
+        )
+        country_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.partner"), ("name", "=", "country_id")],
+            limit=1,
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners By Country Sorted By Label",
+                "code": "DASH-SORT-LABEL-01",
+                "type": "orm",
+                "model_id": partner_model.id,
+                "domain": f"[('id', 'in', {partners.ids!r})]",
+                "group_by_field_id": country_field.id,
+                "sort_by": "label",
+                "sort_order": "asc",
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 2)
+        labels = [row["group_label"] for row in rows]
+        self.assertEqual(labels, [country_id.display_name, country_us.display_name])
+
+    def test_fetch_data_orm_fill_temporal_uses_custom_date_range_bounds(self):
+        """Python murni — pemicu P3 (L-02).
+
+        `date_range` = `custom` (bukan `all_time`) harus membuat rentang
+        pengisian `fill_temporal` mengikuti `Date Start`/`Date End`
+        secara langsung — bukan cuma periode terkecil/terbesar yang ada
+        di data. Rentang kustom sengaja dibuat lebih lebar dari data
+        (November 2025 s.d. April 2026, data hanya Januari & Maret 2026)
+        untuk membuktikan itu, melatih cabang kode berbeda dari test
+        `fill_temporal` lain di atas yang semuanya memakai `date_range`
+        default `all_time`.
+        """
+        currency_rate_model = self.env.ref("base.model_res_currency_rate")
+        date_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.currency.rate"), ("name", "=", "name")],
+            limit=1,
+        )
+        currency = self.env.ref("base.EUR")
+        rates = self.env["res.currency.rate"].create(
+            [
+                {"currency_id": currency.id, "name": "2026-01-15", "rate": 1.1},
+                {"currency_id": currency.id, "name": "2026-03-10", "rate": 1.3},
+            ]
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Rates By Month Filled Custom Range",
+                "code": "DASH-FILLTEMPORAL-CUSTOMRANGE-01",
+                "type": "orm",
+                "model_id": currency_rate_model.id,
+                "domain": f"[('id', 'in', {rates.ids!r})]",
+                "group_by_field_id": date_field.id,
+                "group_by_granularity": "month",
+                "fill_temporal": True,
+                "date_range": "custom",
+                "date_start": "2025-11-01",
+                "date_end": "2026-04-30",
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 6)
+        counts_by_label = {row["group_label"]: row["__count"] for row in rows}
+        self.assertEqual(counts_by_label.get("November 2025"), 0)
+        self.assertEqual(counts_by_label.get("December 2025"), 0)
+        self.assertEqual(counts_by_label.get("January 2026"), 1)
+        self.assertEqual(counts_by_label.get("February 2026"), 0)
+        self.assertEqual(counts_by_label.get("March 2026"), 1)
+        self.assertEqual(counts_by_label.get("April 2026"), 0)
