@@ -195,6 +195,13 @@ msgid "Another measure with that name already exists on this data source."
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_import__name_suffix
+msgid ""
+"Appended to the imported dashboard's 'Name', so it is never mistaken for the"
+" dashboard the file was exported from."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sort_order__asc
 msgid "Ascending"
 msgstr ""
@@ -257,6 +264,7 @@ msgstr ""
 #. module: ssi_dashboard
 #. odoo-javascript
 #: code:addons/ssi_dashboard/static/src/dashboard_layout_editor/dashboard_layout_editor.esm.js:0
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_import_view_form
 msgid "Cancel"
 msgstr ""
 
@@ -381,6 +389,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__create_uid
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_import__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__create_uid
@@ -394,6 +403,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__create_date
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_import__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__create_date
@@ -471,6 +481,12 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model,name:ssi_dashboard.model_dashboard_data_source_measure
 msgid "Dashboard Data Source - Measure"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_import__data_file
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_import_view_form
+msgid "Dashboard File"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -641,6 +657,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__display_name
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_import__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__display_name
@@ -716,6 +733,11 @@ msgid "Export CSV"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_dashboard_view_form
+msgid "Export JSON"
+msgstr ""
+
+#. module: ssi_dashboard
 #. odoo-javascript
 #: code:addons/ssi_dashboard/static/src/dashboard_item/dashboard_item.esm.js:0
 msgid "Export XLSX"
@@ -771,6 +793,11 @@ msgid ""
 "by the row's group label. 'Measure Value' sorts by the first measure in "
 "'Measures' order, or the single measure built from 'Measure Field' / "
 "'Aggregate' when 'Measures' is empty. Ignored when set to 'Unsorted'."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_import__filename
+msgid "Filename"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -980,6 +1007,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__id
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_import__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__id
@@ -1012,6 +1040,23 @@ msgstr ""
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__message_has_error
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__message_has_error
 msgid "If checked, some messages have a delivery error."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_import_view_form
+msgid "Import"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.actions.act_window,name:ssi_dashboard.dashboard_import_action
+#: model:ir.ui.menu,name:ssi_dashboard.dashboard_import_menu
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_import_view_form
+msgid "Import Dashboard"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model,name:ssi_dashboard.model_dashboard_import
+msgid "Import Dashboard Definition"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1055,6 +1100,13 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__config
 msgid "JSON configuration specific to this item's 'Type'."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_import__data_file
+msgid ""
+"JSON file produced by a dashboard's 'Export' action "
+"(dashboard.dashboard.prepare_export_definition)."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1166,6 +1218,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__write_uid
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_import__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__write_uid
@@ -1179,6 +1232,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__write_date
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_import__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__write_date
@@ -1365,6 +1419,11 @@ msgid "Name"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_import__name_suffix
+msgid "Name Suffix"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__activity_date_deadline
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__activity_date_deadline
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__activity_date_deadline
@@ -1543,6 +1602,13 @@ msgid ""
 "through before 'Open Records' takes over — see 'fetch_drilldown_data'. Left "
 "empty, clicking a value opens the list of records behind it straight away, "
 "exactly as before this field existed."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_import__filename
+msgid ""
+"Original name of the uploaded file, kept so the binary widget can offer it "
+"back for download."
 msgstr ""
 
 #. module: ssi_dashboard
