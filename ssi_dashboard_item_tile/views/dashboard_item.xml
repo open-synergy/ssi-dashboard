@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <!-- Adds a dedicated, hidden-for-other-types page carrying the 'tile'
+         fields to the item's own standalone form (opened as a dialog —
+         see ssi_dashboard/models/dashboard_item.py,
+         action_open_item_goals()/_open_item_goals()). -->
+    <record id="dashboard_item_view_form" model="ir.ui.view">
+        <field name="name">dashboard.item - form - tile</field>
+        <field name="model">dashboard.item</field>
+        <field name="inherit_id" ref="ssi_dashboard.dashboard_item_view_form" />
+        <field name="arch" type="xml">
+            <data>
+                <xpath expr="//sheet" position="inside">
+                    <notebook>
+                        <page name="tile" string="Tile" invisible="type != 'tile'">
+                            <group name="dashboard_item_tile_configuration">
+                                <field name="tile_layout" />
+                                <field name="tile_icon" />
+                                <field name="tile_background_color" />
+                                <field name="tile_text_color" />
+                            </group>
+                        </page>
+                    </notebook>
+                </xpath>
+            </data>
+        </field>
+    </record>
+
+    <!-- The dialog above is only reachable through a button on the
+         dashboard form's embedded 'Items' list, and that button is only
+         shown for 'Dated Targets' goals. Widen it so 'tile' items can
+         reach their own 'Tile' page too. -->
+    <record id="dashboard_dashboard_view_form" model="ir.ui.view">
+        <field name="name">dashboard.dashboard - form - tile</field>
+        <field name="model">dashboard.dashboard</field>
+        <field name="inherit_id" ref="ssi_dashboard.dashboard_dashboard_view_form" />
+        <field name="arch" type="xml">
+            <data>
+                <xpath
+                    expr="//button[@name='action_open_item_goals']"
+                    position="attributes"
+                >
+                    <attribute
+                        name="invisible"
+                    >goal_type != 'dated' and type != 'tile'</attribute>
+                </xpath>
+            </data>
+        </field>
+    </record>
+</odoo>

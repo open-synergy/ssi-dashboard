@@ -1,5 +1,5 @@
 scenarios:
-  - name: "Create Tile Item on an ORM-sourced Dashboard"
+  - name: "Create Tile Item Without Tile Layout Defaults to Layout 1"
     steps:
       - step: "Get res.partner model"
         action: "ref"
@@ -21,7 +21,7 @@ scenarios:
         values:
           name: "Tile Dashboard"
           code: "DASH-TILE-01"
-      - step: "Create tile item"
+      - step: "Create tile item without tile_layout"
         action: "create"
         model: "dashboard.item"
         save_as: "item"
@@ -30,15 +30,18 @@ scenarios:
           dashboard_id: "REC: dashboard.id"
           type: "tile"
           data_source_id: "REC: data_source.id"
-      - step: "Assert item type is tile"
+      - step: "Assert tile_layout defaults to layout_1"
         action: "assert"
         target: "item"
         asserts:
           type:
             type: "value"
             expected: "tile"
+          tile_layout:
+            type: "value"
+            expected: "layout_1"
 
-  - name: "Rendering a Tile Item With Invalid Config JSON Raises UserError"
+  - name: "Tile Layout Value With Target Requires a Goal"
     steps:
       - step: "Get res.partner model"
         action: "ref"
@@ -60,19 +63,53 @@ scenarios:
         values:
           name: "Tile Dashboard"
           code: "DASH-TILE-02"
-      - step: "Create tile item with invalid config"
+      - step: "layout_4 with goal_type none is rejected"
+        action: "create"
+        model: "dashboard.item"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Broken Target Tile"
+          dashboard_id: "REC: dashboard.id"
+          type: "tile"
+          data_source_id: "REC: data_source.id"
+          tile_layout: "layout_4"
+
+  - name: "Writing an Out-of-Selection Tile Layout Is Rejected"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Create ORM data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-TILE-DS-03"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Tile Dashboard"
+          code: "DASH-TILE-03"
+      - step: "Create tile item"
         action: "create"
         model: "dashboard.item"
         save_as: "item"
         values:
-          name: "Broken Tile"
+          name: "Partner Count"
           dashboard_id: "REC: dashboard.id"
           type: "tile"
           data_source_id: "REC: data_source.id"
-          config: "{not valid json"
-      - step: "Rendering payload raises UserError"
-        action: "call"
+      - step: "Write an out-of-selection tile_layout"
+        action: "write"
         target: "item"
-        method: "_prepare_render_payload"
         expect_error:
-          type: "UserError"
+          type: "ValueError"
+        values:
+          tile_layout: "layout_9"
