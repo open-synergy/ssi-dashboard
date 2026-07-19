@@ -15,6 +15,10 @@
     "depends": [
         "ssi_dashboard",
     ],
+    "data": [
+        "security/ir_model_access/dashboard_item_column.xml",
+        "views/dashboard_item.xml",
+    ],
     "assets": {
         "web.assets_backend": [
             "ssi_dashboard_item_list/static/src/dashboard_item_list/*",

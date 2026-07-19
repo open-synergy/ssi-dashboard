@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <!-- dashboard.item.column is a detail/child of dashboard.item, which
+         is itself a detail/child of dashboard.dashboard with no group of
+         its own — so, like dashboard.item.goal (ssi_dashboard), its
+         access rows follow the groups defined by ssi_dashboard. -->
+    <record id="dashboard_item_column_user_access" model="ir.model.access">
+        <field name="name">dashboard.item.column - user</field>
+        <field name="model_id" ref="model_dashboard_item_column" />
+        <field name="group_id" ref="ssi_dashboard.group_dashboard_user" />
+        <field name="perm_read" eval="1" />
+        <field name="perm_write" eval="0" />
+        <field name="perm_create" eval="0" />
+        <field name="perm_unlink" eval="0" />
+    </record>
+
+    <record id="dashboard_item_column_admin_access" model="ir.model.access">
+        <field name="name">dashboard.item.column - admin</field>
+        <field name="model_id" ref="model_dashboard_item_column" />
+        <field name="group_id" ref="ssi_dashboard.group_dashboard_admin" />
+        <field name="perm_read" eval="1" />
+        <field name="perm_write" eval="1" />
+        <field name="perm_create" eval="1" />
+        <field name="perm_unlink" eval="1" />
+    </record>
+</odoo>

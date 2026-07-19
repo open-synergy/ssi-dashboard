@@ -7,21 +7,26 @@ Dashboard Item - List
 =====================
 
 Adds the ``list`` dashboard item type to the SSI Dashboard framework: the item's
-fetched data rendered as a table, with columns configured in the item's ``Config``
-JSON field, through an OWL component registered under
+fetched data rendered as a table, through an OWL component registered under
 ``registry.category("ssi_dashboard.item_widgets")``.
 
-The table reads ``columns`` (required — a list of objects naming a ``key``, the row
-key rendered in that column, and, optionally, a ``label`` defaulting to ``key`` as-is
-when empty) and ``limit`` (optional Integer, 1-100, defaulting to 10 — the maximum
-number of rows rendered) out of the item's ``Config`` JSON field, e.g.
-``{"columns": [{"key": "name"}, {"key": "amount", "label": "Amount"}], "limit": 20}``.
-The row limit is enforced server-side, before the payload is sent to the browser, so a
-data source that returns far more rows than fit on screen never reaches the browser. A
-row missing one of the configured columns' keys renders as an empty cell rather than an
-error, since non-ORM data sources (API, ODBC) do not guarantee a uniform row shape.
-Table colors follow the dashboard's own color scheme through CSS custom properties;
-this module carries no palette of its own.
+Columns are configured through a real ``Columns`` (``dashboard.item.column``) list on
+the item — no ``Config`` JSON field is read anywhere in this module. Each column names
+a ``Key`` (the row key it reads its value from), a ``Name`` (its header) and a
+``Column Type``: ``Text``, ``Number`` (formatted following the item's own number
+format configuration), or ``Deviation From Target`` (``Key``'s numeric value minus the
+item's target for the row's date — requires ``Goal Type`` to not be ``No Target``). A
+row missing one of the configured columns' keys renders as an empty cell rather than
+an error, since non-ORM data sources (API, ODBC) do not guarantee a uniform row shape.
+
+``List Mode`` toggles between ``Flat`` (rows as returned) and ``Grouped`` (rows
+arranged under their data source's ``Group By Field`` value, with a subtotal row per
+group — requires ``Group By Field`` to be set on ``Data Source``). ``Page Size``
+(1-200, default 10) tells the browser how many already-fetched rows to show per page —
+pagination happens client-side, over rows already sent; it does not change how many
+rows ``Data Source``'s own ``Limit`` fetches from the database. Table colors follow
+the dashboard's own color scheme through CSS custom properties; this module carries no
+palette of its own.
 
 
 Installation
