@@ -97,6 +97,11 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__all_time
+msgid "All Time"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__group_ids
 msgid "Allowed Groups"
 msgstr ""
@@ -243,6 +248,23 @@ msgid "Created on"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__custom
+msgid "Custom"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__date_end
+msgid ""
+"Custom period end (inclusive). Only used when 'Date Range' is 'Custom'."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__date_start
+msgid ""
+"Custom period start (inclusive). Only used when 'Date Range' is 'Custom'."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.actions.client,name:ssi_dashboard.dashboard_dashboard_client_action
 #: model:ir.model,name:ssi_dashboard.model_dashboard_dashboard
 #: model:ir.module.category,name:ssi_dashboard.dashboard_module_category
@@ -306,6 +328,33 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source_measure__data_source_id
 msgid "Data source this measure belongs to."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__date_end
+msgid "Date End"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__date_field_id
+msgid "Date Field"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__date_range
+msgid "Date Range"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__date_start
+msgid "Date Start"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__date_field_id
+msgid ""
+"Date or datetime field of 'Model' that 'Date Range' is applied on. Left "
+"empty, no date filtering is applied regardless of 'Date Range'."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -378,6 +427,16 @@ msgstr ""
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__activity_type_icon
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__activity_type_icon
 msgid "Font awesome icon e.g. fa-tasks"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__future_starting_now
+msgid "Future Starting Now"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__future_starting_tomorrow
+msgid "Future Starting Tomorrow"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -537,6 +596,36 @@ msgid "Label shown on the item's tile."
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__last_30_days
+msgid "Last 30 Days"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__last_365_days
+msgid "Last 365 Days"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__last_7_days
+msgid "Last 7 Days"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__last_90_days
+msgid "Last 90 Days"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__last_month
+msgid "Last Month"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__last_quarter
+msgid "Last Quarter"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme_color__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__write_uid
@@ -554,6 +643,16 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__write_date
 msgid "Last Updated on"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__last_week
+msgid "Last Week"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__last_year
+msgid "Last Year"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -679,6 +778,11 @@ msgid "Month"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__month_to_date
+msgid "Month to Date"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__my_activity_date_deadline
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__my_activity_date_deadline
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__my_activity_date_deadline
@@ -713,6 +817,26 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__activity_type_id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__activity_type_id
 msgid "Next Activity Type"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__next_month
+msgid "Next Month"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__next_quarter
+msgid "Next Quarter"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__next_week
+msgid "Next Week"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__next_year
+msgid "Next Year"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -794,13 +918,36 @@ msgid "Parent Menu"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__past_excluding_today
+msgid "Past Excluding Today"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__past_till_now
+msgid "Past Till Now"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__type__placeholder
 msgid "Placeholder"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__date_range
+msgid ""
+"Predefined period the data is filtered on, computed in the current user's "
+"timezone. 'All Time' applies no date filtering. 'Custom' uses 'Date Start' /"
+" 'Date End' instead."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__quarter
 msgid "Quarter"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__quarter_to_date
+msgid "Quarter to Date"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -851,8 +998,33 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__this_month
+msgid "This Month"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__this_quarter
+msgid "This Quarter"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__this_week
+msgid "This Week"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__this_year
+msgid "This Year"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__item_ids
 msgid "Tiles placed on this dashboard."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__today
+msgid "Today"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -895,6 +1067,11 @@ msgid "Week"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__week_to_date
+msgid "Week to Date"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__generate_menu
 msgid ""
 "When enabled, this dashboard also shows up as its own menu item under "
@@ -910,4 +1087,14 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__year
 msgid "Year"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__year_to_date
+msgid "Year to Date"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__yesterday
+msgid "Yesterday"
 msgstr ""
