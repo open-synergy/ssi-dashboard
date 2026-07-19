@@ -688,3 +688,192 @@ class TestDashboardDataSource(YamlTransactionCase):
         rows = data_source._fetch_data(self.env["dashboard.item"])
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["__count"], 1)
+
+    def test_fetch_data_orm_sort_by_measure_desc_orders_rows(self):
+        """Python murni — pemicu P3 (L-02: urutan baris hasil harus
+        di-assert, tidak bisa diekspresikan lewat `expect_count`/assert
+        YAML biasa).
+
+        Tiga negara dengan jumlah partner berbeda (1, 2, 3). `sort_by` =
+        `measure`, `sort_order` = `desc` harus mengembalikan baris
+        terurut menurun berdasarkan `__count` (measure tunggal, karena
+        `measure_ids` kosong).
+        """
+        partner_model = self.env.ref("base.model_res_partner")
+        country_a = self.env.ref("base.us")
+        country_b = self.env.ref("base.id")
+        country_c = self.env.ref("base.sg")
+        partners = self.env["res.partner"].create(
+            [
+                {"name": "Sort Partner A1", "country_id": country_a.id},
+                {"name": "Sort Partner B1", "country_id": country_b.id},
+                {"name": "Sort Partner B2", "country_id": country_b.id},
+                {"name": "Sort Partner C1", "country_id": country_c.id},
+                {"name": "Sort Partner C2", "country_id": country_c.id},
+                {"name": "Sort Partner C3", "country_id": country_c.id},
+            ]
+        )
+        country_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.partner"), ("name", "=", "country_id")],
+            limit=1,
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners By Country Sorted",
+                "code": "DASH-SORT-MEASURE-01",
+                "type": "orm",
+                "model_id": partner_model.id,
+                "domain": f"[('id', 'in', {partners.ids!r})]",
+                "group_by_field_id": country_field.id,
+                "sort_by": "measure",
+                "sort_order": "desc",
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 3)
+        counts = [row["__count"] for row in rows]
+        self.assertEqual(counts, [3, 2, 1])
+
+    def test_fetch_data_orm_limit_cuts_rows_after_sort(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Data source dengan tiga grup dan `limit` = 2 harus mengembalikan
+        tepat dua baris — jumlah baris hasil hanya bisa diverifikasi
+        dengan meng-assert nilai balik method langsung (L-01/L-02).
+        """
+        partner_model = self.env.ref("base.model_res_partner")
+        country_a = self.env.ref("base.us")
+        country_b = self.env.ref("base.id")
+        country_c = self.env.ref("base.sg")
+        partners = self.env["res.partner"].create(
+            [
+                {"name": "Limit Partner A1", "country_id": country_a.id},
+                {"name": "Limit Partner B1", "country_id": country_b.id},
+                {"name": "Limit Partner C1", "country_id": country_c.id},
+            ]
+        )
+        country_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.partner"), ("name", "=", "country_id")],
+            limit=1,
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners By Country Limited",
+                "code": "DASH-LIMIT-CUT-01",
+                "type": "orm",
+                "model_id": partner_model.id,
+                "domain": f"[('id', 'in', {partners.ids!r})]",
+                "group_by_field_id": country_field.id,
+                "limit": 2,
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 2)
+
+    def test_fetch_data_orm_limit_zero_returns_every_row(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        `limit` = 0 (nilai default) berarti tanpa batas — mengembalikan
+        seluruh baris. Nilai balik hanya bisa diverifikasi dengan
+        meng-assert hasil pemanggilan method langsung (L-01/L-02).
+        """
+        partner_model = self.env.ref("base.model_res_partner")
+        country_a = self.env.ref("base.us")
+        country_b = self.env.ref("base.id")
+        country_c = self.env.ref("base.sg")
+        partners = self.env["res.partner"].create(
+            [
+                {"name": "NoLimit Partner A1", "country_id": country_a.id},
+                {"name": "NoLimit Partner B1", "country_id": country_b.id},
+                {"name": "NoLimit Partner C1", "country_id": country_c.id},
+            ]
+        )
+        country_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.partner"), ("name", "=", "country_id")],
+            limit=1,
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners By Country No Limit",
+                "code": "DASH-LIMIT-ZERO-01",
+                "type": "orm",
+                "model_id": partner_model.id,
+                "domain": f"[('id', 'in', {partners.ids!r})]",
+                "group_by_field_id": country_field.id,
+                "limit": 0,
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 3)
+
+    def test_fetch_data_orm_fill_temporal_adds_zero_row_for_empty_month(self):
+        """Python murni — pemicu P3 (L-02: baris tambahan hasil fill
+        hanya bisa diverifikasi lewat assert nilai balik method
+        langsung, bukan `expect_count`/assert YAML biasa).
+
+        Data hanya ada di Januari dan Maret 2026 (granularitas bulan).
+        `fill_temporal` = `True` harus menambah satu baris bernilai nol
+        untuk Februari 2026 di antara keduanya.
+        """
+        currency_rate_model = self.env.ref("base.model_res_currency_rate")
+        date_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.currency.rate"), ("name", "=", "name")],
+            limit=1,
+        )
+        currency = self.env.ref("base.EUR")
+        rates = self.env["res.currency.rate"].create(
+            [
+                {"currency_id": currency.id, "name": "2026-01-15", "rate": 1.1},
+                {"currency_id": currency.id, "name": "2026-03-10", "rate": 1.3},
+            ]
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Rates By Month Filled",
+                "code": "DASH-FILLTEMPORAL-01",
+                "type": "orm",
+                "model_id": currency_rate_model.id,
+                "domain": f"[('id', 'in', {rates.ids!r})]",
+                "group_by_field_id": date_field.id,
+                "group_by_granularity": "month",
+                "fill_temporal": True,
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 3)
+        counts_by_label = {row["group_label"]: row["__count"] for row in rows}
+        self.assertIn("February 2026", counts_by_label)
+        self.assertEqual(counts_by_label["February 2026"], 0)
+        self.assertEqual(counts_by_label["January 2026"], 1)
+        self.assertEqual(counts_by_label["March 2026"], 1)
+
+    def test_fetch_data_orm_fill_temporal_ignored_for_non_date_group_by(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        `fill_temporal` = `True` tanpa `group_by_field_id` bertipe
+        tanggal harus diabaikan tanpa error dan tanpa menambah baris —
+        hanya bisa diverifikasi dengan meng-assert nilai balik method
+        langsung.
+        """
+        partner_model = self.env.ref("base.model_res_partner")
+        country_a = self.env.ref("base.us")
+        partners = self.env["res.partner"].create(
+            [{"name": "Fill Ignored Partner 1", "country_id": country_a.id}]
+        )
+        country_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.partner"), ("name", "=", "country_id")],
+            limit=1,
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners Fill Ignored",
+                "code": "DASH-FILLTEMPORAL-IGNORED-01",
+                "type": "orm",
+                "model_id": partner_model.id,
+                "domain": f"[('id', 'in', {partners.ids!r})]",
+                "group_by_field_id": country_field.id,
+                "fill_temporal": True,
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 1)

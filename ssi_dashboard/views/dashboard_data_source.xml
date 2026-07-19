@@ -63,6 +63,9 @@
                                 invisible="not group_by_field_is_date"
                             />
                             <field name="limit" />
+                            <field name="sort_by" />
+                            <field name="sort_order" invisible="sort_by == 'none'" />
+                            <field name="fill_temporal" />
                         </group>
                         <group name="dashboard_data_source_date_range">
                             <field name="date_field_id" />
