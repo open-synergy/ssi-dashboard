@@ -74,6 +74,12 @@ class DashboardItem(models.Model):
 
         :return: dict with keys ``id``, ``name``, ``type``,
             ``column_width``, ``row_height``, ``active`` and ``data``.
+            Also carries ``comparison_data`` — list of list of dict,
+            one list per comparison range — when :attr:`data_source_id`
+            has its ``comparison`` field set to anything other than
+            ``none``; absent entirely otherwise, so an item pulling
+            from a data source without comparison configured pays no
+            extra query cost.
         :rtype: dict
         """
         self.ensure_one()
@@ -86,6 +92,10 @@ class DashboardItem(models.Model):
             "active": self.active,
             "data": self.data_source_id._fetch_data(self),
         }
+        if self.data_source_id.comparison != "none":
+            payload["comparison_data"] = self.data_source_id._fetch_comparison_data(
+                self
+            )
         enrich_method = getattr(self, f"_prepare_render_payload_{self.type}", None)
         if enrich_method is not None:
             payload = enrich_method(payload)
