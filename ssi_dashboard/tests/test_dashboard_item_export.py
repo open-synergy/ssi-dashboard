@@ -46,6 +46,11 @@ class TestDashboardItemExport(YamlTransactionCase):
                 "type": "orm",
                 "model_id": partner_model.id,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
+                # These fixture partners have no company_id, unrelated to
+                # what this test exercises — see
+                # `dashboard_filter._create_partner_data_source` for the
+                # same reasoning.
+                "company_id": False,
                 "measure_ids": [
                     (
                         0,
@@ -118,6 +123,8 @@ class TestDashboardItemExport(YamlTransactionCase):
                 "domain": f"[('id', '=', {partner.id})]",
                 "measure_field_id": latitude_field.id,
                 "aggregate": "sum",
+                # See test_prepare_export_data_two_measures_builds_two_column_table.
+                "company_id": False,
             }
         )
         dashboard = self.env["dashboard.dashboard"].create(
@@ -174,6 +181,8 @@ class TestDashboardItemExport(YamlTransactionCase):
                 "model_id": partner_model.id,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": is_company_field.id,
+                # See test_prepare_export_data_two_measures_builds_two_column_table.
+                "company_id": False,
             }
         )
         dashboard = self.env["dashboard.dashboard"].create(

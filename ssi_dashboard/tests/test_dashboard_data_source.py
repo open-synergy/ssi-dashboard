@@ -98,6 +98,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 "code": "DASH-GROUPBY-COUNTRY-01",
                 "type": "orm",
                 "model_id": partner_model.id,
+                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
             }
@@ -144,6 +145,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 "code": "DASH-ROWDOMAIN-COUNTRY-01",
                 "type": "orm",
                 "model_id": partner_model.id,
+                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
             }
@@ -210,6 +212,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 "code": "DASH-NOGROUPBY-01",
                 "type": "orm",
                 "model_id": partner_model.id,
+                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
             }
         )
@@ -422,6 +425,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 "code": "DASH-MEASURE-SUM-01",
                 "type": "orm",
                 "model_id": partner_model.id,
+                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "measure_field_id": latitude_field.id,
                 "aggregate": "sum",
@@ -457,6 +461,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 "code": "DASH-MEASURE-MULTI-01",
                 "type": "orm",
                 "model_id": partner_model.id,
+                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "measure_ids": [
                     (
@@ -848,6 +853,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 "code": "DASH-SORT-MEASURE-01",
                 "type": "orm",
                 "model_id": partner_model.id,
+                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
                 "sort_by": "measure",
@@ -887,6 +893,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 "code": "DASH-LIMIT-CUT-01",
                 "type": "orm",
                 "model_id": partner_model.id,
+                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
                 "limit": 2,
@@ -923,6 +930,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 "code": "DASH-LIMIT-ZERO-01",
                 "type": "orm",
                 "model_id": partner_model.id,
+                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
                 "limit": 0,
@@ -1040,6 +1048,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 "code": "DASH-FILLTEMPORAL-IGNORED-01",
                 "type": "orm",
                 "model_id": partner_model.id,
+                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
                 "fill_temporal": True,
@@ -1261,6 +1270,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 "code": "DASH-SORT-LABEL-01",
                 "type": "orm",
                 "model_id": partner_model.id,
+                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
                 "sort_by": "label",
@@ -1343,6 +1353,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 "code": "DASH-SUBGROUPBY-01",
                 "type": "orm",
                 "model_id": partner_model.id,
+                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
                 "sub_group_by_field_id": industry_field.id,
@@ -1391,6 +1402,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 "code": "DASH-SUBGROUPBY-NONE-01",
                 "type": "orm",
                 "model_id": partner_model.id,
+                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
             }

@@ -66,6 +66,12 @@ class TestDashboardItemDrilldown(YamlTransactionCase):
                 "type": "orm",
                 "model_id": partner_model.id,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
+                # These fixture partners have no company_id, unrelated to
+                # what the drill-down scenarios below exercise. Force the
+                # data source's company_id empty so
+                # `_prepare_company_domain` does not filter them out —
+                # left at its new active-company default, it would.
+                "company_id": False,
             }
         )
         dashboard = self.env["dashboard.dashboard"].create(

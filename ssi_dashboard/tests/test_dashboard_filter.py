@@ -12,12 +12,23 @@ class TestDashboardFilter(YamlTransactionCase):
         self.run_yaml_scenario("test_data_dashboard_filter.yaml")
 
     def _create_partner_data_source(self, code, **values):
+        """Create a `dashboard.data_source` targeting `res.partner`.
+
+        `company_id` is forced empty: this suite's `res.partner` fixtures
+        are created without a `company_id` (unrelated to what these
+        tests exercise), and `dashboard.data_source.company_id` now
+        defaults to the active company — leaving it at that default
+        would make `_prepare_company_domain` filter those company-less
+        partners out, breaking these tests over a concern they do not
+        test.
+        """
         partner_model = self.env.ref("base.model_res_partner")
         vals = {
             "name": "Partners",
             "code": code,
             "type": "orm",
             "model_id": partner_model.id,
+            "company_id": False,
         }
         vals.update(values)
         return self.env["dashboard.data_source"].create(vals)
