@@ -40,6 +40,31 @@ msgid "'Date Start' must not be after 'Date End'."
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_dashboard__refresh_interval__60
+msgid "1 Minute"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_dashboard__refresh_interval__600
+msgid "10 Minutes"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_dashboard__refresh_interval__1800
+msgid "30 Minutes"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_dashboard__refresh_interval__30
+msgid "30 Seconds"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_dashboard__refresh_interval__300
+msgid "5 Minutes"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__message_needaction
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__message_needaction
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__message_needaction
@@ -157,6 +182,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__message_attachment_count
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__message_attachment_count
 msgid "Attachment Count"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__refresh_interval
+msgid "Auto-Refresh Interval"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -771,6 +801,14 @@ msgid "Hour"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__refresh_interval
+msgid ""
+"How often the browser automatically re-fetches this dashboard's data while "
+"it is open. 'Off' disables automatic refresh; the manual reload button is "
+"always available regardless of this setting."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__number_format
 msgid ""
 "How the browser abbreviates the value. 'Exact' shows the full number. 'Short"
@@ -1291,6 +1329,11 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_dashboard__refresh_interval__0
+msgid "Off"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_dashboard_view_form
 #: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_dashboard_view_list
 msgid "Open Dashboard"
@@ -1358,6 +1401,18 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__quarter_to_date
 msgid "Quarter to Date"
+msgstr ""
+
+#. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_action/dashboard_action.esm.js:0
+msgid "Refresh failed — showing last loaded data"
+msgstr ""
+
+#. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_action/dashboard_action.esm.js:0
+msgid "Reload"
 msgstr ""
 
 #. module: ssi_dashboard
