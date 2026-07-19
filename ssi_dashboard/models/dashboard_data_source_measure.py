@@ -36,7 +36,7 @@ class DashboardDataSourceMeasure(models.Model):
     )
     field_id = fields.Many2one(
         comodel_name="ir.model.fields",
-        ondelete="restrict",
+        ondelete="set null",
         help="Numeric field of the data source's 'Model' that 'Aggregate' "
         "is computed on. Left empty is only valid when 'Aggregate' is "
         "'Count'.",
