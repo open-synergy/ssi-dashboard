@@ -22,6 +22,7 @@ Available addons
 addon | version | maintainers | summary
 --- | --- | --- | ---
 [ssi_dashboard](ssi_dashboard/) | 19.0.1.1.0 |  | Dashboard
+[ssi_dashboard_item_tile](ssi_dashboard_item_tile/) | 19.0.1.0.0 |  | Dashboard Item - Tile
 
 [//]: # (end addons)
 
