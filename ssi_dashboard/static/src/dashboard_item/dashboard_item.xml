@@ -15,7 +15,28 @@
             >
                 <i class="fa fa-pencil" />
             </button>
-            <t t-component="Component" item="props.item" />
+            <div t-if="canDrillBack" class="o_ssi_dashboard_item_drilldown_trail">
+                <button
+                    type="button"
+                    class="btn btn-sm btn-link o_ssi_dashboard_item_drilldown_back"
+                    t-on-click.stop="goBack"
+                >
+                    <i class="fa fa-arrow-left" />
+                    <t t-esc="backLabel" />
+                </button>
+                <t t-foreach="drilldownTrail" t-as="crumb" t-key="crumb.index">
+                    <a
+                        href="#"
+                        class="o_ssi_dashboard_item_drilldown_crumb"
+                        t-on-click.prevent.stop="() => this.goToLevel(crumb.index)"
+                        t-esc="crumb.label"
+                    />
+                    <span t-if="!crumb_last" class="o_ssi_dashboard_item_drilldown_sep">
+                        /
+                    </span>
+                </t>
+            </div>
+            <t t-component="Component" item="displayItem" />
         </div>
     </t>
 </templates>

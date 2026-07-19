@@ -1,4 +1,4 @@
-import {Component} from "@odoo/owl";
+import {Component, useState} from "@odoo/owl";
 import {DashboardItemFallback} from "../dashboard_item_fallback/dashboard_item_fallback.esm";
 import {_t} from "@web/core/l10n/translation";
 import {registry} from "@web/core/registry";
@@ -46,6 +46,20 @@ const itemWidgetRegistry = registry.category("ssi_dashboard.item_widgets");
  * not an Owl prop, so a type-specific component that does not (yet)
  * implement it is entirely unaffected — it simply renders no element
  * matching that selector, and this handler never fires for it.
+ *
+ * On top of "Open Records", also implements "Drill-Down" for items whose
+ * "props.item.has_drilldown" is true (see models/dashboard_item.py's
+ * "drilldown_ids"/"fetch_drilldown_data"): a click on a
+ * "data-ssi-dashboard-row-domain" element drills one level deeper
+ * instead of opening records, re-rendering the SAME type-specific
+ * component with that level's rows ("displayItem" below) rather than
+ * navigating away, until the last level of the chain is reached — from
+ * then on a click opens records exactly as an item without a chain
+ * always has. "this.drilldown.stack" holds one entry per level visited
+ * (index 0 = the item's own original view), so going back
+ * ("goBack"/"goToLevel") never re-fetches anything, only drops entries
+ * off the end. Entirely client-side/in-memory — nothing here is
+ * persisted, so a dashboard reload always starts back at level 0.
  */
 export class DashboardItem extends Component {
     static template = "ssi_dashboard.DashboardItem";
@@ -59,6 +73,74 @@ export class DashboardItem extends Component {
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
+        this.drilldown = useState({
+            stack: [
+                {
+                    level: 0,
+                    rows: null,
+                    groupFieldLabel: null,
+                    isLast: !this.props.item.has_drilldown,
+                },
+            ],
+        });
+    }
+
+    /**
+     * Top of "this.drilldown.stack" — the level currently on screen.
+     *
+     * @returns {Object}
+     */
+    get currentDrilldown() {
+        return this.drilldown.stack[this.drilldown.stack.length - 1];
+    }
+
+    /**
+     * "item" prop forwarded to the type-specific component
+     * ("this.Component" below). Identical to "props.item" while at
+     * level 0 (nothing has been drilled into yet); once drilled in,
+     * "data" is swapped for the current level's own rows so the
+     * type-specific component renders unchanged, only fed different
+     * rows — it never needs to know drill-down exists.
+     *
+     * @returns {Object}
+     */
+    get displayItem() {
+        const current = this.currentDrilldown;
+        if (current.level === 0) {
+            return this.props.item;
+        }
+        return {...this.props.item, data: current.rows};
+    }
+
+    /**
+     * Whether the "back" control and breadcrumb trail are shown at all —
+     * true once at least one level has been drilled into.
+     *
+     * @returns {Boolean}
+     */
+    get canDrillBack() {
+        return this.drilldown.stack.length > 1;
+    }
+
+    get backLabel() {
+        return _t("Back");
+    }
+
+    /**
+     * One entry per level drilled into so far (excludes the level 0 root
+     * entry, which has no field to label), each carrying the stack index
+     * "goToLevel" needs to jump straight back to it.
+     *
+     * @returns {Array}
+     */
+    get drilldownTrail() {
+        return this.drilldown.stack
+            .map((entry, index) => ({index, entry}))
+            .slice(1)
+            .map(({index, entry}) => ({
+                index,
+                label: entry.groupFieldLabel || _t("Level %s", entry.level),
+            }));
     }
 
     get Component() {
@@ -166,6 +248,13 @@ export class DashboardItem extends Component {
      * same as no match at all — the click is silently ignored rather
      * than raising in the browser.
      *
+     * Dispatches to "drillInto" while the current drill-down level is
+     * not yet the last one of the chain, and to "openRecords" otherwise
+     * — either because this item has no chain at all
+     * ("props.item.has_drilldown" false, "currentDrilldown.isLast"
+     * already true from "setup()") or because the chain has been
+     * followed all the way down.
+     *
      * @param {MouseEvent} ev
      */
     onContainerClick(ev) {
@@ -182,7 +271,11 @@ export class DashboardItem extends Component {
         } catch {
             return;
         }
-        this.openRecords(rowDomain);
+        if (this.currentDrilldown.isLast) {
+            this.openRecords(rowDomain);
+        } else {
+            this.drillInto(rowDomain);
+        }
     }
 
     /**
@@ -201,5 +294,55 @@ export class DashboardItem extends Component {
             rowDomain,
         ]);
         this.action.doAction(action);
+    }
+
+    /**
+     * Calls "fetch_drilldown_data" (models/dashboard_item.py) for the
+     * level right after "currentDrilldown", passing "rowDomain" (the
+     * clicked row's own domain) as "path" — already self-contained (see
+     * that method's docstring), so no accumulation across earlier levels
+     * is needed here. Pushes the result onto "this.drilldown.stack",
+     * which re-renders "displayItem" with the new level's rows.
+     *
+     * @param {Array} rowDomain
+     */
+    async drillInto(rowDomain) {
+        const nextLevel = this.currentDrilldown.level + 1;
+        const result = await this.orm.call("dashboard.item", "fetch_drilldown_data", [
+            [this.props.item.id],
+            nextLevel,
+            rowDomain,
+        ]);
+        this.drilldown.stack = [
+            ...this.drilldown.stack,
+            {
+                level: result.level,
+                rows: result.rows,
+                groupFieldLabel: result.group_field_label,
+                isLast: result.is_last,
+            },
+        ];
+    }
+
+    /**
+     * Bound to the breadcrumb trail's "Back" control — drops the last
+     * entry off "this.drilldown.stack", restoring the previous level's
+     * already-fetched rows without any further RPC call.
+     */
+    goBack() {
+        if (this.canDrillBack) {
+            this.drilldown.stack = this.drilldown.stack.slice(0, -1);
+        }
+    }
+
+    /**
+     * Bound to one breadcrumb trail segment — jumps straight back to
+     * that level, dropping every entry pushed after it. Restores
+     * already-fetched rows, no RPC call.
+     *
+     * @param {Number} stackIndex
+     */
+    goToLevel(stackIndex) {
+        this.drilldown.stack = this.drilldown.stack.slice(0, stackIndex + 1);
     }
 }

@@ -120,6 +120,16 @@ class DashboardItem(models.Model):
         "its own date range. Only used when 'Goal Type' is 'Dated "
         "Targets'.",
     )
+    drilldown_ids = fields.One2many(
+        string="Drill-Down Chain",
+        comodel_name="dashboard.item.drilldown",
+        inverse_name="item_id",
+        help="Ordered chain of grouping dimensions clicking into this "
+        "item's data walks through before 'Open Records' takes over — "
+        "see 'fetch_drilldown_data'. Left empty, clicking a value opens "
+        "the list of records behind it straight away, exactly as before "
+        "this field existed.",
+    )
     multiplier = fields.Float(
         default=1.0,
         help="Factor the raw value is multiplied by before the browser "
@@ -480,6 +490,118 @@ with 'Model' filled in
             "name": self.name,
         }
 
+    def fetch_drilldown_data(self, level, path):
+        """Fetch one level of this item's drill-down chain (see
+        :attr:`drilldown_ids`).
+
+        Reuses the exact same read path as :meth:`_prepare_render_payload`
+        (:meth:`dashboard.data_source._fetch_data`/``_fetch_data_orm``),
+        only swapping the grouping dimension for the level being fetched
+        and extending the domain with ``path``. Achieved by cloning
+        :attr:`data_source_id` into a virtual, unsaved record (``new()``
+        with ``origin=data_source_id``, the same mechanism
+        :meth:`preview_render_payload` uses) whose
+        :attr:`~dashboard.data_source.group_by_field_id`/
+        :attr:`~dashboard.data_source.group_by_granularity` are
+        overridden to this level's :attr:`~dashboard.item.drilldown.
+        field_id`/:attr:`~dashboard.item.drilldown.granularity` — every
+        other field (:attr:`~dashboard.data_source.model_id`,
+        :attr:`~dashboard.data_source.domain`,
+        :attr:`~dashboard.data_source.date_field_id`, ...) reads through
+        to :attr:`data_source_id`'s own current value unchanged, so this
+        never duplicates :meth:`~dashboard.data_source._fetch_data_orm`'s
+        own logic.
+
+        ``level`` ``0`` means the item's original, un-drilled view: the
+        rows returned are identical to what :meth:`_prepare_render_payload`
+        itself would fetch (no grouping dimension override), so a caller
+        can use this same method to always come back to the starting
+        point of a drill-down.
+
+        :param level: drill-down level requested. ``0`` is the original
+            view; ``1`` is :attr:`drilldown_ids`' first row (by
+            :attr:`~dashboard.item.drilldown.sequence`), ``2`` its
+            second, and so on.
+        :type level: int
+        :param path: domain accumulated from every level already passed
+            — in practice, the ``row_domain`` of whichever row was
+            clicked to reach ``level`` (see
+            :meth:`dashboard.data_source._fetch_data_orm`), which is
+            already self-contained (this data source's own domain, date
+            filtering and every earlier level's own condition all baked
+            in), so no further accumulation is needed browser-side. Never
+            trusted as-is: :attr:`data_source_id`'s own domain, date
+            filtering and active dashboard filters are rebuilt here,
+            server-side, and ANDed in front of it — see
+            :meth:`dashboard.data_source._prepare_drilldown_extra_domain`
+            — so ``path`` can only narrow the result down further, never
+            escape what :attr:`data_source_id` itself already allows.
+            Any value that is not a ``list`` is treated as an empty
+            domain.
+        :type path: list or None
+        :return: dict with keys ``level`` (``level`` echoed back),
+            ``rows`` (list of dict, same row shape
+            :meth:`~dashboard.data_source._fetch_data_orm` always
+            returns), ``group_field_label`` (display name of this
+            level's grouping field, for use as a title — ``False`` at
+            ``level`` ``0`` when :attr:`data_source_id` itself has no
+            :attr:`~dashboard.data_source.group_by_field_id`) and
+            ``is_last`` (``True`` when there is no further level to drill
+            into, i.e. ``level`` equals the length of
+            :attr:`drilldown_ids` — a caller then switches to
+            :meth:`action_open_records` instead of drilling further).
+        :rtype: dict
+        :raises UserError: when ``level`` is negative or greater than the
+            number of rows in :attr:`drilldown_ids` — rejected outright
+            rather than silently clamped to the nearest valid level.
+        """
+        self.ensure_one()
+        chain = self.drilldown_ids
+        chain_length = len(chain)
+        if not isinstance(level, int) or level < 0 or level > chain_length:
+            error_message = f"""
+Context: Fetch dashboard item drill-down data
+Database ID: {self.id}
+Problem: Requested drill-down level {level} is outside this item's chain \
+range (0-{chain_length})
+Solution: Request a level between 0 and {chain_length}
+"""
+            raise UserError(error_message)
+        extra_domain = path if isinstance(path, list) else []
+        data_source = self.data_source_id
+        if level == 0:
+            rows = (
+                data_source._fetch_data(self, extra_domain=extra_domain)
+                if data_source
+                else []
+            )
+            group_field_label = (
+                data_source.group_by_field_id.field_description
+                if data_source and data_source.group_by_field_id
+                else False
+            )
+            return {
+                "level": 0,
+                "rows": rows,
+                "group_field_label": group_field_label,
+                "is_last": chain_length == 0,
+            }
+        drilldown = chain[level - 1]
+        virtual_source = data_source.new(
+            {
+                "group_by_field_id": drilldown.field_id.id,
+                "group_by_granularity": drilldown.granularity or False,
+            },
+            origin=data_source,
+        )
+        rows = virtual_source._fetch_data(self, extra_domain=extra_domain)
+        return {
+            "level": level,
+            "rows": rows,
+            "group_field_label": drilldown.field_id.field_description,
+            "is_last": level == chain_length,
+        }
+
     def action_open_item_goals(self):
         for record in self.sudo():
             result = record._open_item_goals()
@@ -591,7 +713,9 @@ with 'Model' filled in
         :type active_filters: dict or None
         :return: dict with keys ``id``, ``name``, ``type``,
             ``column_start``, ``row_start``, ``column_width``,
-            ``row_height``, ``active``, ``allow_open_records``, ``data``,
+            ``row_height``, ``active``, ``allow_open_records``,
+            ``has_drilldown`` (``True`` when :attr:`drilldown_ids` has at
+            least one row — see :meth:`fetch_drilldown_data`), ``data``,
             ``number_format_config`` (see :meth:`_get_number_format_config`)
             and ``theme`` (see :meth:`_get_theme_config`).
             ``data`` is an empty list when :attr:`data_source_id` is
@@ -621,6 +745,7 @@ with 'Model' filled in
             "row_height": self.row_height,
             "active": self.active,
             "allow_open_records": self.allow_open_records,
+            "has_drilldown": bool(self.drilldown_ids),
             "data": self.data_source_id._fetch_data(self, active_filters=active_filters)
             if self.data_source_id
             else [],

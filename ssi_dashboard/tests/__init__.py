@@ -7,3 +7,4 @@ from . import test_dashboard_data_source
 from . import test_dashboard_filter
 from . import test_dashboard_dashboard
 from . import test_dashboard_item
+from . import test_dashboard_item_drilldown
