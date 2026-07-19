@@ -14,6 +14,15 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: ssi_dashboard_item_chart
+#: model:ir.model.fields,help:ssi_dashboard_item_chart.field_dashboard_item__chart_cumulative
+msgid ""
+"Add one extra dataset with the running cumulative total of this chart's "
+"first dataset, always drawn as a line regardless of 'Chart Type'. Only used "
+"when 'Type' is 'Chart' and not available when 'Chart Type' is 'Pie', "
+"'Doughnut' or 'Polar Area'."
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
 #: model:ir.model.fields.selection,name:ssi_dashboard_item_chart.selection__dashboard_item__chart_type__area
 msgid "Area"
 msgstr ""
@@ -25,12 +34,33 @@ msgstr ""
 
 #. module: ssi_dashboard_item_chart
 #: model:ir.model.fields.selection,name:ssi_dashboard_item_chart.selection__dashboard_item__type__chart
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard_item_chart.dashboard_item_view_form
 msgid "Chart"
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
+#: model:ir.model.fields,field_description:ssi_dashboard_item_chart.field_dashboard_item__chart_cumulative
+msgid "Chart Cumulative"
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
+#: model:ir.model.fields,field_description:ssi_dashboard_item_chart.field_dashboard_item__chart_data_label
+msgid "Chart Data Label"
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
+#: model:ir.model.fields,field_description:ssi_dashboard_item_chart.field_dashboard_item__chart_semi_circle
+msgid "Chart Semi Circle"
 msgstr ""
 
 #. module: ssi_dashboard_item_chart
 #: model:ir.model.fields,field_description:ssi_dashboard_item_chart.field_dashboard_item__chart_show_legend
 msgid "Chart Show Legend"
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
+#: model:ir.model.fields,field_description:ssi_dashboard_item_chart.field_dashboard_item__chart_stacked
+msgid "Chart Stacked"
 msgstr ""
 
 #. module: ssi_dashboard_item_chart
@@ -51,6 +81,19 @@ msgstr ""
 #. module: ssi_dashboard_item_chart
 #: model:ir.model.fields.selection,name:ssi_dashboard_item_chart.selection__dashboard_item__chart_type__doughnut
 msgid "Doughnut"
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
+#: model:ir.model.fields,help:ssi_dashboard_item_chart.field_dashboard_item__chart_semi_circle
+msgid ""
+"Draw this chart as a half circle instead of a full circle. Only used when "
+"'Type' is 'Chart' and only supported when 'Chart Type' is 'Pie' or "
+"'Doughnut'."
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_chart.selection__dashboard_item__chart_data_label__none
+msgid "Hidden"
 msgstr ""
 
 #. module: ssi_dashboard_item_chart
@@ -86,6 +129,11 @@ msgid "Line"
 msgstr ""
 
 #. module: ssi_dashboard_item_chart
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_chart.selection__dashboard_item__chart_data_label__percent
+msgid "Percentage"
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
 #: model:ir.model.fields.selection,name:ssi_dashboard_item_chart.selection__dashboard_item__chart_type__pie
 msgid "Pie"
 msgstr ""
@@ -96,11 +144,32 @@ msgid "Polar Area"
 msgstr ""
 
 #. module: ssi_dashboard_item_chart
+#: model:ir.model.fields,help:ssi_dashboard_item_chart.field_dashboard_item__chart_data_label
+msgid ""
+"Show each data point's value directly on the chart. 'Percentage' shows each "
+"point's share of its own dataset's total instead of its raw value. Only used"
+" when 'Type' is 'Chart'."
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
 #: model:ir.model.fields,help:ssi_dashboard_item_chart.field_dashboard_item__chart_show_legend
 msgid "Show the chart's legend. Only used when 'Type' is 'Chart'."
 msgstr ""
 
 #. module: ssi_dashboard_item_chart
+#: model:ir.model.fields,help:ssi_dashboard_item_chart.field_dashboard_item__chart_stacked
+msgid ""
+"Stack this chart's datasets on top of each other instead of side by side. "
+"Only used when 'Type' is 'Chart' and only supported when 'Chart Type' is "
+"'Bar', 'Horizontal Bar' or 'Area'."
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
 #: model:ir.model.fields,field_description:ssi_dashboard_item_chart.field_dashboard_item__type
 msgid "Type"
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_chart.selection__dashboard_item__chart_data_label__value
+msgid "Value"
 msgstr ""
