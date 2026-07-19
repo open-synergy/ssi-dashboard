@@ -1,0 +1,87 @@
+scenarios:
+  - name: "Create Data Source"
+    steps:
+      - step: "Create data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Generic Source"
+          code: "DS-CREATE-01"
+      - step: "Assert created"
+        action: "assert"
+        target: "data_source"
+        asserts:
+          id:
+            type: "value"
+            operator: "is_truthy"
+          name:
+            type: "value"
+            expected: "Generic Source"
+
+  - name: "Edit Data Source Name"
+    steps:
+      - step: "Create data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Generic Source"
+          code: "DS-EDIT-01"
+      - step: "Write new name"
+        action: "write"
+        target: "data_source"
+        values:
+          name: "Generic Source v2"
+      - step: "Assert name updated"
+        action: "assert"
+        target: "data_source"
+        asserts:
+          name:
+            type: "value"
+            expected: "Generic Source v2"
+
+  - name: "Delete Data Source"
+    steps:
+      - step: "Create data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Temporary"
+          code: "DS-DELETE-01"
+      - step: "Delete data source"
+        action: "unlink"
+        target: "data_source"
+      - step: "Verify deleted"
+        action: "search"
+        model: "dashboard.data_source"
+        domain: [["code", "=", "DS-DELETE-01"]]
+        save_as: "result"
+        expect_count: 0
+
+  - name: "Create ORM Data Source targeting res.partner"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Create ORM data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DS-ORM-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Assert type and model"
+        action: "assert"
+        target: "data_source"
+        asserts:
+          type:
+            type: "value"
+            expected: "orm"
+          model_id:
+            type: "m2o"
+            expected: "REC: res_partner_model"

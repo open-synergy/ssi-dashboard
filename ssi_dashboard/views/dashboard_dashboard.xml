@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="dashboard_dashboard_view_search" model="ir.ui.view">
+        <field name="name">dashboard.dashboard - search</field>
+        <field name="model">dashboard.dashboard</field>
+        <field
+            name="inherit_id"
+            ref="ssi_master_data_mixin.mixin_master_data_view_search"
+        />
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <data />
+        </field>
+    </record>
+
+    <record id="dashboard_dashboard_view_list" model="ir.ui.view">
+        <field name="name">dashboard.dashboard - list</field>
+        <field name="model">dashboard.dashboard</field>
+        <field
+            name="inherit_id"
+            ref="ssi_master_data_mixin.mixin_master_data_view_tree"
+        />
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <data>
+                <xpath expr="//field[@name='name']" position="after">
+                    <field name="color_scheme_id" optional="show" />
+                </xpath>
+            </data>
+        </field>
+    </record>
+
+    <record id="dashboard_dashboard_view_form" model="ir.ui.view">
+        <field name="name">dashboard.dashboard - form</field>
+        <field name="model">dashboard.dashboard</field>
+        <field
+            name="inherit_id"
+            ref="ssi_master_data_mixin.mixin_master_data_view_form"
+        />
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <data>
+                <xpath expr="//notebook/page[@name='note']" position="before">
+                    <page name="items" string="Items">
+                        <field name="item_ids">
+                            <list editable="bottom">
+                                <field name="sequence" widget="handle" />
+                                <field name="name" />
+                                <field name="type" />
+                                <field name="data_source_id" />
+                                <field name="column_width" />
+                                <field name="row_height" />
+                            </list>
+                        </field>
+                    </page>
+                    <page name="configuration" string="Configuration">
+                        <group name="dashboard_dashboard_configuration">
+                            <field name="color_scheme_id" />
+                            <field name="group_ids" widget="many2many_tags" />
+                        </group>
+                    </page>
+                </xpath>
+            </data>
+        </field>
+    </record>
+
+    <record id="dashboard_dashboard_action" model="ir.actions.act_window">
+        <field name="name">Dashboards</field>
+        <field name="res_model">dashboard.dashboard</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem
+        id="dashboard_dashboard_menu"
+        parent="menu_dashboard_root"
+        action="dashboard_dashboard_action"
+        sequence="10"
+    />
+</odoo>

@@ -1,0 +1,88 @@
+scenarios:
+  - name: "Create Color Scheme"
+    steps:
+      - step: "Create color scheme"
+        action: "create"
+        model: "dashboard.color_scheme"
+        save_as: "scheme"
+        values:
+          name: "Ocean"
+          code: "CS-CREATE-01"
+      - step: "Assert created"
+        action: "assert"
+        target: "scheme"
+        asserts:
+          id:
+            type: "value"
+            operator: "is_truthy"
+          name:
+            type: "value"
+            expected: "Ocean"
+
+  - name: "Edit Color Scheme Name"
+    steps:
+      - step: "Create color scheme"
+        action: "create"
+        model: "dashboard.color_scheme"
+        save_as: "scheme"
+        values:
+          name: "Ocean"
+          code: "CS-EDIT-01"
+      - step: "Write new name"
+        action: "write"
+        target: "scheme"
+        values:
+          name: "Ocean Deep"
+      - step: "Assert name updated"
+        action: "assert"
+        target: "scheme"
+        asserts:
+          name:
+            type: "value"
+            expected: "Ocean Deep"
+
+  - name: "Delete Color Scheme"
+    steps:
+      - step: "Create color scheme"
+        action: "create"
+        model: "dashboard.color_scheme"
+        save_as: "scheme"
+        values:
+          name: "Temporary"
+          code: "CS-DELETE-01"
+      - step: "Delete color scheme"
+        action: "unlink"
+        target: "scheme"
+      - step: "Verify deleted"
+        action: "search"
+        model: "dashboard.color_scheme"
+        domain: [["code", "=", "CS-DELETE-01"]]
+        save_as: "result"
+        expect_count: 0
+
+  - name: "Create Color Scheme with Colors"
+    steps:
+      - step: "Create color scheme with two colors"
+        action: "create"
+        model: "dashboard.color_scheme"
+        save_as: "scheme"
+        values:
+          name: "Brand"
+          code: "CS-COLORS-01"
+          color_ids:
+            - - 0
+              - 0
+              - key: "primary"
+                value: "#1f6feb"
+            - - 0
+              - 0
+              - key: "secondary"
+                value: "#6c757d"
+      - step: "Assert two colors"
+        action: "assert"
+        target: "scheme"
+        asserts:
+          color_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 2

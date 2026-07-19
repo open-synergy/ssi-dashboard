@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="dashboard_dashboard_user_access" model="ir.model.access">
+        <field name="name">dashboard.dashboard - user</field>
+        <field name="model_id" ref="model_dashboard_dashboard" />
+        <field name="group_id" ref="group_dashboard_user" />
+        <field name="perm_read" eval="1" />
+        <field name="perm_write" eval="0" />
+        <field name="perm_create" eval="0" />
+        <field name="perm_unlink" eval="0" />
+    </record>
+
+    <record id="dashboard_dashboard_admin_access" model="ir.model.access">
+        <field name="name">dashboard.dashboard - admin</field>
+        <field name="model_id" ref="model_dashboard_dashboard" />
+        <field name="group_id" ref="group_dashboard_admin" />
+        <field name="perm_read" eval="1" />
+        <field name="perm_write" eval="1" />
+        <field name="perm_create" eval="1" />
+        <field name="perm_unlink" eval="1" />
+    </record>
+
+    <!-- dashboard.item is a detail/child of dashboard.dashboard: no
+         group/menu/view of its own, so its access rows live here. -->
+    <record id="dashboard_item_user_access" model="ir.model.access">
+        <field name="name">dashboard.item - user</field>
+        <field name="model_id" ref="model_dashboard_item" />
+        <field name="group_id" ref="group_dashboard_user" />
+        <field name="perm_read" eval="1" />
+        <field name="perm_write" eval="0" />
+        <field name="perm_create" eval="0" />
+        <field name="perm_unlink" eval="0" />
+    </record>
+
+    <record id="dashboard_item_admin_access" model="ir.model.access">
+        <field name="name">dashboard.item - admin</field>
+        <field name="model_id" ref="model_dashboard_item" />
+        <field name="group_id" ref="group_dashboard_admin" />
+        <field name="perm_read" eval="1" />
+        <field name="perm_write" eval="1" />
+        <field name="perm_create" eval="1" />
+        <field name="perm_unlink" eval="1" />
+    </record>
+</odoo>

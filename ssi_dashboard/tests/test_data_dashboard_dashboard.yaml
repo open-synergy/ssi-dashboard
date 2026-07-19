@@ -1,0 +1,112 @@
+scenarios:
+  - name: "Create Dashboard"
+    steps:
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Sales Overview"
+          code: "DASH-CREATE-01"
+      - step: "Assert created"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          id:
+            type: "value"
+            operator: "is_truthy"
+          name:
+            type: "value"
+            expected: "Sales Overview"
+
+  - name: "Edit Dashboard Name"
+    steps:
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Sales Overview"
+          code: "DASH-EDIT-01"
+      - step: "Write new name"
+        action: "write"
+        target: "dashboard"
+        values:
+          name: "Sales Overview v2"
+      - step: "Assert name updated"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          name:
+            type: "value"
+            expected: "Sales Overview v2"
+
+  - name: "Delete Dashboard"
+    steps:
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Temporary"
+          code: "DASH-DELETE-01"
+      - step: "Delete dashboard"
+        action: "unlink"
+        target: "dashboard"
+      - step: "Verify deleted"
+        action: "search"
+        model: "dashboard.dashboard"
+        domain: [["code", "=", "DASH-DELETE-01"]]
+        save_as: "result"
+        expect_count: 0
+
+  - name: "Create Dashboard with Items"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEMS-DS-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Two Items"
+          code: "DASH-ITEMS-01"
+      - step: "Create item with sequence 20"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item_20"
+        values:
+          name: "Item A"
+          dashboard_id: "REC: dashboard.id"
+          sequence: 20
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Create item with sequence 10"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item_10"
+        values:
+          name: "Item B"
+          dashboard_id: "REC: dashboard.id"
+          sequence: 10
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Assert two items"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          item_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 2
