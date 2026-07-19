@@ -338,6 +338,30 @@ msgid "Column Width"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__company_id
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__company_id
+msgid "Company"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__company_id
+msgid ""
+"Company this dashboard belongs to. Left empty, the dashboard is visible to "
+"every user regardless of company — clear it deliberately to build a cross-"
+"company dashboard."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__company_id
+msgid ""
+"Company this data source belongs to. Left empty, the data source is visible "
+"to every user regardless of company — clear it deliberately to build a "
+"cross-company data source. Also narrows '_fetch_data_orm' reads on 'Model' "
+"to this company when 'Model' itself tracks company (see "
+"'_prepare_company_domain')."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__comparison
 msgid "Comparison"
 msgstr ""
