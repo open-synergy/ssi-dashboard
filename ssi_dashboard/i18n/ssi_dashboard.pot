@@ -364,6 +364,7 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__day
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sub_group_by_granularity__day
 msgid "Day"
 msgstr ""
 
@@ -486,6 +487,13 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__sub_group_by_granularity
+msgid ""
+"Granularity used to group 'Sub Group By Field' when it is a date or datetime"
+" field. Ignored for any other field type."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__group_by_field_id
 msgid "Group By Field"
 msgstr ""
@@ -526,6 +534,7 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__hour
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sub_group_by_granularity__hour
 msgid "Hour"
 msgstr ""
 
@@ -810,6 +819,7 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__month
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sub_group_by_granularity__month
 msgid "Month"
 msgstr ""
 
@@ -949,6 +959,16 @@ msgid "Open Dashboard"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__sub_group_by_field_id
+msgid ""
+"Optional second field of 'Model' that rows are further grouped by, after "
+"'Group By Field' — needed for chart series that break the same rows down by "
+"a second dimension (e.g. team within country). Requires 'Group By Field' to "
+"be set and must be different from it. Left empty, rows carry a single "
+"dimension exactly as before this field existed."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__parent_menu_id
 msgid "Parent Menu"
 msgstr ""
@@ -978,6 +998,7 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__quarter
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sub_group_by_granularity__quarter
 msgid "Quarter"
 msgstr ""
 
@@ -1038,6 +1059,21 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__sub_group_by_field_id
+msgid "Sub Group By Field"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__sub_group_by_field_is_date
+msgid "Sub Group By Field Is Date"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__sub_group_by_granularity
+msgid "Sub Group By Granularity"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__aggregate__sum
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source_measure__aggregate__sum
 msgid "Sum"
@@ -1048,6 +1084,13 @@ msgstr ""
 msgid ""
 "Technical field. True when 'Group By Field' is a date or datetime field, "
 "used to show/hide 'Group By Granularity' in the form view."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__sub_group_by_field_is_date
+msgid ""
+"Technical field. True when 'Sub Group By Field' is a date or datetime field,"
+" used to show/hide 'Sub Group By Granularity' in the form view."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1121,6 +1164,7 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__week
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sub_group_by_granularity__week
 msgid "Week"
 msgstr ""
 
@@ -1153,6 +1197,7 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__year
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sub_group_by_granularity__year
 msgid "Year"
 msgstr ""
 
