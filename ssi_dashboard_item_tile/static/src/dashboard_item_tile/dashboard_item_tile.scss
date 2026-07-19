@@ -1,0 +1,23 @@
+.o_ssi_dashboard_item_tile {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    text-align: center;
+    border: 1px solid var(--ssi-dashboard-border, #dee2e6);
+    border-left: 4px solid var(--ssi-dashboard-primary, #0d6efd);
+    border-radius: 4px;
+
+    .o_ssi_dashboard_item_tile_value {
+        font-size: 1.75em;
+        font-weight: bold;
+        color: var(--ssi-dashboard-primary, #0d6efd);
+    }
+
+    .o_ssi_dashboard_item_tile_label {
+        font-size: 0.85em;
+        color: var(--ssi-dashboard-muted, #6c757d);
+    }
+}

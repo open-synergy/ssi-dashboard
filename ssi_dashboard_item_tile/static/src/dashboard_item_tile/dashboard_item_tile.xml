@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="ssi_dashboard_item_tile.DashboardItemTile">
+        <div class="o_ssi_dashboard_item_tile">
+            <div class="o_ssi_dashboard_item_tile_value" t-esc="formattedValue" />
+            <div class="o_ssi_dashboard_item_tile_label" t-esc="props.item.label" />
+        </div>
+    </t>
+</templates>
