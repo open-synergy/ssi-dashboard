@@ -201,6 +201,20 @@ msgid "Before Value"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__item_border_color
+msgid ""
+"CSS color value used as this tile's border. Only used, and only shown, when "
+"'Item Theme' is 'Custom Colors'."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__item_header_color
+msgid ""
+"CSS color value used as this tile's header background. Only used, and only "
+"shown, when 'Item Theme' is 'Custom Colors'."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_color_scheme_color__key
 msgid ""
 "CSS custom-property name fragment, appended to the '--ssi-dashboard-' prefix"
@@ -258,6 +272,17 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_color_scheme_color__color_scheme_id
 msgid "Color scheme this color entry belongs to."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__item_theme
+msgid ""
+"Color theme applied to this item's tile, overriding the dashboard's own "
+"color scheme. 'Inherit From Dashboard' applies no override. "
+"'Primary'/'Success'/'Warning'/'Danger' refer to the matching key already "
+"defined on the dashboard's color scheme ('--ssi-dashboard-<key>') — the "
+"browser resolves the color, this field never stores one. 'Custom Colors' "
+"uses 'Header Color'/'Border Color' instead."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -362,6 +387,11 @@ msgid "Custom"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__item_theme__custom
+msgid "Custom Colors"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__unit_type__custom
 msgid "Custom Text"
 msgstr ""
@@ -376,6 +406,11 @@ msgstr ""
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__date_start
 msgid ""
 "Custom period start (inclusive). Only used when 'Date Range' is 'Custom'."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__item_theme__danger
+msgid "Danger"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -600,6 +635,12 @@ msgid "Exact"
 msgstr ""
 
 #. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_action/dashboard_action.esm.js:0
+msgid "Exit Fullscreen"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__multiplier
 msgid ""
 "Factor the raw value is multiplied by before the browser formats it, e.g. "
@@ -699,6 +740,17 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/ssi_dashboard/static/src/dashboard_filter_bar/dashboard_filter_bar.esm.js:0
 msgid "From"
+msgstr ""
+
+#. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_action/dashboard_action.esm.js:0
+msgid "Fullscreen"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__fullscreen_enabled
+msgid "Fullscreen Enabled"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -862,10 +914,30 @@ msgid "Indian Scale"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__item_theme__inherit
+msgid "Inherit From Dashboard"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__message_is_follower
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__message_is_follower
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__message_is_follower
 msgid "Is Follower"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__item_border_color
+msgid "Item Border Color"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__item_header_color
+msgid "Item Header Color"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__item_theme
+msgid "Item Theme"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1393,6 +1465,11 @@ msgid "Previous Period"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__item_theme__primary
+msgid "Primary"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__quarter
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sub_group_by_granularity__quarter
 msgid "Quarter"
@@ -1531,6 +1608,11 @@ msgid "Sub Group By Granularity"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__item_theme__success
+msgid "Success"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__aggregate__sum
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source_measure__aggregate__sum
 msgid "Sum"
@@ -1560,6 +1642,11 @@ msgstr ""
 msgid ""
 "Technical field. True when 'Sub Group By Field' is a date or datetime field,"
 " used to show/hide 'Sub Group By Granularity' in the form view."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_item_view_form
+msgid "Theme"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1654,6 +1741,11 @@ msgid "Value"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__item_theme__warning
+msgid "Warning"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__week
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sub_group_by_granularity__week
 msgid "Week"
@@ -1684,6 +1776,14 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__unit_position
 msgid "Where the unit is shown relative to the value."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__fullscreen_enabled
+msgid ""
+"Whether the browser shows a button to display this dashboard in fullscreen "
+"mode, hiding the surrounding Odoo backend chrome while keeping the filter "
+"bar and reload button available."
 msgstr ""
 
 #. module: ssi_dashboard
