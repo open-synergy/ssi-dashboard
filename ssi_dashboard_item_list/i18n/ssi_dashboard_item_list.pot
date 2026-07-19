@@ -14,18 +14,116 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: ssi_dashboard_item_list
+#: model:ir.model.fields,field_description:ssi_dashboard_item_list.field_dashboard_item_column__item_id
+msgid "# Item"
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.constraint,message:ssi_dashboard_item_list.constraint_dashboard_item_column_item_id_key_uniq
+msgid "Another column with that 'Key' already exists on this item."
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields,field_description:ssi_dashboard_item_list.field_dashboard_item_column__column_type
+msgid "Column Type"
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields,help:ssi_dashboard_item_list.field_dashboard_item_column__name
+msgid "Column header shown in the table."
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields,field_description:ssi_dashboard_item_list.field_dashboard_item__column_ids
+msgid "Columns"
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields,help:ssi_dashboard_item_list.field_dashboard_item__column_ids
+msgid ""
+"Columns rendered by the table, in 'Sequence' order. Only used, and required,"
+" when 'Type' is 'List'."
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields,field_description:ssi_dashboard_item_list.field_dashboard_item_column__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields,field_description:ssi_dashboard_item_list.field_dashboard_item_column__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: ssi_dashboard_item_list
 #: model:ir.model,name:ssi_dashboard_item_list.model_dashboard_item
 msgid "Dashboard Item"
 msgstr ""
 
 #. module: ssi_dashboard_item_list
+#: model:ir.model,name:ssi_dashboard_item_list.model_dashboard_item_column
+msgid "Dashboard Item List Column"
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields,help:ssi_dashboard_item_list.field_dashboard_item_column__item_id
+msgid "Dashboard item (of 'Type' 'List') this column belongs to."
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields,help:ssi_dashboard_item_list.field_dashboard_item_column__sequence
+msgid "Determines the display order of columns in the table."
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_list.selection__dashboard_item_column__column_type__deviation
+msgid "Deviation From Target"
+msgstr ""
+
+#. module: ssi_dashboard_item_list
 #: model:ir.model.fields,field_description:ssi_dashboard_item_list.field_dashboard_item__display_name
+#: model:ir.model.fields,field_description:ssi_dashboard_item_list.field_dashboard_item_column__display_name
 msgid "Display Name"
 msgstr ""
 
 #. module: ssi_dashboard_item_list
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_list.selection__dashboard_item__list_mode__flat
+msgid "Flat"
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_list.selection__dashboard_item__list_mode__grouped
+msgid "Grouped"
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields,help:ssi_dashboard_item_list.field_dashboard_item__list_mode
+msgid ""
+"How the table's rows are arranged. Only used when 'Type' is 'List'. "
+"'Grouped' arranges rows under their 'Data Source''s 'Group By Field' value, "
+"with a subtotal row per group, and requires 'Group By Field' to be set on "
+"'Data Source'."
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields,help:ssi_dashboard_item_list.field_dashboard_item_column__column_type
+msgid ""
+"How this column's value is formatted. 'Number' formats the raw value "
+"following the item's 'Number Format Config'. 'Deviation From Target' "
+"subtracts the item's target for the row's date (see "
+"'dashboard.item._get_goal_value') from 'Key''s numeric value, and requires "
+"the item's 'Goal Type' to not be 'No Target'."
+msgstr ""
+
+#. module: ssi_dashboard_item_list
 #: model:ir.model.fields,field_description:ssi_dashboard_item_list.field_dashboard_item__id
+#: model:ir.model.fields,field_description:ssi_dashboard_item_list.field_dashboard_item_column__id
 msgid "ID"
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields,field_description:ssi_dashboard_item_list.field_dashboard_item_column__key
+msgid "Key"
 msgstr ""
 
 #. module: ssi_dashboard_item_list
@@ -37,8 +135,65 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard_item_list
+#: model:ir.model.fields,field_description:ssi_dashboard_item_list.field_dashboard_item_column__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields,field_description:ssi_dashboard_item_list.field_dashboard_item_column__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: ssi_dashboard_item_list
 #: model:ir.model.fields.selection,name:ssi_dashboard_item_list.selection__dashboard_item__type__list
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard_item_list.dashboard_item_view_form
 msgid "List"
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields,field_description:ssi_dashboard_item_list.field_dashboard_item__list_mode
+msgid "List Mode"
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields,field_description:ssi_dashboard_item_list.field_dashboard_item_column__name
+msgid "Name"
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields,help:ssi_dashboard_item_list.field_dashboard_item_column__key
+msgid ""
+"Name of the key on the item's fetched data row that this column reads its "
+"value from."
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_list.selection__dashboard_item_column__column_type__number
+msgid "Number"
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields,help:ssi_dashboard_item_list.field_dashboard_item__page_size
+msgid ""
+"Number of rows shown at once in the browser before pagination hides the "
+"rest. Applied client-side, over rows already sent to the browser — it does "
+"not change how many rows 'Data Source' fetches from the database ('Limit' on"
+" 'Data Source' still governs that). Must be between 1 and 200."
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields,field_description:ssi_dashboard_item_list.field_dashboard_item__page_size
+msgid "Page Size"
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields,field_description:ssi_dashboard_item_list.field_dashboard_item_column__sequence
+msgid "Sequence"
+msgstr ""
+
+#. module: ssi_dashboard_item_list
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_list.selection__dashboard_item_column__column_type__text
+msgid "Text"
 msgstr ""
 
 #. module: ssi_dashboard_item_list
