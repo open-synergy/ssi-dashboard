@@ -298,6 +298,48 @@ class TestDashboardItem(YamlTransactionCase):
         payload = item._prepare_render_payload()
         self.assertNotIn("goal", payload)
 
+    def test_prepare_render_payload_number_format_config_unit_symbol_monetary(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Sama seperti test payload lain di atas: isi dict payload hanya
+        bisa diperiksa lewat nilai balik method (L-01/L-02). 'Unit Type'
+        'Currency' dengan 'Currency' terisi harus membuat
+        `number_format_config['unit_symbol']` sama dengan simbol currency
+        itu (Kriteria Penerimaan: 'unit_symbol' berisi simbol currency
+        saat 'unit_type' = 'monetary').
+        """
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners",
+                "code": "DASH-ITEM-NFC-MONETARY-DS-01",
+                "type": "orm",
+                "model_id": self.env["ir.model"]._get("res.partner").id,
+            }
+        )
+        dashboard = self.env["dashboard.dashboard"].create(
+            {"name": "Number Format Config Dashboard", "code": "DASH-ITEM-NFC-01"}
+        )
+        currency = self.env.ref("base.USD")
+        item = self.env["dashboard.item"].create(
+            {
+                "name": "Item Monetary Unit",
+                "dashboard_id": dashboard.id,
+                "type": "placeholder",
+                "data_source_id": data_source.id,
+                "unit_type": "monetary",
+                "currency_id": currency.id,
+            }
+        )
+        payload = item._prepare_render_payload()
+        self.assertIn("number_format_config", payload)
+        number_format_config = payload["number_format_config"]
+        self.assertEqual(number_format_config["unit_symbol"], currency.symbol)
+        self.assertEqual(number_format_config["unit_type"], "monetary")
+        self.assertEqual(number_format_config["multiplier"], 1.0)
+        self.assertEqual(number_format_config["number_format"], "exact")
+        self.assertEqual(number_format_config["precision_digits"], 2)
+        self.assertEqual(number_format_config["unit_position"], "after")
+
     def test_prepare_render_payload_includes_goal_key_when_fixed(self):
         """Python murni — pemicu P1 (L-01, L-02) dan P2 (L-04).
 

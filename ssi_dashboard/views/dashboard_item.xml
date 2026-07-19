@@ -18,6 +18,15 @@
                         <field name="goal_type" />
                         <field name="goal_value" invisible="goal_type != 'fixed'" />
                     </group>
+                    <group name="dashboard_item_number_format" string="Number Format">
+                        <field name="multiplier" />
+                        <field name="number_format" />
+                        <field name="precision_digits" />
+                        <field name="unit_type" />
+                        <field name="currency_id" invisible="unit_type != 'monetary'" />
+                        <field name="unit_text" invisible="unit_type != 'custom'" />
+                        <field name="unit_position" invisible="unit_type == 'none'" />
+                    </group>
                     <field name="goal_ids">
                         <list editable="bottom">
                             <field name="date_start" />
