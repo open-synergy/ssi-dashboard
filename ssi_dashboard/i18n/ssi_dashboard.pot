@@ -29,6 +29,16 @@ msgid "# Data Source"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__item_id
+msgid "# Item"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.constraint,message:ssi_dashboard.constraint_dashboard_item_goal_date_start_end_check
+msgid "'Date Start' must not be after 'Date End'."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__message_needaction
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__message_needaction
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__message_needaction
@@ -247,6 +257,11 @@ msgid "Configuration"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_dashboard_view_form
+msgid "Configure Goals"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__aggregate__count
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source_measure__aggregate__count
 msgid "Count"
@@ -259,6 +274,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__create_uid
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__create_uid
 msgid "Created by"
 msgstr ""
 
@@ -269,6 +285,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__create_date
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__create_date
 msgid "Created on"
 msgstr ""
 
@@ -319,7 +336,18 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model,name:ssi_dashboard.model_dashboard_item
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_item_view_form
 msgid "Dashboard Item"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model,name:ssi_dashboard.model_dashboard_item_goal
+msgid "Dashboard Item Goal"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item_goal__item_id
+msgid "Dashboard item this dated target belongs to."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -357,6 +385,7 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__date_end
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__date_end
 msgid "Date End"
 msgstr ""
 
@@ -372,6 +401,7 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__date_start
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__date_start
 msgid "Date Start"
 msgstr ""
 
@@ -380,6 +410,18 @@ msgstr ""
 msgid ""
 "Date or datetime field of 'Model' that 'Date Range' is applied on. Left "
 "empty, no date filtering is applied regardless of 'Date Range'."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__goal_type__dated
+msgid "Dated Targets"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__goal_ids
+msgid ""
+"Dated target rows, each stating the value that applies for its own date "
+"range. Only used when 'Goal Type' is 'Dated Targets'."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -419,6 +461,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__display_name
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__display_name
 msgid "Display Name"
 msgstr ""
 
@@ -451,6 +494,16 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__fill_temporal
 msgid "Fill Temporal"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item_goal__date_start
+msgid "First date (inclusive) this target's 'Value' applies to."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__goal_type__fixed
+msgid "Fixed Value"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -497,6 +550,21 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__menu_id
 msgid "Generated Menu"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__goal_type
+msgid "Goal Type"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__goal_value
+msgid "Goal Value"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__goal_ids
+msgid "Goals"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -565,6 +633,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__id
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__id
 msgid "ID"
 msgstr ""
 
@@ -624,6 +693,15 @@ msgstr ""
 msgid ""
 "Kind of data feed. Extension modules add more choices via 'selection_add' "
 "and must implement a matching '_fetch_data_<type>' method."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__goal_type
+msgid ""
+"Kind of target this item is measured against. 'No Target' carries no target "
+"value. 'Fixed Value' uses 'Goal Value' for every date. 'Dated Targets' looks"
+" up 'Goals' for the value that applies to a given date, see "
+"'_get_goal_value'."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -690,6 +768,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__write_uid
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__write_uid
 msgid "Last Updated by"
 msgstr ""
 
@@ -700,6 +779,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__write_date
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__write_date
 msgid "Last Updated on"
 msgstr ""
 
@@ -711,6 +791,11 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__last_year
 msgid "Last Year"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item_goal__date_end
+msgid "Last date (inclusive) this target's 'Value' applies to."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -908,6 +993,11 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__comparison__none
 msgid "No Comparison"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__goal_type__none
+msgid "No Target"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1123,6 +1213,18 @@ msgid "Sum"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__goal_value
+msgid ""
+"Target value applied for every date. Only used when 'Goal Type' is 'Fixed "
+"Value'."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item_goal__value
+msgid "Target value that applies for the 'Date Start'/'Date End' range."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__group_by_field_is_date
 msgid ""
 "Technical field. True when 'Group By Field' is a date or datetime field, "
@@ -1202,6 +1304,7 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme_color__value
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__value
 msgid "Value"
 msgstr ""
 
