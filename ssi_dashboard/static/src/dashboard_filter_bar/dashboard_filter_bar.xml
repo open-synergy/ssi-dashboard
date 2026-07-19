@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="ssi_dashboard.DashboardFilterBar">
+        <div class="o_ssi_dashboard_filter_bar">
+            <div class="o_ssi_dashboard_filter_bar_chips">
+                <button
+                    t-foreach="toggleableFilters"
+                    t-as="filter"
+                    t-key="filter.id"
+                    type="button"
+                    t-att-class="{
+                        'btn btn-sm o_ssi_dashboard_filter_chip': true,
+                        'btn-primary': isActive(filter.id),
+                        'btn-outline-secondary': !isActive(filter.id),
+                    }"
+                    t-on-click="() => this.onToggleFilter(filter.id)"
+                    t-esc="filter.name"
+                />
+            </div>
+            <div class="o_ssi_dashboard_filter_bar_dates">
+                <DateTimeInput
+                    type="'date'"
+                    value="state.dateStart"
+                    onApply.bind="onDateStartApply"
+                    placeholder="dateStartPlaceholder"
+                />
+                <DateTimeInput
+                    type="'date'"
+                    value="state.dateEnd"
+                    onApply.bind="onDateEndApply"
+                    placeholder="dateEndPlaceholder"
+                />
+                <button
+                    type="button"
+                    class="btn btn-sm btn-link o_ssi_dashboard_filter_reset"
+                    t-on-click="onReset"
+                    t-esc="resetLabel"
+                />
+            </div>
+        </div>
+    </t>
+</templates>

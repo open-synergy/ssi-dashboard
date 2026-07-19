@@ -52,6 +52,14 @@ class DashboardDashboard(models.Model):
         inverse_name="dashboard_id",
         help="Tiles placed on this dashboard.",
     )
+    filter_ids = fields.One2many(
+        string="Filters",
+        comodel_name="dashboard.filter",
+        inverse_name="dashboard_id",
+        help="Entries of this dashboard's global filter bar. Each active "
+        "filter narrows every item's data on top of that item's own "
+        "data source configuration.",
+    )
     group_ids = fields.Many2many(
         string="Allowed Groups",
         comodel_name="res.groups",
@@ -193,30 +201,88 @@ Solution: Set 'Parent Menu' or disable 'Generate Menu'
         else:
             record.menu_id.write(menu_values)
 
-    def get_dashboard_payload(self):
+    def get_dashboard_payload(self, active_filters=None):
         """Build the payload the browser uses to render this dashboard.
 
         This is the single entry point called from the browser side.
 
+        :param active_filters: optional dict describing the filter bar's
+            current selection, with keys:
+
+            - ``filter_ids`` — list of active ``dashboard.filter`` ids.
+            - ``date_start``, ``date_end`` — ISO date strings or
+              ``None``, overriding the date range of every item's data
+              source that has a ``date_field_id`` set (see
+              ``dashboard.data_source._prepare_date_domain``).
+
+            ``None`` (the default) means "use this dashboard's filters
+            with ``default_active`` set to True, and no date override" —
+            see :meth:`_resolve_active_filters` — so a call made before
+            this argument existed keeps behaving exactly the same.
+        :type active_filters: dict or None
         :return: dict with keys ``id``, ``name``, ``color_scheme`` (result
             of :meth:`dashboard.color_scheme._prepare_css_variables`, or
-            ``{}`` when :attr:`color_scheme_id` is empty) and ``items``
-            (list of :meth:`dashboard.item._prepare_render_payload`
-            results, ordered by ``sequence``).
+            ``{}`` when :attr:`color_scheme_id` is empty), ``filters``
+            (list of :meth:`dashboard.filter._prepare_filter_payload`
+            results, ordered by ``sequence`` — the filter bar's
+            definitions), ``active_filter_ids`` (the resolved
+            ``filter_ids`` from :meth:`_resolve_active_filters`, so the
+            browser can pre-select them) and ``items`` (list of
+            :meth:`dashboard.item._prepare_render_payload` results,
+            ordered by ``sequence``, each filtered per
+            ``active_filters``).
         :rtype: dict
         """
         self.ensure_one()
+        resolved_filters = self._resolve_active_filters(active_filters)
         color_scheme = (
             self.color_scheme_id._prepare_css_variables()
             if self.color_scheme_id
             else {}
         )
         items = self.item_ids.sorted("sequence")
+        filters = self.filter_ids.sorted("sequence")
         return {
             "id": self.id,
             "name": self.name,
             "color_scheme": color_scheme,
-            "items": [item._prepare_render_payload() for item in items],
+            "filters": [filter_._prepare_filter_payload() for filter_ in filters],
+            "active_filter_ids": resolved_filters["filter_ids"],
+            "items": [
+                item._prepare_render_payload(active_filters=resolved_filters)
+                for item in items
+            ],
+        }
+
+    def _resolve_active_filters(self, active_filters):
+        """Normalize the ``active_filters`` argument of
+        :meth:`get_dashboard_payload` into the dict form propagated down
+        to every item/data source.
+
+        :param active_filters: see :meth:`get_dashboard_payload`.
+        :type active_filters: dict or None
+        :return: dict with keys ``filter_ids`` (list of int),
+            ``date_start`` and ``date_end`` (str or None). When
+            ``active_filters`` is ``None``, ``filter_ids`` is this
+            dashboard's :attr:`filter_ids` filtered on
+            ``default_active`` and both dates are ``None`` (no
+            override) — otherwise, each key is read from
+            ``active_filters`` as given (missing/falsy ``filter_ids``
+            becomes an empty list).
+        :rtype: dict
+        """
+        self.ensure_one()
+        if active_filters is None:
+            default_filters = self.filter_ids.filtered("default_active")
+            return {
+                "filter_ids": default_filters.ids,
+                "date_start": None,
+                "date_end": None,
+            }
+        return {
+            "filter_ids": list(active_filters.get("filter_ids") or []),
+            "date_start": active_filters.get("date_start"),
+            "date_end": active_filters.get("date_end"),
         }
 
     def action_open_dashboard(self):

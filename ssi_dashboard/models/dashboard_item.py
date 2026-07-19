@@ -338,7 +338,7 @@ another value
             "precision_digits": self.precision_digits,
         }
 
-    def _prepare_render_payload(self):
+    def _prepare_render_payload(self, active_filters=None):
         """Build the payload the browser uses to render this item.
 
         Fetches the item's data through :attr:`data_source_id`, then
@@ -347,6 +347,18 @@ another value
         with type-specific keys. When no such method exists, the base
         payload is returned as-is.
 
+        :param active_filters: resolved 'active_filters' dict, passed
+            straight through to
+            ``dashboard.data_source._fetch_data``/``_fetch_data_orm`` —
+            see ``dashboard.dashboard.get_dashboard_payload`` and
+            :meth:`dashboard.dashboard._resolve_active_filters`. ``None``
+            (the default) applies no filter/date override, keeping calls
+            made before this argument existed (e.g. from extension
+            module tests) working unchanged. Not applied to
+            ``comparison_data`` — a data source's ``comparison`` range
+            is still computed from its own configuration, regardless of
+            the dashboard's active filters.
+        :type active_filters: dict or None
         :return: dict with keys ``id``, ``name``, ``type``,
             ``column_width``, ``row_height``, ``active``, ``data`` and
             ``number_format_config`` (see :meth:`_get_number_format_config`).
@@ -374,7 +386,7 @@ another value
             "column_width": self.column_width,
             "row_height": self.row_height,
             "active": self.active,
-            "data": self.data_source_id._fetch_data(self)
+            "data": self.data_source_id._fetch_data(self, active_filters=active_filters)
             if self.data_source_id
             else [],
             "number_format_config": self._get_number_format_config(),

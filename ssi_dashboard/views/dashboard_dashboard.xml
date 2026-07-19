@@ -85,6 +85,24 @@
                             </list>
                         </field>
                     </page>
+                    <page name="filters" string="Filters">
+                        <field name="filter_ids">
+                            <list editable="bottom">
+                                <field name="sequence" widget="handle" />
+                                <field name="name" />
+                                <field name="filter_type" />
+                                <field
+                                    name="domain"
+                                    invisible="filter_type != 'domain'"
+                                />
+                                <field
+                                    name="field_id"
+                                    invisible="filter_type != 'field'"
+                                />
+                                <field name="default_active" widget="boolean_toggle" />
+                            </list>
+                        </field>
+                    </page>
                     <page name="configuration" string="Configuration">
                         <group name="dashboard_dashboard_configuration">
                             <field name="color_scheme_id" />
