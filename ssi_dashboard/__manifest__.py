@@ -22,6 +22,8 @@
         "security/ir_model_access/dashboard_data_source.xml",
         "security/ir_model_access/dashboard_color_scheme.xml",
         "security/ir_model_access/dashboard_import.xml",
+        "security/ir_rule/dashboard_dashboard.xml",
+        "security/ir_rule/dashboard_data_source.xml",
         "menu.xml",
         "views/dashboard_data_source.xml",
         "views/dashboard_color_scheme.xml",

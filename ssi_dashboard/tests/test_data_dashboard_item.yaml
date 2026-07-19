@@ -842,3 +842,40 @@ scenarios:
           - {}
         expect_error:
           type: "UserError"
+
+  - name: "Item Rejects Data Source From A Different Company"
+    steps:
+      - step: "Create a second company"
+        action: "create"
+        model: "res.company"
+        save_as: "company_b"
+        values:
+          name: "Second Company"
+      - step: "Create dashboard belonging to the active company"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Company Dashboard"
+          code: "DASH-ITEM-COMPANY-DASH-01"
+          company_id: "REC: company.id"
+      - step: "Create data source belonging to the second company"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Second Company Partners"
+          code: "DASH-ITEM-COMPANY-DS-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+          company_id: "REC: company_b.id"
+      - step: "Creating an item mixing the two companies must be rejected"
+        action: "create"
+        model: "dashboard.item"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Cross Company Item"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"

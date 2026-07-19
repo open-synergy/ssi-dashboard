@@ -39,6 +39,12 @@ class TestDashboardItemExport(YamlTransactionCase):
                 {"name": "Export Partner B", "partner_latitude": 20.25},
             ]
         )
+        # `dashboard.data_source.company_id` defaults to the active
+        # company, and `_prepare_company_domain` narrows `_fetch_data_orm`
+        # reads on 'res.partner' to that same company — unrelated to what
+        # this test exercises. Match these fixture partners to it so that
+        # filter never changes their result.
+        partners.write({"company_id": self.env.company.id})
         data_source = self.env["dashboard.data_source"].create(
             {
                 "name": "Export Partners Two Measures",
@@ -109,6 +115,8 @@ class TestDashboardItemExport(YamlTransactionCase):
         partner = self.env["res.partner"].create(
             {"name": "Export Partner Multiplier", "partner_latitude": 1234.5678}
         )
+        # See test_prepare_export_data_two_measures_builds_two_column_table.
+        partner.write({"company_id": self.env.company.id})
         data_source = self.env["dashboard.data_source"].create(
             {
                 "name": "Export Partners Multiplier",
@@ -166,6 +174,8 @@ class TestDashboardItemExport(YamlTransactionCase):
                 {"name": "Export Individual A", "is_company": False},
             ]
         )
+        # See test_prepare_export_data_two_measures_builds_two_column_table.
+        partners.write({"company_id": self.env.company.id})
         data_source = self.env["dashboard.data_source"].create(
             {
                 "name": "Export Partners Filter",

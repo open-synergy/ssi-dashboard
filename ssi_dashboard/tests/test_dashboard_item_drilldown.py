@@ -59,6 +59,12 @@ class TestDashboardItemDrilldown(YamlTransactionCase):
                 },
             ]
         )
+        # `dashboard.data_source.company_id` defaults to the active
+        # company, and `_prepare_company_domain` narrows `_fetch_data_orm`
+        # reads on 'res.partner' to that same company — unrelated to what
+        # the drill-down scenarios below exercise. Match these fixture
+        # partners to it so that filter never changes their result.
+        partners.write({"company_id": self.env.company.id})
         data_source = self.env["dashboard.data_source"].create(
             {
                 "name": "Partners For Drilldown",

@@ -12,6 +12,16 @@ class TestDashboardFilter(YamlTransactionCase):
         self.run_yaml_scenario("test_data_dashboard_filter.yaml")
 
     def _create_partner_data_source(self, code, **values):
+        """Create a `dashboard.data_source` targeting `res.partner`.
+
+        `dashboard.data_source.company_id` now defaults to the active
+        company, so `_prepare_company_domain` narrows `_fetch_data_orm`
+        reads to `res.partner` records of that same company. Every
+        `res.partner` fixture created below is given a matching
+        `company_id` (see the `partners.write(...)` calls after each
+        `res.partner.create(...)`) precisely so that filter — unrelated
+        to what these tests exercise — never changes their result.
+        """
         partner_model = self.env.ref("base.model_res_partner")
         vals = {
             "name": "Partners",
@@ -40,6 +50,7 @@ class TestDashboardFilter(YamlTransactionCase):
                 {"name": "Filter Narrow Partner Other"},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         data_source = self._create_partner_data_source(
             "DASH-FILTER-NARROW-DS-01",
             domain=f"[('id', 'in', {partners.ids!r})]",
@@ -89,6 +100,7 @@ class TestDashboardFilter(YamlTransactionCase):
                 {"name": "Default Active Partner Other"},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         data_source = self._create_partner_data_source(
             "DASH-FILTER-DEFAULT-DS-01",
             domain=f"[('id', 'in', {partners.ids!r})]",
@@ -137,6 +149,7 @@ class TestDashboardFilter(YamlTransactionCase):
                 {"name": "Field Filter Partner Without Email"},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         partner_data_source = self._create_partner_data_source(
             "DASH-FILTER-FIELD-DS-01",
             domain=f"[('id', 'in', {partners.ids!r})]",

@@ -92,6 +92,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 {"name": "Group By Partner B1", "country_id": country_b.id},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         data_source = self.env["dashboard.data_source"].create(
             {
                 "name": "Partners By Country",
@@ -138,6 +139,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 {"name": "Row Domain Partner B1", "country_id": country_b.id},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         data_source = self.env["dashboard.data_source"].create(
             {
                 "name": "Partners By Country Row Domain",
@@ -204,6 +206,7 @@ class TestDashboardDataSource(YamlTransactionCase):
         partners = self.env["res.partner"].create(
             [{"name": "No Group Partner 1"}, {"name": "No Group Partner 2"}]
         )
+        partners.write({"company_id": self.env.company.id})
         data_source = self.env["dashboard.data_source"].create(
             {
                 "name": "All Partners",
@@ -416,6 +419,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 {"name": "Sum Partner 3", "partner_latitude": 30.0},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         data_source = self.env["dashboard.data_source"].create(
             {
                 "name": "Partners Latitude Sum",
@@ -451,6 +455,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 {"name": "Multi Measure Partner 3", "partner_latitude": 30.0},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         data_source = self.env["dashboard.data_source"].create(
             {
                 "name": "Partners Latitude Multi Measure",
@@ -838,6 +843,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 {"name": "Sort Partner C3", "country_id": country_c.id},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         country_field = self.env["ir.model.fields"].search(
             [("model", "=", "res.partner"), ("name", "=", "country_id")],
             limit=1,
@@ -877,6 +883,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 {"name": "Limit Partner C1", "country_id": country_c.id},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         country_field = self.env["ir.model.fields"].search(
             [("model", "=", "res.partner"), ("name", "=", "country_id")],
             limit=1,
@@ -913,6 +920,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 {"name": "NoLimit Partner C1", "country_id": country_c.id},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         country_field = self.env["ir.model.fields"].search(
             [("model", "=", "res.partner"), ("name", "=", "country_id")],
             limit=1,
@@ -1030,6 +1038,7 @@ class TestDashboardDataSource(YamlTransactionCase):
         partners = self.env["res.partner"].create(
             [{"name": "Fill Ignored Partner 1", "country_id": country_a.id}]
         )
+        partners.write({"company_id": self.env.company.id})
         country_field = self.env["ir.model.fields"].search(
             [("model", "=", "res.partner"), ("name", "=", "country_id")],
             limit=1,
@@ -1251,6 +1260,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 {"name": "Label Sort Partner ID", "country_id": country_id.id},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         country_field = self.env["ir.model.fields"].search(
             [("model", "=", "res.partner"), ("name", "=", "country_id")],
             limit=1,
@@ -1337,6 +1347,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 },
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         data_source = self.env["dashboard.data_source"].create(
             {
                 "name": "Partners By Country And Industry",
@@ -1385,6 +1396,7 @@ class TestDashboardDataSource(YamlTransactionCase):
         partners = self.env["res.partner"].create(
             [{"name": "Single Dim Partner 1", "country_id": country_a.id}]
         )
+        partners.write({"company_id": self.env.company.id})
         data_source = self.env["dashboard.data_source"].create(
             {
                 "name": "Partners By Country Single Dim",
@@ -1535,3 +1547,107 @@ class TestDashboardDataSource(YamlTransactionCase):
                 (datetime.date(2024, 3, 1), datetime.date(2024, 3, 31)),
             ],
         )
+
+    def test_fetch_data_orm_filters_to_own_company_when_set(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Skenario Uji positif dari issue: data source ber-`company_id`
+        atas model ber-`company_id` (`res.partner`) → hasil `_fetch_data`
+        hanya mencakup record company itu. Nilai balik `_fetch_data_orm`
+        (jumlah baris/measure) hanya bisa diverifikasi dengan meng-assert
+        hasil pemanggilan method langsung — `action: call` YAML membuang
+        nilai baliknya (L-01) dan tidak bisa meng-assert ekspresi bebas
+        seperti `len(rows)` (L-02). `_fetch_data_orm` membaca lewat
+        `sudo()`, sehingga penyaringan company harus datang dari
+        `_prepare_company_domain`, bukan dari record rule `res.partner`
+        yang di-bypass oleh `sudo()`.
+        """
+        company_b = self.env["res.company"].create({"name": "Company B"})
+        partner_model = self.env.ref("base.model_res_partner")
+        partner_own = self.env["res.partner"].create(
+            {"name": "Own Company Partner", "company_id": self.env.company.id}
+        )
+        partner_other = self.env["res.partner"].create(
+            {"name": "Other Company Partner", "company_id": company_b.id}
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Own Company Partners",
+                "code": "DASH-COMPANY-OWN-01",
+                "type": "orm",
+                "model_id": partner_model.id,
+                "domain": f"[('id', 'in', {(partner_own + partner_other).ids!r})]",
+                "company_id": self.env.company.id,
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["__count"], 1)
+
+    def test_fetch_data_orm_without_company_filters_to_session_companies(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Skenario Uji positif dari issue (Keputusan Desain: company_id
+        kosong → penyaringan dibatasi ke `self.env.companies.ids`). Nilai
+        balik `_fetch_data_orm` hanya bisa diverifikasi dengan
+        meng-assert hasil pemanggilan method langsung (L-01/L-02).
+        `allowed_company_ids` dipasang eksplisit lewat context (pola yang
+        sama dipakai `ssi_accounting`'s multi-company tests) supaya
+        `self.env.companies` deterministik, bukan bergantung pada
+        `company_ids` bawaan user default `TransactionCase`.
+        """
+        company_b = self.env["res.company"].create({"name": "Company B"})
+        partner_model = self.env.ref("base.model_res_partner")
+        partner_allowed = self.env["res.partner"].create(
+            {"name": "Allowed Company Partner", "company_id": self.env.company.id}
+        )
+        partner_other = self.env["res.partner"].create(
+            {"name": "Other Company Partner", "company_id": company_b.id}
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Session Company Partners",
+                "code": "DASH-COMPANY-SESSION-01",
+                "type": "orm",
+                "model_id": partner_model.id,
+                "domain": f"[('id', 'in', {(partner_allowed + partner_other).ids!r})]",
+                "company_id": False,
+            }
+        )
+        self.assertFalse(data_source.company_id)
+        rows = data_source.with_context(
+            allowed_company_ids=[self.env.company.id]
+        )._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["__count"], 1)
+
+    def test_fetch_data_orm_model_without_company_id_is_not_filtered(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Skenario Uji positif dari issue: data source atas model tanpa
+        field `company_id` → tetap terbaca, tanpa error. `mail.message`
+        (selalu tersedia lewat modul `mail`, dependensi
+        `ssi_master_data_mixin`) tidak punya `company_id` — Keputusan
+        Desain menyatakan model semacam ini dibiarkan tanpa penyaringan
+        tambahan sama sekali. Nilai balik `_fetch_data_orm` hanya bisa
+        diverifikasi dengan meng-assert hasil pemanggilan method langsung
+        (L-01/L-02).
+        """
+        message_model = self.env.ref("mail.model_mail_message")
+        self.assertNotIn("company_id", self.env["mail.message"]._fields)
+        messages = self.env["mail.message"].create(
+            [{"body": "No Company Filter Message"}]
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Messages No Company Filter",
+                "code": "DASH-COMPANY-NOFIELD-01",
+                "type": "orm",
+                "model_id": message_model.id,
+                "domain": f"[('id', 'in', {messages.ids!r})]",
+                "company_id": self.env.company.id,
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["__count"], 1)
