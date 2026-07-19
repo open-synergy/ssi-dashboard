@@ -14,12 +14,12 @@ constraints for the two ``Many2one`` fields.
 Does **not** touch ``dashboard_item.config`` -- that field is not removed
 by this version (see open-synergy/ssi-dashboard#18 and its follow-up #53).
 """
+
 import json
 import logging
 
 _logger = logging.getLogger(__name__)
 
-_TABLE = "dashboard_data_source"
 _VALID_AGGREGATES = ("count", "sum", "avg", "min", "max")
 _DEFAULT_AGGREGATE = "count"
 
@@ -33,9 +33,22 @@ def _column_exists(cr, table, column):
     return bool(cr.fetchone())
 
 
-def _add_column_if_missing(cr, table, column, column_type):
-    if not _column_exists(cr, table, column):
-        cr.execute(f'ALTER TABLE "{table}" ADD COLUMN "{column}" {column_type}')
+def _add_new_columns(cr):
+    # Table and column names below are hard-coded literals (this module's
+    # own schema, not user input), added one statement per known column so
+    # no query is built by formatting a table/column name into the SQL.
+    if not _column_exists(cr, "dashboard_data_source", "measure_field_id"):
+        cr.execute(
+            "ALTER TABLE dashboard_data_source ADD COLUMN measure_field_id integer"
+        )
+    if not _column_exists(cr, "dashboard_data_source", "aggregate"):
+        cr.execute("ALTER TABLE dashboard_data_source ADD COLUMN aggregate varchar")
+    if not _column_exists(cr, "dashboard_data_source", "group_by_field_id"):
+        cr.execute(
+            "ALTER TABLE dashboard_data_source ADD COLUMN group_by_field_id integer"
+        )
+    if not _column_exists(cr, "dashboard_data_source", "limit"):
+        cr.execute('ALTER TABLE dashboard_data_source ADD COLUMN "limit" integer')
 
 
 def _field_id(cr, model_id, field_name):
@@ -54,17 +67,14 @@ def migrate(cr, version):
     if not version:
         # Fresh install, nothing to migrate.
         return
-    if not _column_exists(cr, _TABLE, "config"):
+    if not _column_exists(cr, "dashboard_data_source", "config"):
         # Already migrated, or 'config' never existed on this database.
         return
 
-    _add_column_if_missing(cr, _TABLE, "measure_field_id", "integer")
-    _add_column_if_missing(cr, _TABLE, "aggregate", "varchar")
-    _add_column_if_missing(cr, _TABLE, "group_by_field_id", "integer")
-    _add_column_if_missing(cr, _TABLE, "limit", "integer")
+    _add_new_columns(cr)
 
     cr.execute(
-        f'SELECT id, model_id, config FROM "{_TABLE}" '
+        "SELECT id, model_id, config FROM dashboard_data_source "
         "WHERE config IS NOT NULL AND config != ''"
     )
     rows = cr.fetchall()
@@ -73,8 +83,8 @@ def migrate(cr, version):
             config = json.loads(config_text)
         except ValueError:
             _logger.warning(
-                "%s id=%s has invalid JSON in 'config', skipped by migration",
-                _TABLE,
+                "dashboard_data_source id=%s has invalid JSON in 'config', "
+                "skipped by migration",
                 row_id,
             )
             continue
@@ -87,7 +97,8 @@ def migrate(cr, version):
             aggregate = _DEFAULT_AGGREGATE
         limit = config.get("limit") or 0
         cr.execute(
-            f'UPDATE "{_TABLE}" SET measure_field_id = %s, aggregate = %s, '
-            'group_by_field_id = %s, "limit" = %s WHERE id = %s',
+            "UPDATE dashboard_data_source SET measure_field_id = %s, "
+            'aggregate = %s, group_by_field_id = %s, "limit" = %s '
+            "WHERE id = %s",
             (measure_field_id, aggregate, group_by_field_id, limit, row_id),
         )

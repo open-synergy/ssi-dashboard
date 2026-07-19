@@ -45,7 +45,7 @@ class DashboardDataSource(models.Model):
     )
     measure_field_id = fields.Many2one(
         comodel_name="ir.model.fields",
-        ondelete="restrict",
+        ondelete="set null",
         domain="[('model_id', '=', model_id), "
         "('ttype', 'in', ['integer', 'float', 'monetary'])]",
         help="Numeric field of 'Model' that 'Aggregate' is computed on. "
@@ -66,7 +66,7 @@ class DashboardDataSource(models.Model):
     )
     group_by_field_id = fields.Many2one(
         comodel_name="ir.model.fields",
-        ondelete="restrict",
+        ondelete="set null",
         domain="[('model_id', '=', model_id)]",
         help="Field of 'Model' that rows are grouped by. Left empty, "
         "'Aggregate' is computed over every matching record as one group.",
