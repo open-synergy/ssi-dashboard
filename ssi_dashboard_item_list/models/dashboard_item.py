@@ -88,8 +88,22 @@ Solution: Set 'Group By Field' on 'Data Source' \
 """
                 raise ValidationError(error_message)
 
-    @api.constrains("goal_type", "column_ids")
+    @api.constrains("goal_type")
     def _check_deviation_column_requires_goal(self):
+        """Reject 'Goal Type' being set to 'No Target' while this item
+        already has one or more 'Deviation From Target' columns.
+
+        Only triggered on 'goal_type' (this model's own field) — the
+        symmetric case (a 'Deviation From Target' column being added on
+        an item that already has no target) is covered by
+        :meth:`dashboard.item.column._check_column_type_deviation_requires_goal`
+        instead, since that only requires a same-model trigger there
+        too ('column_type'/'item_id'), unlike triggering this method on
+        'column_ids' itself — which does not fire when a
+        'dashboard.item.column' row is created directly against
+        'item_id' rather than through this item's own 'Columns' nested
+        one2many.
+        """
         for item in self:
             deviation_columns = item.column_ids.filtered(
                 lambda column: column.column_type == "deviation"
