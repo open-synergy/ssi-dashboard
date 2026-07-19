@@ -23,5 +23,19 @@
         td {
             color: var(--ssi-dashboard-text, #212529);
         }
+
+        .o_ssi_dashboard_item_list_subtotal td {
+            font-weight: bold;
+            background-color: var(--ssi-dashboard-surface-alt, #f8f9fa);
+        }
+    }
+
+    .o_ssi_dashboard_item_list_pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 8px;
+        color: var(--ssi-dashboard-text, #212529);
     }
 }

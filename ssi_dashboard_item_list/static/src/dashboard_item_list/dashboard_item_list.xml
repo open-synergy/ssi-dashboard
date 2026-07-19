@@ -10,24 +10,55 @@
                             t-as="column"
                             t-key="column.key"
                         >
-                            <th t-esc="column.label" />
+                            <th t-esc="column.name" />
                         </t>
                     </tr>
                 </thead>
                 <tbody>
-                    <t t-foreach="props.item.rows" t-as="row" t-key="row_index">
+                    <t t-foreach="pagedRows" t-as="entry" t-key="entry_index">
                         <tr>
                             <t
                                 t-foreach="props.item.columns"
                                 t-as="column"
                                 t-key="column.key"
                             >
-                                <td t-esc="cellValue(row, column)" />
+                                <td t-esc="cellValue(entry.row, column)" />
+                            </t>
+                        </tr>
+                        <tr
+                            t-if="isGrouped and entry.isGroupEnd"
+                            class="o_ssi_dashboard_item_list_subtotal"
+                        >
+                            <t
+                                t-foreach="props.item.columns"
+                                t-as="column"
+                                t-key="column.key"
+                            >
+                                <td
+                                    t-esc="subtotalCellValue(entry.row, column, column_index)"
+                                />
                             </t>
                         </tr>
                     </t>
                 </tbody>
             </table>
+            <div class="o_ssi_dashboard_item_list_pagination" t-if="pageCount > 1">
+                <button
+                    class="btn btn-sm btn-secondary"
+                    t-on-click="previousPage"
+                    t-att-disabled="state.page === 0"
+                >
+                    ‹
+                </button>
+                <span t-esc="pageLabel" />
+                <button
+                    class="btn btn-sm btn-secondary"
+                    t-on-click="nextPage"
+                    t-att-disabled="state.page >= pageCount - 1"
+                >
+                    ›
+                </button>
+            </div>
         </div>
     </t>
 </templates>

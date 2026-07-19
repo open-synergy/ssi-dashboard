@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <!-- Adds a dedicated, hidden-for-other-types page carrying the
+         'list' fields to the item's own standalone form (opened as a
+         dialog — see ssi_dashboard/models/dashboard_item.py,
+         action_open_item_goals()/_open_item_goals()). 'column_ids' is a
+         One2many, so — like 'goal_ids' — it cannot be edited inline
+         inside the dashboard form's embedded 'Items' list and needs this
+         dialog. Follows the same pattern as
+         ssi_dashboard_item_tile/views/dashboard_item.xml. -->
+    <record id="dashboard_item_view_form" model="ir.ui.view">
+        <field name="name">dashboard.item - form - list</field>
+        <field name="model">dashboard.item</field>
+        <field name="inherit_id" ref="ssi_dashboard.dashboard_item_view_form" />
+        <field name="arch" type="xml">
+            <data>
+                <xpath expr="//sheet" position="inside">
+                    <notebook>
+                        <page name="list" string="List" invisible="type != 'list'">
+                            <group name="dashboard_item_list_configuration">
+                                <field name="list_mode" />
+                                <field name="page_size" />
+                            </group>
+                            <field name="column_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle" />
+                                    <field name="key" />
+                                    <field name="name" />
+                                    <field name="column_type" />
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </xpath>
+            </data>
+        </field>
+    </record>
+
+    <!-- The dialog above is only reachable through a button on the
+         dashboard form's embedded 'Items' list, and that button is only
+         shown for 'Dated Targets' goals or 'tile' items (widened by
+         ssi_dashboard_item_tile). Widen it so 'list' items can reach
+         their own 'List' page too. -->
+    <record id="dashboard_dashboard_view_form" model="ir.ui.view">
+        <field name="name">dashboard.dashboard - form - list</field>
+        <field name="model">dashboard.dashboard</field>
+        <field name="inherit_id" ref="ssi_dashboard.dashboard_dashboard_view_form" />
+        <field name="arch" type="xml">
+            <data>
+                <xpath
+                    expr="//button[@name='action_open_item_goals']"
+                    position="attributes"
+                >
+                    <attribute
+                        name="invisible"
+                    >goal_type != 'dated' and type != 'list'</attribute>
+                </xpath>
+            </data>
+        </field>
+    </record>
+</odoo>

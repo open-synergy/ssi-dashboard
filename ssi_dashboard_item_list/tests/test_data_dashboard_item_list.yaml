@@ -1,5 +1,5 @@
 scenarios:
-  - name: "Create List Item on an ORM-sourced Dashboard"
+  - name: "Create List Item With Two Columns Defaults To Flat Mode And Page Size 10"
     steps:
       - step: "Get res.partner model"
         action: "ref"
@@ -21,7 +21,7 @@ scenarios:
         values:
           name: "List Dashboard"
           code: "DASH-LIST-01"
-      - step: "Create list item"
+      - step: "Create list item with two columns"
         action: "create"
         model: "dashboard.item"
         save_as: "item"
@@ -30,16 +30,35 @@ scenarios:
           dashboard_id: "REC: dashboard.id"
           type: "list"
           data_source_id: "REC: data_source.id"
-          config: '{"columns": [{"key": "name"}, {"key": "amount", "label": "Amount"}]}'
-      - step: "Assert item type is list"
+          column_ids:
+            - - 0
+              - 0
+              - key: "name"
+                name: "Name"
+            - - 0
+              - 0
+              - key: "amount"
+                name: "Amount"
+                column_type: "number"
+      - step: "Assert type, list_mode and page_size"
         action: "assert"
         target: "item"
         asserts:
           type:
             type: "value"
             expected: "list"
+          list_mode:
+            type: "value"
+            expected: "flat"
+          page_size:
+            type: "value"
+            expected: 10
+          column_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 2
 
-  - name: "Rendering a List Item With Invalid Config JSON Raises UserError"
+  - name: "Create List Item Without Columns Raises ValidationError"
     steps:
       - step: "Get res.partner model"
         action: "ref"
@@ -61,30 +80,24 @@ scenarios:
         values:
           name: "List Dashboard"
           code: "DASH-LIST-02"
-      - step: "Create list item with invalid config"
+      - step: "Create list item without column_ids"
         action: "create"
         model: "dashboard.item"
-        save_as: "item"
+        expect_error:
+          type: "ValidationError"
         values:
-          name: "Broken List"
+          name: "No Columns List"
           dashboard_id: "REC: dashboard.id"
           type: "list"
           data_source_id: "REC: data_source.id"
-          config: "{not valid json"
-      - step: "Rendering payload raises UserError"
-        action: "call"
-        target: "item"
-        method: "_prepare_render_payload"
-        expect_error:
-          type: "UserError"
 
-  - name: "Rendering a List Item With Empty columns Raises UserError"
+  - name: "Grouped List Mode Without Group By Field Raises ValidationError"
     steps:
       - step: "Get res.partner model"
         action: "ref"
         xml_id: "base.model_res_partner"
         save_as: "res_partner_model"
-      - step: "Create ORM data source"
+      - step: "Create ORM data source without Group By Field"
         action: "create"
         model: "dashboard.data_source"
         save_as: "data_source"
@@ -100,24 +113,24 @@ scenarios:
         values:
           name: "List Dashboard"
           code: "DASH-LIST-03"
-      - step: "Create list item with empty columns"
+      - step: "Create grouped list item"
         action: "create"
         model: "dashboard.item"
-        save_as: "item"
+        expect_error:
+          type: "ValidationError"
         values:
-          name: "No Columns List"
+          name: "Broken Grouped List"
           dashboard_id: "REC: dashboard.id"
           type: "list"
+          list_mode: "grouped"
           data_source_id: "REC: data_source.id"
-          config: '{"columns": []}'
-      - step: "Rendering payload raises UserError"
-        action: "call"
-        target: "item"
-        method: "_prepare_render_payload"
-        expect_error:
-          type: "UserError"
+          column_ids:
+            - - 0
+              - 0
+              - key: "name"
+                name: "Name"
 
-  - name: "Rendering a List Item With limit Below 1 Raises UserError"
+  - name: "Deviation Column On Item Without Goal Raises ValidationError"
     steps:
       - step: "Get res.partner model"
         action: "ref"
@@ -139,24 +152,32 @@ scenarios:
         values:
           name: "List Dashboard"
           code: "DASH-LIST-04"
-      - step: "Create list item with limit 0"
+      - step: "Create list item with one text column, goal_type none"
         action: "create"
         model: "dashboard.item"
         save_as: "item"
         values:
-          name: "Zero Limit List"
+          name: "No Goal List"
           dashboard_id: "REC: dashboard.id"
           type: "list"
           data_source_id: "REC: data_source.id"
-          config: '{"columns": [{"key": "name"}], "limit": 0}'
-      - step: "Rendering payload raises UserError"
-        action: "call"
-        target: "item"
-        method: "_prepare_render_payload"
+          column_ids:
+            - - 0
+              - 0
+              - key: "name"
+                name: "Name"
+      - step: "Add a deviation column without a goal configured"
+        action: "create"
+        model: "dashboard.item.column"
         expect_error:
-          type: "UserError"
+          type: "ValidationError"
+        values:
+          item_id: "REC: item.id"
+          key: "amount"
+          name: "Deviation"
+          column_type: "deviation"
 
-  - name: "Rendering a List Item With limit Above 100 Raises UserError"
+  - name: "Writing page_size Above 200 Raises ValidationError"
     steps:
       - step: "Get res.partner model"
         action: "ref"
@@ -178,19 +199,24 @@ scenarios:
         values:
           name: "List Dashboard"
           code: "DASH-LIST-05"
-      - step: "Create list item with limit 500"
+      - step: "Create list item"
         action: "create"
         model: "dashboard.item"
         save_as: "item"
         values:
-          name: "Huge Limit List"
+          name: "Partner Table"
           dashboard_id: "REC: dashboard.id"
           type: "list"
           data_source_id: "REC: data_source.id"
-          config: '{"columns": [{"key": "name"}], "limit": 500}'
-      - step: "Rendering payload raises UserError"
-        action: "call"
+          column_ids:
+            - - 0
+              - 0
+              - key: "name"
+                name: "Name"
+      - step: "Write page_size above 200"
+        action: "write"
         target: "item"
-        method: "_prepare_render_payload"
         expect_error:
-          type: "UserError"
+          type: "ValidationError"
+        values:
+          page_size: 500
