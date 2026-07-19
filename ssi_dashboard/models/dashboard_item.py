@@ -915,3 +915,68 @@ configuration
         """
         self.ensure_one()
         return round(value * self.multiplier, self.precision_digits)
+
+    def _prepare_export_item_vals(self):
+        """Build this item's own entry under
+        ``dashboard.dashboard.prepare_export_definition``'s ``items``
+        key.
+
+        :attr:`data_source_id` is stored as its own :attr:`~dashboard.
+        data_source.code` (or ``False`` when empty) rather than a
+        numeric id — see ``dashboard.dashboard.prepare_export_definition``,
+        which keys its ``data_sources`` entry the same way, so
+        ``dashboard.import.action_import`` can look the newly created
+        data source back up by that same ``code``. :attr:`currency_id`
+        is stored as its own ``name`` (the ISO code, e.g. ``'USD'``),
+        the natural name-based identifier for a currency shared across
+        every database, instead of a numeric id.
+
+        :return: dict with keys ``name``, ``sequence``, ``type``,
+            ``data_source`` (``code`` or ``False``), ``config``,
+            ``column_width``, ``row_height``, ``column_start``,
+            ``row_start``, ``active``, ``allow_open_records``,
+            ``allow_export``, ``goal_type``, ``goal_value``,
+            ``goal_ids`` (list, see ``dashboard.item.goal.
+            _prepare_export_goal_vals``), ``drilldown_ids`` (list, see
+            ``dashboard.item.drilldown._prepare_export_drilldown_vals``),
+            ``multiplier``, ``unit_type``, ``currency`` (ISO code or
+            ``False``), ``unit_text``, ``unit_position``,
+            ``number_format``, ``precision_digits``, ``item_theme``,
+            ``item_header_color`` and ``item_border_color``.
+        :rtype: dict
+        """
+        self.ensure_one()
+        return {
+            "name": self.name,
+            "sequence": self.sequence,
+            "type": self.type,
+            "data_source": self.data_source_id.code or False,
+            "config": self.config,
+            "column_width": self.column_width,
+            "row_height": self.row_height,
+            "column_start": self.column_start,
+            "row_start": self.row_start,
+            "active": self.active,
+            "allow_open_records": self.allow_open_records,
+            "allow_export": self.allow_export,
+            "goal_type": self.goal_type,
+            "goal_value": self.goal_value,
+            "goal_ids": [
+                goal._prepare_export_goal_vals()
+                for goal in self.goal_ids.sorted("date_start")
+            ],
+            "drilldown_ids": [
+                drilldown._prepare_export_drilldown_vals()
+                for drilldown in self.drilldown_ids.sorted("sequence")
+            ],
+            "multiplier": self.multiplier,
+            "unit_type": self.unit_type,
+            "currency": self.currency_id.name or False,
+            "unit_text": self.unit_text,
+            "unit_position": self.unit_position,
+            "number_format": self.number_format,
+            "precision_digits": self.precision_digits,
+            "item_theme": self.item_theme,
+            "item_header_color": self.item_header_color,
+            "item_border_color": self.item_border_color,
+        }

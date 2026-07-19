@@ -1,6 +1,9 @@
 # Copyright 2026 OpenSynergy Indonesia
 # Copyright 2026 PT. Simetri Sinergi Indonesia
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+import base64
+import json
+
 from odoo import api, fields, models
 from odoo.exceptions import UserError
 
@@ -429,4 +432,192 @@ Solution: Reload the dashboard and try arranging the layout again
             "tag": "ssi_dashboard.dashboard_view",
             "name": self.name,
             "context": {"dashboard_id": self.id},
+        }
+
+    def prepare_export_definition(self):
+        """Build this dashboard's definition as a plain,
+        JSON-serializable dict, meant to be written to a ``.json`` file
+        and later fed back to ``dashboard.import.action_import``.
+
+        Restricted to ``ssi_dashboard.group_dashboard_admin``, checked
+        here (see :meth:`_check_export_access`) regardless of what the
+        browser side hides/shows — exporting is an administrative
+        action, not a viewing one, so it is checked independently of
+        this model's own ACL, which a plain 'Dashboard User' already
+        passes (read-only).
+
+        Every reference to another record is stored by *name*, never by
+        database id — a numeric id is meaningless once the file is
+        opened against a different database, and storing one would make
+        ``dashboard.import.action_import`` silently point at whatever
+        unrelated record happens to have that id there. See
+        ``dashboard.data_source._prepare_export_data_source_vals``,
+        ``dashboard.item._prepare_export_item_vals`` and
+        ``dashboard.filter._prepare_export_filter_vals`` for how each
+        model turns its own Many2one fields into name-based references.
+
+        Only data sources actually pulled from by one of :attr:`item_ids`
+        are included under the ``data_sources`` key, keyed by their own
+        :attr:`~dashboard.data_source.code` (unique per
+        ``dashboard.data_source._dashboard_data_source_code_uniq``) — a
+        dashboard referencing the same data source from two items only
+        carries one copy of its definition.
+
+        :return: dict with keys ``schema_version`` (int, always ``1``
+            for this version of this method — ``dashboard.import.
+            action_import`` rejects any other value, see its
+            ``_check_schema_version``), ``dashboard`` (this dashboard's
+            own attributes, see :meth:`_prepare_export_dashboard_vals`),
+            ``items`` (list, :attr:`item_ids` ordered by ``sequence``),
+            ``filters`` (list, :attr:`filter_ids` ordered by
+            ``sequence``) and ``data_sources`` (dict, keyed by ``code``).
+        :rtype: dict
+        :raises UserError: when the current user is not a member of
+            ``ssi_dashboard.group_dashboard_admin`` — see
+            :meth:`_check_export_access`.
+        """
+        self.ensure_one()
+        self._check_export_access()
+        data_sources = self.item_ids.mapped("data_source_id")
+        return {
+            "schema_version": 1,
+            "dashboard": self._prepare_export_dashboard_vals(),
+            "items": [
+                item._prepare_export_item_vals()
+                for item in self.item_ids.sorted("sequence")
+            ],
+            "filters": [
+                filter_._prepare_export_filter_vals()
+                for filter_ in self.filter_ids.sorted("sequence")
+            ],
+            "data_sources": {
+                data_source.code: data_source._prepare_export_data_source_vals()
+                for data_source in data_sources
+            },
+        }
+
+    def _check_export_access(self):
+        """Raise ``UserError`` unless the current user belongs to
+        ``group_dashboard_admin``.
+
+        Called by :meth:`prepare_export_definition` itself so the
+        restriction applies no matter how the method is reached — an
+        RPC call bypassing the browser's own export button visibility
+        would otherwise let a plain 'Dashboard User' read out a full
+        dashboard/data source definition despite ``dashboard.
+        data_source`` granting that group no access at all (see
+        ``security/ir_model_access/dashboard_data_source.xml``).
+
+        :return: None
+        :raises UserError: when the current user is not a member of
+            ``ssi_dashboard.group_dashboard_admin``.
+        """
+        self.ensure_one()
+        if not self.env.user.has_group("ssi_dashboard.group_dashboard_admin"):
+            error_message = f"""
+Context: Export dashboard definition
+Database ID: {self.id}
+Problem: Current user is not a member of the 'Administrator' dashboard \
+group
+Solution: Ask a dashboard administrator to export this dashboard, or \
+request 'Administrator' access
+"""
+            raise UserError(error_message)
+
+    def _prepare_export_dashboard_vals(self):
+        """Build the ``dashboard`` key of
+        :meth:`prepare_export_definition`'s result — this dashboard's
+        own attributes, excluding :attr:`item_ids`/:attr:`filter_ids`
+        (own top-level keys) and the menu-generation fields
+        (:attr:`generate_menu`, :attr:`menu_name`, :attr:`parent_menu_id`,
+        :attr:`menu_sequence`, :attr:`menu_id`, :attr:`client_action_id`).
+
+        The last two are technical, managed by :meth:`_sync_menu`, and
+        the menu location the first four would need (:attr:`parent_menu_id`)
+        is not guaranteed to exist, or mean the same thing, on the
+        database the file is imported into — so
+        ``dashboard.import.action_import`` always creates the imported
+        dashboard with menu generation off, exactly as a brand new
+        dashboard would default to.
+
+        :return: dict with keys ``name``, ``code``, ``color_scheme``
+            (this dashboard's :attr:`~dashboard.color_scheme.code`, or
+            ``False`` when :attr:`color_scheme_id` is empty),
+            ``refresh_interval``, ``fullscreen_enabled`` and
+            ``group_ids`` (list of external id strings, see
+            :meth:`_export_group_xmlids`).
+        :rtype: dict
+        """
+        self.ensure_one()
+        return {
+            "name": self.name,
+            "code": self.code,
+            "color_scheme": self.color_scheme_id.code or False,
+            "refresh_interval": self.refresh_interval,
+            "fullscreen_enabled": self.fullscreen_enabled,
+            "group_ids": self._export_group_xmlids(),
+        }
+
+    def _export_group_xmlids(self):
+        """Build the list of external id strings behind
+        :meth:`_prepare_export_dashboard_vals`'s ``group_ids`` key.
+
+        Best-effort: a group created ad-hoc through the UI, without an
+        XML id, has no name to store it by, so it is silently left out
+        rather than blocking the whole export — ``group_ids`` only
+        narrows who may view the imported dashboard, it never affects
+        whether the dashboard itself works.
+
+        :return: list of ``"module.name"`` strings, one per row of
+            :attr:`group_ids` that has a matching ``ir.model.data`` row.
+        :rtype: list
+        """
+        self.ensure_one()
+        xmlids = []
+        for group in self.group_ids:
+            xmlid = group.get_external_id().get(group.id)
+            if xmlid:
+                xmlids.append(xmlid)
+        return xmlids
+
+    def action_export_json(self):
+        """Build and return the download action for this dashboard's
+        JSON definition (see :meth:`prepare_export_definition`).
+
+        Writes the definition to a new ``ir.attachment`` (JSON, UTF-8,
+        named ``'<code>.json'``, linked to this record through
+        ``res_model``/``res_id``) and returns an ``ir.actions.act_url``
+        pointing at it through the core ``/web/content`` controller — no
+        dedicated controller route is added for this feature. The
+        attachment is created through ``sudo()``: a member of
+        ``group_dashboard_admin`` is not necessarily also granted create
+        rights on ``ir.attachment`` itself, the same reasoning
+        :meth:`_sync_menu` already applies to ``ir.ui.menu``/
+        ``ir.actions.client``.
+
+        :return: dict describing an ``ir.actions.act_url``.
+        :rtype: dict
+        :raises UserError: see :meth:`prepare_export_definition`.
+        """
+        self.ensure_one()
+        definition = self.prepare_export_definition()
+        content = json.dumps(definition, indent=2, ensure_ascii=False)
+        attachment = (
+            self.env["ir.attachment"]
+            .sudo()
+            .create(
+                {
+                    "name": f"{self.code}.json",
+                    "type": "binary",
+                    "datas": base64.b64encode(content.encode("utf-8")),
+                    "res_model": self._name,
+                    "res_id": self.id,
+                    "mimetype": "application/json",
+                }
+            )
+        )
+        return {
+            "type": "ir.actions.act_url",
+            "url": f"/web/content/{attachment.id}?download=true",
+            "target": "self",
         }
