@@ -143,6 +143,11 @@ msgid "All Time"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__allow_open_records
+msgid "Allow Open Records"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__group_ids
 msgid "Allowed Groups"
 msgstr ""
@@ -1788,6 +1793,15 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__unit_position
 msgid "Where the unit is shown relative to the value."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__allow_open_records
+msgid ""
+"Whether clicking a value or segment of this item's tile opens the list of "
+"records behind it (see 'action_open_records'). Untick to disable the click "
+"for this item. Ignored (no click happens either way) when 'Data Source' is "
+"not of type 'Odoo Model' — there is no model to open a list of records from."
 msgstr ""
 
 #. module: ssi_dashboard
