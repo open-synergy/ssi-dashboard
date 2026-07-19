@@ -87,6 +87,11 @@ msgid "Administrator"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__unit_position__after
+msgid "After Value"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__aggregate
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__aggregate
 msgid "Aggregate"
@@ -157,6 +162,11 @@ msgstr ""
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__aggregate__avg
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source_measure__aggregate__avg
 msgid "Average"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__unit_position__before
+msgid "Before Value"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -290,8 +300,26 @@ msgid "Created on"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__currency_id
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__unit_type__monetary
+msgid "Currency"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__currency_id
+msgid ""
+"Currency whose symbol is shown alongside the value. Only used, and required,"
+" when 'Unit Type' is 'Currency'."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__custom
 msgid "Custom"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__unit_type__custom
+msgid "Custom Text"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -471,6 +499,18 @@ msgid "Domain"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__number_format__exact
+msgid "Exact"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__multiplier
+msgid ""
+"Factor the raw value is multiplied by before the browser formats it, e.g. "
+"use 0.000001 to show a value in millions. Must not be 0."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__field_id
 msgid "Field"
 msgstr ""
@@ -525,6 +565,13 @@ msgstr ""
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__activity_type_icon
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__activity_type_icon
 msgid "Font awesome icon e.g. fa-tasks"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__unit_text
+msgid ""
+"Free-form unit text shown alongside the value, e.g. 'kg', 'pcs', '%'. Only "
+"used, and required, when 'Unit Type' is 'Custom Text'."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -627,6 +674,14 @@ msgid "Hour"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__number_format
+msgid ""
+"How the browser abbreviates the value. 'Exact' shows the full number. 'Short"
+" Scale' abbreviates using thousand/million/billion suffixes. 'Indian Scale' "
+"abbreviates using lakh/crore suffixes."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme_color__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__id
@@ -663,6 +718,11 @@ msgstr ""
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__message_has_error
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__message_has_error
 msgid "If checked, some messages have a delivery error."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__number_format__indian
+msgid "Indian Scale"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -710,6 +770,15 @@ msgid ""
 "Kind of tile rendered by the browser. Extension modules add more choices via"
 " 'selection_add' and may implement a matching "
 "'_prepare_render_payload_<type>' method."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__unit_type
+msgid ""
+"Kind of unit shown alongside the value. 'No Unit' shows the value alone. "
+"'Currency' shows 'Currency''s symbol, and requires 'Currency' to be filled "
+"in. 'Custom Text' shows 'Unit Text', and requires 'Unit Text' to be filled "
+"in."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -934,6 +1003,11 @@ msgid "Month to Date"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__multiplier
+msgid "Multiplier"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__my_activity_date_deadline
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__my_activity_date_deadline
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__my_activity_date_deadline
@@ -1001,6 +1075,11 @@ msgid "No Target"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__unit_type__none
+msgid "No Unit"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__note
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__note
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__note
@@ -1008,10 +1087,22 @@ msgid "Note"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__number_format
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_item_view_form
+msgid "Number Format"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__message_needaction_counter
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__message_needaction_counter
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__message_needaction_counter
 msgid "Number of Actions"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__precision_digits
+msgid ""
+"Number of digits shown after the decimal point. Must be between 0 and 6."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1112,6 +1203,11 @@ msgid "Placeholder"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__precision_digits
+msgid "Precision Digits"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__date_range
 msgid ""
 "Predefined period the data is filtered on, computed in the current user's "
@@ -1161,6 +1257,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__sequence
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__sequence
 msgid "Sequence"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__number_format__short
+msgid "Short Scale"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1282,6 +1383,21 @@ msgid "Type of the exception activity on record."
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__unit_position
+msgid "Unit Position"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__unit_text
+msgid "Unit Text"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__unit_type
+msgid "Unit Type"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sort_by__none
 msgid "Unsorted"
 msgstr ""
@@ -1334,6 +1450,11 @@ msgid ""
 "When enabled, this dashboard also shows up as its own menu item under "
 "'Parent Menu', in addition to being reachable from the 'Open Dashboard' "
 "button here."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__unit_position
+msgid "Where the unit is shown relative to the value."
 msgstr ""
 
 #. module: ssi_dashboard
