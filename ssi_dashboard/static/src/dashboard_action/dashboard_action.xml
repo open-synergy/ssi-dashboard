@@ -47,6 +47,7 @@
                         item="item"
                         useExplicitPosition="useExplicitPosition"
                         isAdmin="state.isAdmin"
+                        activeFilters="currentFilters"
                         onEditClick.bind="onEditItemClick"
                     />
                 </div>

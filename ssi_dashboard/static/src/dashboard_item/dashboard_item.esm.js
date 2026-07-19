@@ -60,6 +60,16 @@ const itemWidgetRegistry = registry.category("ssi_dashboard.item_widgets");
  * ("goBack"/"goToLevel") never re-fetches anything, only drops entries
  * off the end. Entirely client-side/in-memory — nothing here is
  * persisted, so a dashboard reload always starts back at level 0.
+ *
+ * Also shows two download buttons — XLSX/CSV — when
+ * "props.item.allow_export" is true (see "canExport"/models/
+ * dashboard_item.py's "allow_export"), each linking straight to
+ * "controllers/export.py"'s endpoints with this item's id and
+ * "props.activeFilters" (mirrors DashboardAction's "currentFilters")
+ * carried as query parameters — see "buildExportUrl". Plain browser
+ * navigation over an authenticated GET, no fetch/blob handling needed;
+ * the server re-checks read access and "allow_export" on its own
+ * regardless of what this component shows.
  */
 export class DashboardItem extends Component {
     static template = "ssi_dashboard.DashboardItem";
@@ -67,6 +77,7 @@ export class DashboardItem extends Component {
         item: Object,
         useExplicitPosition: {type: Boolean, optional: true},
         isAdmin: {type: Boolean, optional: true},
+        activeFilters: {type: Object, optional: true},
         onEditClick: {type: Function, optional: true},
     };
 
@@ -224,6 +235,71 @@ export class DashboardItem extends Component {
      */
     onEditClick() {
         this.props.onEditClick(this.props.item.id);
+    }
+
+    /**
+     * Whether the download buttons are shown at all — mirrors
+     * "props.item.allow_export" (see models/dashboard_item.py's
+     * "allow_export"). The export endpoints (see "controllers/
+     * export.py") re-check this server-side regardless of what this
+     * getter hides in the browser.
+     *
+     * @returns {Boolean}
+     */
+    get canExport() {
+        return Boolean(this.props.item.allow_export);
+    }
+
+    get exportXlsxLabel() {
+        return _t("Export XLSX");
+    }
+
+    get exportCsvLabel() {
+        return _t("Export CSV");
+    }
+
+    /**
+     * Query-string URL for one of the export endpoints, always carrying
+     * this item's own id and — when available — "props.activeFilters"
+     * (see DashboardAction's "currentFilters", forwarded down as this
+     * prop), JSON-encoded exactly as
+     * "dashboard.item.prepare_export_data" expects its own
+     * "active_filters" argument. Forwarding the very same selection the
+     * tile itself was last rendered with is the whole point (backlog
+     * issue #43's Keputusan Desain) — a download built without it could
+     * silently disagree with what is on screen.
+     *
+     * @param {String} format "xlsx" or "csv"
+     * @returns {String}
+     */
+    buildExportUrl(format) {
+        const params = new URLSearchParams();
+        params.set("item_id", this.props.item.id);
+        if (this.props.activeFilters) {
+            params.set("active_filters", JSON.stringify(this.props.activeFilters));
+        }
+        return `/ssi_dashboard/export/${format}?${params.toString()}`;
+    }
+
+    get exportXlsxUrl() {
+        return this.buildExportUrl("xlsx");
+    }
+
+    get exportCsvUrl() {
+        return this.buildExportUrl("csv");
+    }
+
+    /**
+     * Bound to both download links — only stops the click from
+     * bubbling up to "onContainerClick" (see the class docstring's
+     * "data-ssi-dashboard-row-domain" contract); the link's own default
+     * navigation, which triggers the actual download, is left alone
+     * (no "preventDefault").
+     *
+     * @param {MouseEvent} ev
+     */
+    onExportClick(ev) {
+        ev.stopPropagation();
     }
 
     /**

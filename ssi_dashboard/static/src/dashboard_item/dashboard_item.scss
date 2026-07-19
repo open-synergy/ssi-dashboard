@@ -6,20 +6,24 @@
     // show no extra border here.
     border-left: 4px solid var(--ssi-dashboard-item-border-color, transparent);
     border-radius: 4px;
-    // Anchors ".o_ssi_dashboard_item_edit" to this tile's own corner
+    // Anchors ".o_ssi_dashboard_item_toolbar" to this tile's own corner
     // instead of the whole grid.
     position: relative;
 
-    .o_ssi_dashboard_item_edit {
+    // Holds the export links and the 'Edit' button — see
+    // dashboard_item.esm.js's "canExport"/"props.isAdmin".
+    .o_ssi_dashboard_item_toolbar {
         position: absolute;
         top: 4px;
         right: 4px;
         z-index: 1;
+        display: flex;
+        gap: 2px;
         opacity: 0;
         transition: opacity 0.15s ease-in-out;
     }
 
-    &:hover .o_ssi_dashboard_item_edit {
+    &:hover .o_ssi_dashboard_item_toolbar {
         opacity: 1;
     }
 

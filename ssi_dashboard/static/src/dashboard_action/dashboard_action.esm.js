@@ -77,11 +77,20 @@ export class DashboardAction extends Component {
         this.action = useService("action");
         this.gridRef = useRef("grid");
         this.rootRef = useRef("root");
-        // Last "active_filters" selection sent to get_dashboard_payload
-        // (see DashboardFilterBar's "onChange" prop) — not reactive
-        // state on purpose, it is only ever read back by
-        // refreshDashboard() to repeat the same selection, never
-        // rendered directly.
+        // Resolved "active_filters" the dashboard is currently showing
+        // — set from every loadDashboard() response (see
+        // "payload.active_filter_ids"), never left null once the first
+        // fetch completes, even when nothing was ever passed to
+        // get_dashboard_payload (see loadDashboard()'s docstring: the
+        // server resolves its own default_active filters in that case,
+        // and this must mirror that resolution, not the raw argument,
+        // so DashboardItem's export button — see "activeFilters" prop —
+        // always forwards exactly the filters the tile itself was
+        // rendered with, per backlog issue #43's Keputusan Desain). Not
+        // reactive state on purpose, it is only ever read back by
+        // refreshDashboard() to repeat the same selection and by the
+        // template to build DashboardItem's "activeFilters" prop, never
+        // rendered directly itself.
         this.currentFilters = null;
         this.refreshTimerId = null;
         this.onVisibilityChange = this.onVisibilityChange.bind(this);
@@ -135,17 +144,27 @@ export class DashboardAction extends Component {
      * existed. For refreshing already-loaded data without wiping it on
      * failure, see refreshDashboard() instead.
      *
+     * "this.currentFilters" is (re)built from the response rather than
+     * echoing "activeFilters" back verbatim: "payload.active_filter_ids"
+     * is the dashboard's own *resolved* filter selection (falls back to
+     * this dashboard's default_active filters server-side when
+     * "activeFilters" is null/omitted — see models/dashboard_dashboard.py's
+     * "_resolve_active_filters"), so this keeps working correctly even
+     * before the filter bar has ever been touched.
+     *
      * @param {Object} [activeFilters]
      */
     async loadDashboard(activeFilters = null) {
-        if (activeFilters !== null) {
-            this.currentFilters = activeFilters;
-        }
         const payload = await this.orm.call(
             "dashboard.dashboard",
             "get_dashboard_payload",
             [[this.dashboardId], activeFilters]
         );
+        this.currentFilters = {
+            filter_ids: payload.active_filter_ids,
+            date_start: activeFilters ? activeFilters.date_start : null,
+            date_end: activeFilters ? activeFilters.date_end : null,
+        };
         Object.assign(this.dashboard, payload);
         this.state.refreshFailed = false;
     }
