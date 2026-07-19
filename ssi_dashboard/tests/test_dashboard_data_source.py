@@ -1102,6 +1102,114 @@ class TestDashboardDataSource(YamlTransactionCase):
         labels = [row["group_label"] for row in rows]
         self.assertEqual(labels, [country_id.display_name, country_us.display_name])
 
+    def test_fetch_data_orm_groups_by_two_dimensions(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        `sub_group_by_field_id` menghasilkan satu baris per kombinasi
+        (`group_by_field_id`, `sub_group_by_field_id`) yang punya data —
+        jumlah baris dan isi `sub_group_key`/`sub_group_label` hanya bisa
+        diverifikasi dengan meng-assert nilai balik method langsung
+        (L-01/L-02), karena `action: call` YAML membuang nilai balik dan
+        tidak bisa meng-assert ekspresi bebas seperti `len(rows)`.
+        """
+        partner_model = self.env.ref("base.model_res_partner")
+        country_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.partner"), ("name", "=", "country_id")],
+            limit=1,
+        )
+        company_type_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.partner"), ("name", "=", "company_type")],
+            limit=1,
+        )
+        country_a = self.env.ref("base.us")
+        country_b = self.env.ref("base.id")
+        partners = self.env["res.partner"].create(
+            [
+                {
+                    "name": "Two Dim Partner A Company",
+                    "country_id": country_a.id,
+                    "company_type": "company",
+                    "is_company": True,
+                },
+                {
+                    "name": "Two Dim Partner A Person",
+                    "country_id": country_a.id,
+                    "company_type": "person",
+                    "is_company": False,
+                },
+                {
+                    "name": "Two Dim Partner B Person 1",
+                    "country_id": country_b.id,
+                    "company_type": "person",
+                    "is_company": False,
+                },
+                {
+                    "name": "Two Dim Partner B Person 2",
+                    "country_id": country_b.id,
+                    "company_type": "person",
+                    "is_company": False,
+                },
+            ]
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners By Country And Type",
+                "code": "DASH-SUBGROUPBY-01",
+                "type": "orm",
+                "model_id": partner_model.id,
+                "domain": f"[('id', 'in', {partners.ids!r})]",
+                "group_by_field_id": country_field.id,
+                "sub_group_by_field_id": company_type_field.id,
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        # Country A has two distinct company_type values (2 rows), country
+        # B has a single company_type value (1 row) -> 3 combinations.
+        self.assertEqual(len(rows), 3)
+        combos = {
+            (row["group_label"], row["sub_group_label"]): row["__count"]
+            for row in rows
+        }
+        self.assertEqual(combos[(country_a.display_name, "Company")], 1)
+        self.assertEqual(combos[(country_a.display_name, "Individual")], 1)
+        self.assertEqual(combos[(country_b.display_name, "Individual")], 2)
+        for row in rows:
+            self.assertIn("sub_group_key", row)
+            self.assertIn("sub_group_label", row)
+
+    def test_fetch_data_orm_single_dimension_has_no_sub_group_keys(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Data source dengan satu dimensi (tanpa `sub_group_by_field_id`)
+        harus mengembalikan baris tanpa kunci `sub_group_key`/
+        `sub_group_label` sama sekali — bukan bernilai `False`. Hanya bisa
+        diverifikasi dengan `assertNotIn` atas dict hasil pemanggilan
+        method langsung (L-01/L-02).
+        """
+        partner_model = self.env.ref("base.model_res_partner")
+        country_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.partner"), ("name", "=", "country_id")],
+            limit=1,
+        )
+        country_a = self.env.ref("base.us")
+        partners = self.env["res.partner"].create(
+            [{"name": "Single Dim Partner 1", "country_id": country_a.id}]
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners By Country Single Dim",
+                "code": "DASH-SUBGROUPBY-NONE-01",
+                "type": "orm",
+                "model_id": partner_model.id,
+                "domain": f"[('id', 'in', {partners.ids!r})]",
+                "group_by_field_id": country_field.id,
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 1)
+        self.assertNotIn("sub_group_key", rows[0])
+        self.assertNotIn("sub_group_label", rows[0])
+
     def test_fetch_data_orm_fill_temporal_uses_custom_date_range_bounds(self):
         """Python murni — pemicu P3 (L-02).
 

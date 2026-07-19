@@ -62,6 +62,12 @@
                                 name="group_by_granularity"
                                 invisible="not group_by_field_is_date"
                             />
+                            <field name="sub_group_by_field_id" />
+                            <field name="sub_group_by_field_is_date" invisible="1" />
+                            <field
+                                name="sub_group_by_granularity"
+                                invisible="not sub_group_by_field_is_date"
+                            />
                             <field name="limit" />
                             <field name="sort_by" />
                             <field name="sort_order" invisible="sort_by == 'none'" />
