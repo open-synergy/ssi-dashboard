@@ -9,7 +9,7 @@ from odoo.tools.safe_eval import safe_eval
 class DashboardDataSource(models.Model):
     """Represents a reusable data feed that dashboard items pull their
     numbers from. This core module only ships the 'orm' type, which reads
-    an Odoo model through ``read_group``. Extension modules add further
+    an Odoo model through ``_read_group``. Extension modules add further
     types via ``selection_add`` on :attr:`type` and by implementing the
     matching ``_fetch_data_<type>`` method — see :meth:`_fetch_data`."""
 
@@ -78,11 +78,14 @@ Solution: Install a module that implements {method_name}
     def _fetch_data_orm(self, item):
         """Fetch data for the 'orm' data source type.
 
-        Reads :attr:`model_id` through ``read_group`` filtered by
-        :attr:`domain`.
+        Reads :attr:`model_id` through ``_read_group`` filtered by
+        :attr:`domain`. ``read_group`` is deprecated since 19.0 in favor
+        of ``_read_group``/``formatted_read_group``; ``_read_group`` is
+        used here and its tuple result is turned back into the list of
+        dict this method's contract promises.
 
         :param item: ``dashboard.item`` record requesting the data.
-        :return: list of dict, one per group returned by ``read_group``.
+        :return: list of dict, one per group returned by ``_read_group``.
         :rtype: list
         :raises UserError: when :attr:`model_id` is not configured.
         """
@@ -98,4 +101,6 @@ Solution: Set the Model field on this data source
             raise UserError(error_message)
         domain = safe_eval(self.domain) if self.domain else []
         model = self.env[self.model_id.model].sudo()
-        return model.read_group(domain, ["__count"], groupby=[])
+        aggregates = ["__count"]
+        rows = model._read_group(domain, groupby=[], aggregates=aggregates)
+        return [dict(zip(aggregates, row, strict=True)) for row in rows]

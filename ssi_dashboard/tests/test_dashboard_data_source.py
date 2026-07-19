@@ -6,6 +6,7 @@ from psycopg2 import IntegrityError
 
 from odoo.exceptions import UserError
 from odoo.tests import tagged
+from odoo.tools import mute_logger
 
 
 @tagged("post_install", "-at_install")
@@ -21,12 +22,16 @@ class TestDashboardDataSource(YamlTransactionCase):
         Membuat record kedua dengan `code` yang sama melempar
         `psycopg2.errors.UniqueViolation` (subclass `psycopg2.IntegrityError`),
         tipe yang tidak termasuk 12 tipe yang dikenali `expect_error`
-        (L-22), sehingga tidak bisa diuji lewat YAML.
+        (L-22), sehingga tidak bisa diuji lewat YAML. `mute_logger`
+        membungkam log ERROR `odoo.sql_db` yang normal muncul saat
+        Postgres menolak query ini — errornya memang diharapkan dan
+        sudah ditangkap lewat `assertRaises`, bukan kebocoran nyata yang
+        harus menggagalkan `oca_checklog_odoo` di CI.
         """
         self.env["dashboard.data_source"].create(
             {"name": "First", "code": "DASH-DUP-01"}
         )
-        with self.assertRaises(IntegrityError):
+        with mute_logger("odoo.sql_db"), self.assertRaises(IntegrityError):
             with self.env.cr.savepoint():
                 self.env["dashboard.data_source"].create(
                     {"name": "Second", "code": "DASH-DUP-01"}

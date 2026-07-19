@@ -5,6 +5,7 @@ from odoo_yaml_test import YamlTransactionCase
 from psycopg2 import IntegrityError
 
 from odoo.tests import tagged
+from odoo.tools import mute_logger
 
 
 @tagged("post_install", "-at_install")
@@ -72,7 +73,10 @@ class TestDashboardDashboard(YamlTransactionCase):
         melempar `psycopg2.errors.ForeignKeyViolation` (subclass
         `psycopg2.IntegrityError`), tipe yang tidak termasuk 12 tipe yang
         dikenali `expect_error` (L-22), sehingga tidak bisa diuji lewat
-        YAML.
+        YAML. `mute_logger` membungkam log ERROR `odoo.sql_db` yang normal
+        muncul saat Postgres menolak query ini — errornya memang
+        diharapkan dan sudah ditangkap lewat `assertRaises`, bukan
+        kebocoran nyata yang harus menggagalkan `oca_checklog_odoo` di CI.
         """
         color_scheme = self.env["dashboard.color_scheme"].create(
             {"name": "Referenced", "code": "DASH-RESTRICT-CS-01"}
@@ -84,6 +88,6 @@ class TestDashboardDashboard(YamlTransactionCase):
                 "color_scheme_id": color_scheme.id,
             }
         )
-        with self.assertRaises(IntegrityError):
+        with mute_logger("odoo.sql_db"), self.assertRaises(IntegrityError):
             with self.env.cr.savepoint():
                 color_scheme.unlink()

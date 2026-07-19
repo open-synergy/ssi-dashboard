@@ -17,7 +17,7 @@ modules build on without editing this one: new tile kinds add a
 ``dashboard.color_scheme`` records.
 
 This module ships one built-in data source type (``orm``, reading an Odoo model
-through ``read_group``) and one built-in item type (``placeholder``) so it can be
+through ``_read_group``) and one built-in item type (``placeholder``) so it can be
 installed and tested standalone.
 
 
