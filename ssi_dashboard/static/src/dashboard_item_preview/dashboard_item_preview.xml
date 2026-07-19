@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="ssi_dashboard.DashboardItemPreview">
+        <div class="o_ssi_dashboard_item_preview">
+            <div class="o_ssi_dashboard_item_preview_label" t-esc="previewLabel" />
+            <div
+                t-if="state.error"
+                class="alert alert-danger o_ssi_dashboard_item_preview_error"
+                role="alert"
+                t-esc="state.error"
+            />
+            <div t-elif="state.item" class="o_ssi_dashboard_item_preview_tile">
+                <DashboardItem item="state.item" useExplicitPosition="false" />
+            </div>
+        </div>
+    </t>
+</templates>

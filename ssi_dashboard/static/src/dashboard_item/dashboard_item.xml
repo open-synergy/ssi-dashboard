@@ -2,6 +2,15 @@
 <templates xml:space="preserve">
     <t t-name="ssi_dashboard.DashboardItem">
         <div class="o_ssi_dashboard_item" t-att-style="style + '; ' + themeStyle">
+            <button
+                t-if="props.isAdmin"
+                type="button"
+                class="btn btn-sm btn-light o_ssi_dashboard_item_edit"
+                t-att-title="editLabel"
+                t-on-click.stop="onEditClick"
+            >
+                <i class="fa fa-pencil" />
+            </button>
             <t t-component="Component" item="props.item" />
         </div>
     </t>

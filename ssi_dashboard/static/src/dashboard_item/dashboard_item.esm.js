@@ -1,5 +1,6 @@
 import {Component} from "@odoo/owl";
 import {DashboardItemFallback} from "../dashboard_item_fallback/dashboard_item_fallback.esm";
+import {_t} from "@web/core/l10n/translation";
 import {registry} from "@web/core/registry";
 
 /**
@@ -19,12 +20,26 @@ const itemWidgetRegistry = registry.category("ssi_dashboard.item_widgets");
  * whichever component is registered for its "type" in item_widgets, or to
  * DashboardItemFallback when no such component is registered yet — so an
  * unsupported/unknown type never breaks the whole dashboard.
+ *
+ * "props.isAdmin" (mirrors DashboardAction's "state.isAdmin") shows a
+ * per-tile 'Edit' button overlaid on top of whatever the type-specific
+ * component renders. Pressing it calls "props.onEditClick" with this
+ * item's id — DashboardAction.onEditItemClick() opens the item's own
+ * form (see models/dashboard_item.py's "dashboard_item_view_form") in a
+ * dialog and, once closed, reloads only this one tile (see
+ * DashboardAction.reloadItem()) rather than the whole dashboard. Both
+ * props are optional so this component keeps working unchanged
+ * wherever it is reused without them, e.g.
+ * dashboard_item_preview.esm.js's own preview tile, which never shows
+ * the button.
  */
 export class DashboardItem extends Component {
     static template = "ssi_dashboard.DashboardItem";
     static props = {
         item: Object,
         useExplicitPosition: {type: Boolean, optional: true},
+        isAdmin: {type: Boolean, optional: true},
+        onEditClick: {type: Function, optional: true},
     };
 
     get Component() {
@@ -95,5 +110,18 @@ export class DashboardItem extends Component {
             declarations.push(`--ssi-dashboard-item-border-color: ${borderColor}`);
         }
         return declarations.join("; ");
+    }
+
+    get editLabel() {
+        return _t("Edit");
+    }
+
+    /**
+     * Bound to the 'Edit' button, only rendered when "props.isAdmin".
+     * Forwards to "props.onEditClick" with this item's own id — see the
+     * class docstring for what happens next.
+     */
+    onEditClick() {
+        this.props.onEditClick(this.props.item.id);
     }
 }

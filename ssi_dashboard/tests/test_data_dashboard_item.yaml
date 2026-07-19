@@ -723,3 +723,52 @@ scenarios:
                 type: "o2m"
                 check: "count"
                 expected_count: 0
+
+  - name: "Preview Render Payload Rejects Non Admin User"
+    steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-20"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-20"
+      - step: "Create item"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item Preview Access"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Create a plain dashboard user (not administrator)"
+        action: "create"
+        model: "res.users"
+        save_as: "dashboard_user"
+        values:
+          name: "Dashboard User"
+          login: "dashboard-user-preview@example.com"
+          group_ids:
+            - - 6
+              - 0
+              - - "REF: base.group_user"
+                - "REF: ssi_dashboard.group_dashboard_user"
+      - step: "Non admin user calling preview must be rejected"
+        action: "call"
+        target: "item"
+        method: "preview_render_payload"
+        as_user: "dashboard_user"
+        args:
+          - {}
+        expect_error:
+          type: "UserError"

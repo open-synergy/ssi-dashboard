@@ -6,4 +6,20 @@
     // show no extra border here.
     border-left: 4px solid var(--ssi-dashboard-item-border-color, transparent);
     border-radius: 4px;
+    // Anchors ".o_ssi_dashboard_item_edit" to this tile's own corner
+    // instead of the whole grid.
+    position: relative;
+
+    .o_ssi_dashboard_item_edit {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        z-index: 1;
+        opacity: 0;
+        transition: opacity 0.15s ease-in-out;
+    }
+
+    &:hover .o_ssi_dashboard_item_edit {
+        opacity: 1;
+    }
 }

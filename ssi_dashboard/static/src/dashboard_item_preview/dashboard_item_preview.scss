@@ -1,0 +1,27 @@
+.o_ssi_dashboard_item_preview {
+    margin-bottom: 16px;
+    padding: 12px;
+    border: 1px dashed #adb5bd;
+    border-radius: 4px;
+
+    .o_ssi_dashboard_item_preview_label {
+        margin-bottom: 8px;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
+
+    .o_ssi_dashboard_item_preview_tile {
+        height: 220px;
+
+        // DashboardItem's own "style"/"themeStyle" getters emit
+        // grid-column/grid-row declarations meant for the real
+        // dashboard's CSS grid — harmless no-ops here since this
+        // wrapper is not "display: grid", but the tile still needs its
+        // own height since nothing else here provides one.
+        .o_ssi_dashboard_item {
+            height: 100%;
+        }
+    }
+}
