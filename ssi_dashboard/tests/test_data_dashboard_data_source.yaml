@@ -169,3 +169,48 @@ scenarios:
           type: "ValueError"
         values:
           aggregate: "median"
+
+  - name: "Selecting Non-Date Group By Field Clears Granularity"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "model_a"
+      - step: "Find the 'name' field on res.partner"
+        action: "search"
+        model: "ir.model.fields"
+        domain: [["model", "=", "res.partner"], ["name", "=", "name"]]
+        save_as: "non_date_field"
+        limit: 1
+      - step: "Fill form and pick a non-date group by field"
+        action: "form"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        save: true
+        ops:
+          - set: {name: "Form Granularity Source"}
+          - set: {code: "DS-GRAN-FORM-01"}
+          - set: {type: "orm"}
+          - set: {model_id: "REC: model_a"}
+          - set: {group_by_field_id: "REC: non_date_field"}
+          - assert:
+              group_by_granularity:
+                type: "value"
+                operator: "is_falsy"
+
+  - name: "Invalid Group By Granularity Value Is Rejected"
+    steps:
+      - step: "Create data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Generic Source"
+          code: "DS-BADGRAN-01"
+      - step: "Write invalid granularity value"
+        action: "write"
+        target: "data_source"
+        expect_error:
+          type: "ValueError"
+        values:
+          group_by_granularity: "decade"

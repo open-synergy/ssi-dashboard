@@ -53,6 +53,11 @@
                             <field name="measure_field_id" />
                             <field name="aggregate" />
                             <field name="group_by_field_id" />
+                            <field name="group_by_field_is_date" invisible="1" />
+                            <field
+                                name="group_by_granularity"
+                                invisible="not group_by_field_is_date"
+                            />
                             <field name="limit" />
                         </group>
                     </page>
