@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <!-- Global multi-company isolation: dashboard.dashboard.company_id is
+         NOT required (a dashboard may be deliberately cross-company), so
+         a record with an empty company_id stays visible to every user
+         alongside the companies allowed in the current session. No
+         `groups` field on purpose -> applies to every user, same as the
+         other multi-company rules shipped by Odoo core. -->
+    <record id="dashboard_dashboard_multi_company_rule" model="ir.rule">
+        <field name="name">Dashboard - Multi Company</field>
+        <field name="model_id" ref="model_dashboard_dashboard" />
+        <field
+            name="domain_force"
+        >['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>

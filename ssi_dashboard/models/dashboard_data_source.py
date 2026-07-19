@@ -72,6 +72,16 @@ class DashboardDataSource(models.Model):
         "Another data source with that code already exists.",
     )
 
+    company_id = fields.Many2one(
+        comodel_name="res.company",
+        ondelete="restrict",
+        default=lambda self: self.env.company,
+        help="Company this data source belongs to. Left empty, the data "
+        "source is visible to every user regardless of company — clear "
+        "it deliberately to build a cross-company data source. Also "
+        "narrows '_fetch_data_orm' reads on 'Model' to this company when "
+        "'Model' itself tracks company (see '_prepare_company_domain').",
+    )
     type = fields.Selection(
         selection=[
             ("orm", "Odoo Model"),
@@ -1564,6 +1574,35 @@ Solution: Install a module that implements this 'Date Range' value
             domain += dashboard_filter._prepare_domain()
         return domain
 
+    def _prepare_company_domain(self):
+        """Build the domain fragment that restricts a read on
+        :attr:`model_id` to the companies the current user may see, when
+        that model tracks company at all.
+
+        :meth:`_fetch_data_orm` reads :attr:`model_id` through
+        ``sudo()``, which bypasses that model's own multi-company record
+        rule entirely — without this fragment, a dashboard item could
+        surface data from a company the current user has no access to.
+        Models with no ``company_id`` field of their own are left
+        unfiltered, exactly as before this method existed.
+
+        :return: ``[]`` when :attr:`model_id` is not set or has no
+            ``company_id`` field. Otherwise a single domain tuple:
+            restricted to this data source's own :attr:`company_id` when
+            set, or to ``self.env.companies.ids`` (the companies allowed
+            in the current session) when :attr:`company_id` is empty.
+        :rtype: list
+        """
+        self.ensure_one()
+        if not self.model_id:
+            return []
+        model = self.env[self.model_id.model]
+        if "company_id" not in model._fields:
+            return []
+        if self.company_id:
+            return [("company_id", "=", self.company_id.id)]
+        return [("company_id", "in", self.env.companies.ids)]
+
     def _fetch_data_orm(self, item, date_range_override=None):
         """Fetch data for the 'orm' data source type.
 
@@ -1623,6 +1662,13 @@ Solution: Install a module that implements this 'Date Range' value
         ``dashboard_drilldown_extra_domain`` context key unset) behaves
         exactly as before drill-down existed.
 
+        :meth:`_prepare_company_domain` contributes a final fragment,
+        also ANDed in, restricting the read to :attr:`company_id` (or,
+        when empty, every company the current user may see) whenever
+        :attr:`model_id` tracks company — since this method reads
+        through ``sudo()``, that model's own multi-company record rule
+        would otherwise not apply.
+
         As a last step, :meth:`_postprocess_rows` applies
         :attr:`fill_temporal`, :attr:`sort_by`/:attr:`sort_order`, and
         :attr:`limit`, in that order.
@@ -1655,6 +1701,7 @@ Solution: Set the Model field on this data source
             + self._prepare_date_domain(date_range_override)
             + self._prepare_filter_domain()
             + self._prepare_drilldown_extra_domain()
+            + self._prepare_company_domain()
         )
         model = self.env[self.model_id.model].sudo()
         aggregates, column_names = self._prepare_aggregate_spec()

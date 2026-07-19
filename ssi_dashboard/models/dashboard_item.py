@@ -252,6 +252,24 @@ Solution: Set 'Data Source', or choose a 'Type' that does not require one
 """
                 raise ValidationError(error_message)
 
+    @api.constrains("dashboard_id", "data_source_id")
+    def _check_data_source_company(self):
+        for item in self:
+            dashboard_company = item.dashboard_id.company_id
+            source_company = item.data_source_id.company_id
+            if not dashboard_company or not source_company:
+                continue
+            if dashboard_company != source_company:
+                error_message = f"""
+Context: Configure dashboard item
+Database ID: {item.id}
+Problem: 'Data Source' belongs to company '{source_company.name}', which \
+differs from this item's dashboard company '{dashboard_company.name}'
+Solution: Pick a 'Data Source' with the same 'Company' as the dashboard \
+(or empty), or clear 'Company' on the dashboard or the data source
+"""
+                raise ValidationError(error_message)
+
     @api.constrains("multiplier")
     def _check_multiplier_not_zero(self):
         for item in self:

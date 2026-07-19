@@ -45,6 +45,14 @@ class DashboardDashboard(models.Model):
         "Another dashboard with that code already exists.",
     )
 
+    company_id = fields.Many2one(
+        comodel_name="res.company",
+        ondelete="restrict",
+        default=lambda self: self.env.company,
+        help="Company this dashboard belongs to. Left empty, the "
+        "dashboard is visible to every user regardless of company — "
+        "clear it deliberately to build a cross-company dashboard.",
+    )
     color_scheme_id = fields.Many2one(
         comodel_name="dashboard.color_scheme",
         ondelete="restrict",

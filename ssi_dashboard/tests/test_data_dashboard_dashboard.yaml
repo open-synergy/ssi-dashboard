@@ -509,6 +509,88 @@ scenarios:
             type: "value"
             operator: "is_truthy"
 
+  - name: "Creating Dashboard Without Company Defaults To Active Company"
+    steps:
+      - step: "Create dashboard without setting company_id"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Default Company Dashboard"
+          code: "DASH-COMPANY-DEFAULT-01"
+      - step: "Assert company_id defaults to the active company"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          company_id:
+            type: "m2o"
+            expected: "REC: company"
+
+  - name: "User Sees Own Company And Company-less Dashboards But Not Another Company's"
+    steps:
+      - step: "Create a second company"
+        action: "create"
+        model: "res.company"
+        save_as: "company_b"
+        values:
+          name: "Second Company"
+      - step: "Create dashboard belonging to the active company"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard_own"
+        values:
+          name: "Own Company Dashboard"
+          code: "DASH-COMPANY-MC-OWN-01"
+          company_id: "REC: company.id"
+      - step: "Create dashboard belonging to the second company"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard_other"
+        values:
+          name: "Other Company Dashboard"
+          code: "DASH-COMPANY-MC-OTHER-01"
+          company_id: "REC: company_b.id"
+      - step: "Create dashboard with no company"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard_empty"
+        values:
+          name: "Company-less Dashboard"
+          code: "DASH-COMPANY-MC-EMPTY-01"
+          company_id: false
+      - step: "Create a plain dashboard user"
+        action: "create"
+        model: "res.users"
+        save_as: "company_user"
+        values:
+          name: "Company Scoped User"
+          login: "company-scoped-user@example.com"
+          group_ids:
+            - - 6
+              - 0
+              - - "REF: base.group_user"
+                - "REF: ssi_dashboard.group_dashboard_user"
+      - step: "Searching with only the active company allowed finds only that company's and the company-less dashboard"
+        action: "search"
+        model: "dashboard.dashboard"
+        domain:
+          [
+            [
+              "code",
+              "in",
+              [
+                "DASH-COMPANY-MC-OWN-01",
+                "DASH-COMPANY-MC-OTHER-01",
+                "DASH-COMPANY-MC-EMPTY-01",
+              ],
+            ],
+          ]
+        as_user: "company_user"
+        context:
+          allowed_company_ids: ["REC: company.id"]
+        save_as: "visible_dashboards"
+        expect_count: 2
+
   - name: "Save Layout By Non Admin User Is Rejected"
     steps:
       - step: "Get res.partner model"
