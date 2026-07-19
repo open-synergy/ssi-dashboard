@@ -65,6 +65,40 @@ class TestDashboardDashboard(YamlTransactionCase):
         self.assertEqual(len(payload["items"]), 1)
         self.assertEqual(payload["items"][0]["name"], "Item A")
 
+    def test_get_dashboard_payload_refresh_interval_is_int(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        `get_dashboard_payload` diuji lewat nilai balik method (kunci
+        `refresh_interval` di dalam dict payload, hasil konversi
+        `int(self.refresh_interval)`). `action: call` di YAML membuang
+        nilai balik method (L-01), dan sisi actual sebuah assert selalu
+        berupa dotted `getattr` pada record (L-02) — isi dict hasil
+        method tidak bisa diverifikasi lewat YAML sama sekali, dan tipe
+        Python (`int` vs `str`) juga tidak bisa dibedakan lewat YAML.
+        """
+        dashboard = self.env["dashboard.dashboard"].create(
+            {
+                "name": "Refresh Payload Dashboard",
+                "code": "DASH-PAYLOAD-REFRESH-01",
+                "refresh_interval": "300",
+            }
+        )
+        payload = dashboard.get_dashboard_payload()
+        self.assertEqual(payload["refresh_interval"], 300)
+        self.assertIsInstance(payload["refresh_interval"], int)
+
+    def test_get_dashboard_payload_refresh_interval_off_is_zero(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Sama seperti di atas: nilai balik method, bukan efek samping pada
+        record, jadi tidak bisa diuji lewat YAML (L-01, L-02).
+        """
+        dashboard = self.env["dashboard.dashboard"].create(
+            {"name": "Refresh Off Dashboard", "code": "DASH-PAYLOAD-REFRESH-OFF-01"}
+        )
+        payload = dashboard.get_dashboard_payload()
+        self.assertEqual(payload["refresh_interval"], 0)
+
     def test_action_open_dashboard_returns_client_action(self):
         """Python murni — pemicu P1 (L-01, L-02).
 

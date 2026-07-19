@@ -4,13 +4,27 @@
         <div class="o_ssi_dashboard" t-att-style="rootStyle">
             <div class="o_ssi_dashboard_header">
                 <h2 class="o_ssi_dashboard_title" t-esc="dashboard.name" />
-                <button
-                    t-if="state.isAdmin and !state.editMode"
-                    type="button"
-                    class="btn btn-secondary o_ssi_dashboard_edit_layout"
-                    t-on-click="onEditLayoutClick"
-                    t-esc="editLayoutLabel"
+                <span
+                    t-if="state.refreshFailed"
+                    class="o_ssi_dashboard_refresh_failed text-danger"
+                    t-esc="refreshFailedLabel"
                 />
+                <div class="o_ssi_dashboard_header_actions">
+                    <button
+                        type="button"
+                        class="btn btn-secondary o_ssi_dashboard_refresh"
+                        t-att-disabled="state.isRefreshing"
+                        t-on-click="onManualRefreshClick"
+                        t-esc="refreshLabel"
+                    />
+                    <button
+                        t-if="state.isAdmin and !state.editMode"
+                        type="button"
+                        class="btn btn-secondary o_ssi_dashboard_edit_layout"
+                        t-on-click="onEditLayoutClick"
+                        t-esc="editLayoutLabel"
+                    />
+                </div>
             </div>
             <t t-if="!state.editMode">
                 <DashboardFilterBar

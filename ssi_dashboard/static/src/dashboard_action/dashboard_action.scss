@@ -15,6 +15,17 @@
             margin: 0;
             color: var(--ssi-dashboard-title, inherit);
         }
+
+        .o_ssi_dashboard_refresh_failed {
+            font-size: 0.85rem;
+        }
+
+        .o_ssi_dashboard_header_actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
     }
 
     .o_ssi_dashboard_grid {
