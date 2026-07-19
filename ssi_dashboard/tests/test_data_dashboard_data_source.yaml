@@ -284,10 +284,10 @@ scenarios:
         domain: [["model", "=", "res.partner"], ["name", "=", "country_id"]]
         save_as: "group_field"
         limit: 1
-      - step: "Find company_type field on res.partner"
+      - step: "Find industry_id field on res.partner"
         action: "search"
         model: "ir.model.fields"
-        domain: [["model", "=", "res.partner"], ["name", "=", "company_type"]]
+        domain: [["model", "=", "res.partner"], ["name", "=", "industry_id"]]
         save_as: "sub_group_field"
         limit: 1
       - step: "Fill form, set both group by fields on model A, then switch model"

@@ -1111,68 +1111,78 @@ class TestDashboardDataSource(YamlTransactionCase):
         diverifikasi dengan meng-assert nilai balik method langsung
         (L-01/L-02), karena `action: call` YAML membuang nilai balik dan
         tidak bisa meng-assert ekspresi bebas seperti `len(rows)`.
+
+        `industry_id` (bukan `company_type`) dipakai sebagai field sub
+        group karena `company_type` adalah field computed tanpa
+        `store=True` di `res.partner` — `_read_group` tidak bisa
+        mengelompokkan field yang tidak tersimpan di database
+        (`ValueError: Cannot convert ... to SQL because it is not
+        stored`). `industry_id` sekaligus melatih jalur label relasional
+        (`display_name`) untuk dimensi kedua, sama seperti `country_id`
+        untuk dimensi pertama.
         """
         partner_model = self.env.ref("base.model_res_partner")
         country_field = self.env["ir.model.fields"].search(
             [("model", "=", "res.partner"), ("name", "=", "country_id")],
             limit=1,
         )
-        company_type_field = self.env["ir.model.fields"].search(
-            [("model", "=", "res.partner"), ("name", "=", "company_type")],
+        industry_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.partner"), ("name", "=", "industry_id")],
             limit=1,
         )
         country_a = self.env.ref("base.us")
         country_b = self.env.ref("base.id")
+        industry_x, industry_y = self.env["res.partner.industry"].create(
+            [
+                {"name": "Two Dim Industry X"},
+                {"name": "Two Dim Industry Y"},
+            ]
+        )
         partners = self.env["res.partner"].create(
             [
                 {
-                    "name": "Two Dim Partner A Company",
+                    "name": "Two Dim Partner A Industry X",
                     "country_id": country_a.id,
-                    "company_type": "company",
-                    "is_company": True,
+                    "industry_id": industry_x.id,
                 },
                 {
-                    "name": "Two Dim Partner A Person",
+                    "name": "Two Dim Partner A Industry Y",
                     "country_id": country_a.id,
-                    "company_type": "person",
-                    "is_company": False,
+                    "industry_id": industry_y.id,
                 },
                 {
-                    "name": "Two Dim Partner B Person 1",
+                    "name": "Two Dim Partner B Industry Y 1",
                     "country_id": country_b.id,
-                    "company_type": "person",
-                    "is_company": False,
+                    "industry_id": industry_y.id,
                 },
                 {
-                    "name": "Two Dim Partner B Person 2",
+                    "name": "Two Dim Partner B Industry Y 2",
                     "country_id": country_b.id,
-                    "company_type": "person",
-                    "is_company": False,
+                    "industry_id": industry_y.id,
                 },
             ]
         )
         data_source = self.env["dashboard.data_source"].create(
             {
-                "name": "Partners By Country And Type",
+                "name": "Partners By Country And Industry",
                 "code": "DASH-SUBGROUPBY-01",
                 "type": "orm",
                 "model_id": partner_model.id,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
-                "sub_group_by_field_id": company_type_field.id,
+                "sub_group_by_field_id": industry_field.id,
             }
         )
         rows = data_source._fetch_data(self.env["dashboard.item"])
-        # Country A has two distinct company_type values (2 rows), country
-        # B has a single company_type value (1 row) -> 3 combinations.
+        # Country A has two distinct industries (2 rows), country B has a
+        # single industry (1 row) -> 3 combinations.
         self.assertEqual(len(rows), 3)
         combos = {
-            (row["group_label"], row["sub_group_label"]): row["__count"]
-            for row in rows
+            (row["group_label"], row["sub_group_label"]): row["__count"] for row in rows
         }
-        self.assertEqual(combos[(country_a.display_name, "Company")], 1)
-        self.assertEqual(combos[(country_a.display_name, "Individual")], 1)
-        self.assertEqual(combos[(country_b.display_name, "Individual")], 2)
+        self.assertEqual(combos[(country_a.display_name, industry_x.display_name)], 1)
+        self.assertEqual(combos[(country_a.display_name, industry_y.display_name)], 1)
+        self.assertEqual(combos[(country_b.display_name, industry_y.display_name)], 2)
         for row in rows:
             self.assertIn("sub_group_key", row)
             self.assertIn("sub_group_label", row)
