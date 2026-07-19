@@ -373,3 +373,73 @@ class TestDashboardItem(YamlTransactionCase):
         payload = item._prepare_render_payload()
         self.assertIn("goal", payload)
         self.assertAlmostEqual(payload["goal"], 2500.0, places=2)
+
+    def test_prepare_render_payload_theme_non_custom_has_none_colors(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Sama seperti test payload lain di atas: isi dict payload hanya
+        bisa diperiksa lewat nilai balik method (L-01/L-02). 'Item
+        Theme' 'Warning' (bukan 'custom') harus membuat
+        `payload['theme']['header_color']` dan `['border_color']`
+        bernilai `None` — server tidak menyalin warna, browser yang
+        merujuk variabel CSS palet '--ssi-dashboard-warning' (Kriteria
+        Penerimaan: tema selain 'custom' menghasilkan warna bernilai
+        `None` di payload).
+        """
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners",
+                "code": "DASH-ITEM-THEME-WARNING-DS-01",
+                "type": "orm",
+                "model_id": self.env["ir.model"]._get("res.partner").id,
+            }
+        )
+        dashboard = self.env["dashboard.dashboard"].create(
+            {"name": "Theme Warning Dashboard", "code": "DASH-ITEM-THEME-WARNING-01"}
+        )
+        item = self.env["dashboard.item"].create(
+            {
+                "name": "Item Warning Theme",
+                "dashboard_id": dashboard.id,
+                "type": "placeholder",
+                "data_source_id": data_source.id,
+                "item_theme": "warning",
+            }
+        )
+        payload = item._prepare_render_payload()
+        self.assertIn("theme", payload)
+        self.assertEqual(payload["theme"]["name"], "warning")
+        self.assertIsNone(payload["theme"]["header_color"])
+        self.assertIsNone(payload["theme"]["border_color"])
+
+    def test_prepare_render_payload_theme_custom_carries_its_own_colors(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Sama seperti di atas. 'Item Theme' 'Custom Colors' dengan
+        'Header Color' terisi harus membuat payload memuat warna itu
+        apa adanya di `payload['theme']['header_color']`.
+        """
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners",
+                "code": "DASH-ITEM-THEME-CUSTOM-DS-01",
+                "type": "orm",
+                "model_id": self.env["ir.model"]._get("res.partner").id,
+            }
+        )
+        dashboard = self.env["dashboard.dashboard"].create(
+            {"name": "Theme Custom Dashboard", "code": "DASH-ITEM-THEME-CUSTOM-01"}
+        )
+        item = self.env["dashboard.item"].create(
+            {
+                "name": "Item Custom Theme",
+                "dashboard_id": dashboard.id,
+                "type": "placeholder",
+                "data_source_id": data_source.id,
+                "item_theme": "custom",
+                "item_header_color": "#ff0000",
+            }
+        )
+        payload = item._prepare_render_payload()
+        self.assertEqual(payload["theme"]["name"], "custom")
+        self.assertEqual(payload["theme"]["header_color"], "#ff0000")

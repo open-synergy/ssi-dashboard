@@ -71,6 +71,7 @@
                                 <field name="row_start" optional="hide" />
                                 <field name="column_width" />
                                 <field name="row_height" />
+                                <field name="item_theme" optional="hide" />
                                 <field name="goal_type" />
                                 <field
                                     name="goal_value"
@@ -110,6 +111,7 @@
                             <field name="color_scheme_id" />
                             <field name="group_ids" widget="many2many_tags" />
                             <field name="refresh_interval" />
+                            <field name="fullscreen_enabled" />
                         </group>
                         <group name="dashboard_dashboard_menu" string="Menu">
                             <field name="generate_menu" />

@@ -122,6 +122,13 @@ class DashboardDashboard(models.Model):
         "refresh; the manual reload button is always available "
         "regardless of this setting.",
     )
+    fullscreen_enabled = fields.Boolean(
+        default=True,
+        help="Whether the browser shows a button to display this "
+        "dashboard in fullscreen mode, hiding the surrounding Odoo "
+        "backend chrome while keeping the filter bar and reload button "
+        "available.",
+    )
 
     @api.constrains("generate_menu", "parent_menu_id")
     def _check_generate_menu_parent(self):
@@ -248,7 +255,8 @@ Solution: Set 'Parent Menu' or disable 'Generate Menu'
             ``filter_ids`` from :meth:`_resolve_active_filters`, so the
             browser can pre-select them), ``refresh_interval`` (int,
             :attr:`refresh_interval` converted to seconds; ``0`` means
-            auto-refresh is off) and ``items`` (list of
+            auto-refresh is off), ``fullscreen_enabled`` (bool,
+            :attr:`fullscreen_enabled` as-is) and ``items`` (list of
             :meth:`dashboard.item._prepare_render_payload` results,
             ordered by ``sequence``, each filtered per
             ``active_filters``).
@@ -270,6 +278,7 @@ Solution: Set 'Parent Menu' or disable 'Generate Menu'
             "filters": [filter_._prepare_filter_payload() for filter_ in filters],
             "active_filter_ids": resolved_filters["filter_ids"],
             "refresh_interval": int(self.refresh_interval),
+            "fullscreen_enabled": self.fullscreen_enabled,
             "items": [
                 item._prepare_render_payload(active_filters=resolved_filters)
                 for item in items

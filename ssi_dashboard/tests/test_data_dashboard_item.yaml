@@ -526,6 +526,151 @@ scenarios:
         values:
           column_width: 0
 
+  - name: "Create Item Without Item Theme Defaults To Inherit"
+    steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-16"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-16"
+      - step: "Create item without item_theme"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item Without Theme"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Assert item_theme defaults to inherit"
+        action: "assert"
+        target: "item"
+        asserts:
+          item_theme:
+            type: "value"
+            expected: "inherit"
+
+  - name: "Custom Item Theme Without Any Color Is Rejected"
+    steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-17"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-17"
+      - step: "Create item with custom theme but no color must be rejected"
+        action: "create"
+        model: "dashboard.item"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Item Custom Without Color"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+          item_theme: "custom"
+
+  - name: "Writing An Out Of Selection Item Theme Is Rejected"
+    steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-18"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-18"
+      - step: "Create item"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item Theme Selection"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Write item_theme outside the selection must be rejected"
+        action: "write"
+        target: "item"
+        expect_error:
+          type: "ValueError"
+        values:
+          item_theme: "info"
+
+  - name: "Changing Item Theme From Custom To Primary Clears Colors"
+    steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-19"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-19"
+      - step: "Create item with a custom theme and both colors set"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item Custom Theme"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+          item_theme: "custom"
+          item_header_color: "#ff0000"
+          item_border_color: "#00ff00"
+      - step: "Open item in a form and switch item_theme to primary"
+        action: "form"
+        target: "item"
+        save: false
+        ops:
+          - set: {item_theme: "primary"}
+          - assert:
+              item_header_color:
+                type: "value"
+                operator: "is_falsy"
+          - assert:
+              item_border_color:
+                type: "value"
+                operator: "is_falsy"
+
   - name: "Changing Goal Type To None Clears Goal Value And Goals"
     steps:
       - step: "Create data source for items"

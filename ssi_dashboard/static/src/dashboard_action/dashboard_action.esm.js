@@ -61,6 +61,7 @@ export class DashboardAction extends Component {
     setup() {
         this.orm = useService("orm");
         this.gridRef = useRef("grid");
+        this.rootRef = useRef("root");
         // Last "active_filters" selection sent to get_dashboard_payload
         // (see DashboardFilterBar's "onChange" prop) — not reactive
         // state on purpose, it is only ever read back by
@@ -69,12 +70,14 @@ export class DashboardAction extends Component {
         this.currentFilters = null;
         this.refreshTimerId = null;
         this.onVisibilityChange = this.onVisibilityChange.bind(this);
+        this.onFullscreenChange = this.onFullscreenChange.bind(this);
         this.dashboard = useState({
             name: "",
             color_scheme: {},
             filters: [],
             active_filter_ids: [],
             refresh_interval: 0,
+            fullscreen_enabled: true,
             items: [],
         });
         this.state = useState({
@@ -83,6 +86,7 @@ export class DashboardAction extends Component {
             editItems: [],
             isRefreshing: false,
             refreshFailed: false,
+            isFullscreen: false,
         });
         onWillStart(async () => {
             await this.loadDashboard();
@@ -92,6 +96,12 @@ export class DashboardAction extends Component {
         });
         onMounted(() => this.startAutoRefresh());
         onWillUnmount(() => this.stopAutoRefresh());
+        onMounted(() =>
+            document.addEventListener("fullscreenchange", this.onFullscreenChange)
+        );
+        onWillUnmount(() =>
+            document.removeEventListener("fullscreenchange", this.onFullscreenChange)
+        );
     }
 
     get dashboardId() {
@@ -254,6 +264,44 @@ export class DashboardAction extends Component {
 
     get editLayoutLabel() {
         return _t("Edit Layout");
+    }
+
+    get fullscreenLabel() {
+        return this.state.isFullscreen ? _t("Exit Fullscreen") : _t("Fullscreen");
+    }
+
+    /**
+     * Bound to the 'Fullscreen'/'Exit Fullscreen' button, only shown
+     * when "dashboard.fullscreen_enabled" (see
+     * models/dashboard_dashboard.py's "fullscreen_enabled" field).
+     *
+     * Uses the browser's native Fullscreen API on this component's own
+     * root element (".o_ssi_dashboard", see "rootRef") rather than
+     * hiding the surrounding Odoo backend chrome with CSS — so exiting
+     * fullscreen (via this button, the browser's own UI, or Escape)
+     * always restores the page correctly, and the filter bar/reload
+     * button (rendered inside the root element) stay available while
+     * fullscreen. "state.isFullscreen" itself is kept in sync by
+     * "onFullscreenChange" listening for the native "fullscreenchange"
+     * event, so it also reflects fullscreen exited through means other
+     * than this button.
+     */
+    onFullscreenClick() {
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else {
+            this.rootRef.el.requestFullscreen();
+        }
+    }
+
+    /**
+     * Bound to the document's "fullscreenchange" event (see setup()).
+     * Keeps "state.isFullscreen" in sync with the actual browser state,
+     * regardless of what triggered the change (this component's own
+     * button, the browser's UI, or the Escape key).
+     */
+    onFullscreenChange() {
+        this.state.isFullscreen = document.fullscreenElement === this.rootRef.el;
     }
 
     /**
