@@ -115,6 +115,13 @@ msgid "CSS value assigned to the custom property (e.g. '#1f6feb')."
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__client_action_id
+msgid ""
+"Client action generated for this dashboard's menu item. Managed by "
+"'_sync_menu', do not edit manually."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__code
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__code
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__code
@@ -253,6 +260,13 @@ msgid "Determines the display order of items on the dashboard."
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__menu_sequence
+msgid ""
+"Determines the display order of the generated menu item among its siblings "
+"under 'Parent Menu'."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme_color__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__display_name
@@ -285,6 +299,21 @@ msgstr ""
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__activity_type_icon
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__activity_type_icon
 msgid "Font awesome icon e.g. fa-tasks"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__generate_menu
+msgid "Generate Menu"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__client_action_id
+msgid "Generated Client Action"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__menu_id
+msgid "Generated Menu"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -387,6 +416,13 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__menu_name
+msgid ""
+"Label of the generated menu item. Leave empty to reuse this dashboard's "
+"'Name'."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__name
 msgid "Label shown on the item's tile."
 msgstr ""
@@ -433,6 +469,35 @@ msgid ""
 "* Click 'Generate Code' button to automatically assign code.\n"
 "  Sequence template must be set to perform this action\n"
 "  Only master data with '/' code will be assign automatic code"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_dashboard_view_form
+msgid "Menu"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__menu_name
+msgid "Menu Name"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__menu_sequence
+msgid "Menu Sequence"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__menu_id
+msgid ""
+"Menu item generated for this dashboard. Managed by '_sync_menu', do not edit"
+" manually."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__parent_menu_id
+msgid ""
+"Menu the generated menu item is placed under. Required when 'Generate Menu' "
+"is enabled."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -550,6 +615,11 @@ msgid "Open Dashboard"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__parent_menu_id
+msgid "Parent Menu"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__type__placeholder
 msgid "Placeholder"
 msgstr ""
@@ -619,6 +689,14 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme_color__value
 msgid "Value"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__generate_menu
+msgid ""
+"When enabled, this dashboard also shows up as its own menu item under "
+"'Parent Menu', in addition to being reachable from the 'Open Dashboard' "
+"button here."
 msgstr ""
 
 #. module: ssi_dashboard
