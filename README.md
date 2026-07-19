@@ -55,7 +55,7 @@ Available addons
 ----------------
 addon | version | maintainers | summary
 --- | --- | --- | ---
-[ssi_dashboard](ssi_dashboard/) | 19.0.1.10.0 |  | Dashboard
+[ssi_dashboard](ssi_dashboard/) | 19.0.1.11.0 |  | Dashboard
 [ssi_dashboard_color_scheme_ssi](ssi_dashboard_color_scheme_ssi/) | 19.0.1.0.1 |  | Dashboard Color Scheme - SSI
 [ssi_dashboard_item_chart](ssi_dashboard_item_chart/) | 19.0.1.0.0 |  | Dashboard Item - Chart
 [ssi_dashboard_item_list](ssi_dashboard_item_list/) | 19.0.1.0.0 |  | Dashboard Item - List
