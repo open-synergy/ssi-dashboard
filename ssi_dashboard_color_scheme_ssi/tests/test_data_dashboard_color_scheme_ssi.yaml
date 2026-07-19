@@ -19,20 +19,33 @@ scenarios:
             type: "value"
             expected: "ssi_dark"
 
-  - name: "SSI Light color scheme has ten color rows"
+  - name: "SSI Light color scheme has eighteen color rows"
     steps:
       - step: "Get ssi_light color scheme by XML ID"
         action: "ref"
         xml_id: "ssi_dashboard_color_scheme_ssi.dashboard_color_scheme_ssi_light"
         save_as: "scheme"
-      - step: "Assert ten colors"
+      - step: "Assert eighteen colors"
         action: "assert"
         target: "scheme"
         asserts:
           color_ids:
             type: "o2m"
             check: "count"
-            expected_count: 10
+            expected_count: 18
+
+  - name: "SSI Light color scheme has exactly one chart-1 color row"
+    steps:
+      - step: "Get ssi_light color scheme by XML ID"
+        action: "ref"
+        xml_id: "ssi_dashboard_color_scheme_ssi.dashboard_color_scheme_ssi_light"
+        save_as: "scheme"
+      - step: "Search chart-1 color row on ssi_light"
+        action: "search"
+        model: "dashboard.color_scheme.color"
+        domain: [["color_scheme_id", "=", "REC: scheme.id"], ["key", "=", "chart-1"]]
+        save_as: "chart_1_rows"
+        expect_count: 1
 
   - name: "Assigning ssi_corporate_blue to a dashboard sets its color scheme"
     steps:
