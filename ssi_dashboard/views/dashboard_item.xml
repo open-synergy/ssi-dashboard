@@ -14,8 +14,8 @@
             <form string="Dashboard Item">
                 <sheet>
                     <group name="dashboard_item_goal_header">
-                        <field name="name" readonly="1" />
-                        <field name="goal_type" readonly="1" />
+                        <field name="name" />
+                        <field name="goal_type" />
                     </group>
                     <field name="goal_ids">
                         <list editable="bottom">
