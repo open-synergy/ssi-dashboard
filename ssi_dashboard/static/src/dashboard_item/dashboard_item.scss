@@ -33,4 +33,29 @@
     &.o_ssi_dashboard_item_clickable [data-ssi-dashboard-row-domain] {
         cursor: pointer;
     }
+
+    // Breadcrumb trail shown once at least one drill-down level has been
+    // visited (see "canDrillBack"/"drilldownTrail" in
+    // dashboard_item.esm.js) — "Back" plus one clickable segment per
+    // level already passed.
+    .o_ssi_dashboard_item_drilldown_trail {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-bottom: 4px;
+        font-size: 0.85rem;
+
+        .o_ssi_dashboard_item_drilldown_back {
+            padding: 0 4px;
+        }
+
+        .o_ssi_dashboard_item_drilldown_crumb {
+            text-decoration: none;
+        }
+
+        .o_ssi_dashboard_item_drilldown_sep {
+            color: var(--o-gray-500, #adb5bd);
+        }
+    }
 }

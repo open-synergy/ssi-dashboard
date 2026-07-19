@@ -447,21 +447,24 @@ Solution: Set 'Date Field', or change 'Comparison' back to 'No Comparison'
         ):
             self.sub_group_by_granularity = False
 
-    def _fetch_data(self, item, active_filters=None):
+    def _fetch_data(self, item, active_filters=None, extra_domain=None):
         """Fetch the raw data for a dashboard item.
 
         Dispatches to ``self._fetch_data_<type>(item)``. Extension modules
         implementing a new :attr:`type` only need to add that method —
         this dispatcher stays untouched.
 
-        :attr:`active_filters` is not passed as a positional/keyword
-        argument to ``_fetch_data_<type>`` — that would break every
-        extension module's existing ``_fetch_data_<type>(self, item)``
-        signature. Instead it travels through the ``dashboard_active_
-        filters`` context key, so only :meth:`_fetch_data_orm` (which
-        reads it back via :meth:`_prepare_filter_domain`/
-        :meth:`_prepare_date_domain`) needs to know about it; any other
-        ``_fetch_data_<type>`` keeps working completely unmodified.
+        Neither :attr:`active_filters` nor ``extra_domain`` is passed as a
+        positional/keyword argument to ``_fetch_data_<type>`` — that would
+        break every extension module's existing
+        ``_fetch_data_<type>(self, item)`` signature. Instead both travel
+        through context keys (``dashboard_active_filters``,
+        ``dashboard_drilldown_extra_domain``), so only
+        :meth:`_fetch_data_orm` (which reads them back via
+        :meth:`_prepare_filter_domain`/:meth:`_prepare_date_domain`/
+        :meth:`_prepare_drilldown_extra_domain`) needs to know about them;
+        any other ``_fetch_data_<type>`` keeps working completely
+        unmodified.
 
         :param item: ``dashboard.item`` record requesting the data.
         :param active_filters: resolved 'active_filters' dict, as built
@@ -470,6 +473,17 @@ Solution: Set 'Date Field', or change 'Comparison' back to 'No Comparison'
             default) applies no filter/date override, keeping calls made
             before this argument existed working unchanged.
         :type active_filters: dict or None
+        :param extra_domain: extra domain ANDed in front of the domain
+            :meth:`_fetch_data_orm` would otherwise build on its own —
+            used by ``dashboard.item.fetch_drilldown_data`` to narrow a
+            read down to the branch of the drill-down chain being
+            explored (its own ``path`` argument). Never trusted to
+            replace this data source's own domain/date/filter
+            contributions, only to narrow them further — see
+            :meth:`_prepare_drilldown_extra_domain`. ``None`` (the
+            default) contributes nothing, keeping calls made before this
+            argument existed working unchanged.
+        :type extra_domain: list or None
         :return: list of dict, the raw rows for the item to render.
         :rtype: list
         :raises UserError: when no ``_fetch_data_<type>`` method exists
@@ -477,7 +491,10 @@ Solution: Set 'Date Field', or change 'Comparison' back to 'No Comparison'
         """
         self.ensure_one()
         method_name = f"_fetch_data_{self.type}"
-        record = self.with_context(dashboard_active_filters=active_filters)
+        record = self.with_context(
+            dashboard_active_filters=active_filters,
+            dashboard_drilldown_extra_domain=extra_domain,
+        )
         method = getattr(record, method_name, None)
         if method is None:
             error_message = f"""
@@ -489,6 +506,28 @@ Solution: Install a module that implements {method_name}
 """
             raise UserError(error_message)
         return method(item)
+
+    def _prepare_drilldown_extra_domain(self):
+        """Build the domain fragment contributed by an in-progress
+        drill-down navigation, read back from the
+        ``dashboard_drilldown_extra_domain`` context key set by
+        :meth:`_fetch_data`.
+
+        Not trusted as-is beyond being ANDed onto the rest of
+        :meth:`_fetch_data_orm`'s own domain (:attr:`domain`,
+        :meth:`_prepare_date_domain`, :meth:`_prepare_filter_domain`):
+        this only ever narrows the result down further, it can never
+        widen it — see ``dashboard.item.fetch_drilldown_data``.
+
+        :return: the ``dashboard_drilldown_extra_domain`` context value
+            when it is a ``list``; ``[]`` otherwise (including when the
+            context key is absent, e.g. every call made before drill-down
+            existed).
+        :rtype: list
+        """
+        self.ensure_one()
+        extra_domain = self.env.context.get("dashboard_drilldown_extra_domain")
+        return extra_domain if isinstance(extra_domain, list) else []
 
     def _prepare_groupby_spec(self):
         """Build the ``_read_group`` groupby specification for this data
@@ -1544,6 +1583,13 @@ Solution: Install a module that implements this 'Date Range' value
         ``dashboard.dashboard.get_dashboard_payload`` (that context key
         unset) behaves exactly as before filters existed.
 
+        An in-progress drill-down navigation (see
+        ``dashboard.item.fetch_drilldown_data``) contributes one more
+        fragment, built by :meth:`_prepare_drilldown_extra_domain`, also
+        ANDed in. A call made outside of that navigation (the
+        ``dashboard_drilldown_extra_domain`` context key unset) behaves
+        exactly as before drill-down existed.
+
         As a last step, :meth:`_postprocess_rows` applies
         :attr:`fill_temporal`, :attr:`sort_by`/:attr:`sort_order`, and
         :attr:`limit`, in that order.
@@ -1575,6 +1621,7 @@ Solution: Set the Model field on this data source
             self._prepare_domain()
             + self._prepare_date_domain(date_range_override)
             + self._prepare_filter_domain()
+            + self._prepare_drilldown_extra_domain()
         )
         model = self.env[self.model_id.model].sudo()
         aggregates, column_names = self._prepare_aggregate_spec()

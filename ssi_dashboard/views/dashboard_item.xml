@@ -55,6 +55,22 @@
                             <field name="value" />
                         </list>
                     </field>
+                    <group name="dashboard_item_drilldown" string="Drill-Down Chain">
+                        <field name="drilldown_ids" nolabel="1">
+                            <list editable="bottom">
+                                <field name="sequence" widget="handle" />
+                                <field
+                                    name="data_source_model_id"
+                                    column_invisible="1"
+                                />
+                                <field
+                                    name="field_id"
+                                    domain="[('model_id', '=', data_source_model_id)]"
+                                />
+                                <field name="granularity" />
+                            </list>
+                        </field>
+                    </group>
                 </sheet>
             </form>
         </field>

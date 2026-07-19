@@ -1,0 +1,146 @@
+setup:
+  steps:
+    - step: "Get res.partner model"
+      action: "ref"
+      xml_id: "base.model_res_partner"
+      save_as: "res_partner_model"
+    - step: "Get res.partner country_id field"
+      action: "ref"
+      xml_id: "base.field_res_partner__country_id"
+      save_as: "country_field"
+    - step: "Get res.partner industry_id field"
+      action: "ref"
+      xml_id: "base.field_res_partner__industry_id"
+      save_as: "industry_field"
+    - step: "Get res.company name field (belongs to a different model)"
+      action: "ref"
+      xml_id: "base.field_res_company__name"
+      save_as: "company_name_field"
+
+scenarios:
+  - name: "Drill-Down Level Out Of Range Is Rejected"
+    steps:
+      - step: "Create data source for drilldown"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-DRILLDOWN-RANGE-DS-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for drilldown"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Drilldown Range Dashboard"
+          code: "DASH-DRILLDOWN-RANGE-DASH-01"
+      - step: "Create item with a two-level drill-down chain"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item With Chain"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+          drilldown_ids:
+            - - 0
+              - 0
+              - sequence: 10
+                field_id: "REC: country_field.id"
+                granularity: false
+            - - 0
+              - 0
+              - sequence: 20
+                field_id: "REC: industry_field.id"
+                granularity: false
+      - step: "Requesting level 5 on a two-level chain must be rejected"
+        action: "call"
+        target: "item"
+        method: "fetch_drilldown_data"
+        expect_error:
+          type: "UserError"
+        args:
+          - 5
+          - []
+
+  - name: "Drill-Down Field Must Belong To Data Source Model"
+    steps:
+      - step: "Create data source for drilldown"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-DRILLDOWN-FIELDMODEL-DS-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for drilldown"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Drilldown Field Model Dashboard"
+          code: "DASH-DRILLDOWN-FIELDMODEL-DASH-01"
+      - step: "Create item"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item Wrong Model Field"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step:
+          "Adding a drilldown level pointing to another model's field must be rejected"
+        action: "create"
+        model: "dashboard.item.drilldown"
+        expect_error:
+          type: "UserError"
+        values:
+          item_id: "REC: item.id"
+          sequence: 10
+          field_id: "REC: company_name_field.id"
+          granularity: false
+
+  - name: "Drill-Down Granularity Requires Date Field"
+    steps:
+      - step: "Create data source for drilldown"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-DRILLDOWN-GRAN-DS-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for drilldown"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Drilldown Granularity Dashboard"
+          code: "DASH-DRILLDOWN-GRAN-DASH-01"
+      - step: "Create item"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item Granularity"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step:
+          "Adding a drilldown level with granularity on a non-date field must be
+          rejected"
+        action: "create"
+        model: "dashboard.item.drilldown"
+        expect_error:
+          type: "UserError"
+        values:
+          item_id: "REC: item.id"
+          sequence: 10
+          field_id: "REC: country_field.id"
+          granularity: "month"
