@@ -183,6 +183,12 @@ msgid "CSS value assigned to the custom property (e.g. '#1f6feb')."
 msgstr ""
 
 #. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_layout_editor/dashboard_layout_editor.esm.js:0
+msgid "Cancel"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__client_action_id
 msgid ""
 "Client action generated for this dashboard's menu item. Managed by "
@@ -228,6 +234,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__color_ids
 #: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_color_scheme_view_form
 msgid "Colors"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__column_start
+msgid "Column Start"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -527,6 +538,18 @@ msgid "Domain"
 msgstr ""
 
 #. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_layout_editor/dashboard_layout_editor.esm.js:0
+msgid "Drag a tile to move it, or its bottom-right handle to resize it."
+msgstr ""
+
+#. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_action/dashboard_action.esm.js:0
+msgid "Edit Layout"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_filter__default_active
 msgid ""
 "Enable so this filter is already active the first time the dashboard is "
@@ -738,7 +761,7 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__row_height
-msgid "Height of this item's tile, in grid rows."
+msgid "Height of this item's tile, in grid rows. Must be at least 1."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1361,8 +1384,19 @@ msgid "Row Height"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__row_start
+msgid "Row Start"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__comparison__previous_year
 msgid "Same Period Previous Year"
+msgstr ""
+
+#. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_layout_editor/dashboard_layout_editor.esm.js:0
+msgid "Save"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1392,6 +1426,27 @@ msgstr ""
 msgid ""
 "Sort direction applied when 'Sort By' is not 'Unsorted'. Ignored when 'Sort "
 "By' is 'Unsorted'."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__column_start
+msgid ""
+"Starting column of this item's tile on the dashboard's 12-column grid, "
+"0-indexed. Must be between 0 and 11, and 'Column Start' plus 'Column Width' "
+"must not exceed 12. When every item of a dashboard has 'Column Start' and "
+"'Row Start' at 0 (the state right after installing/updating this module), "
+"the browser places items flowing in 'Sequence' order instead, as before this"
+" field existed. As soon as a layout is saved through the dashboard's layout "
+"editor, every item of that dashboard gets explicit coordinates and flowing "
+"placement no longer applies to it."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__row_start
+msgid ""
+"Starting row of this item's tile on the dashboard grid, 0-indexed. See "
+"'Column Start' for the flowing-placement fallback rule that applies while "
+"this stays 0 on every item of the dashboard."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1578,7 +1633,9 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__column_width
-msgid "Width of this item's tile, in grid columns out of 12."
+msgid ""
+"Width of this item's tile, in grid columns out of 12. Must be between 1 and "
+"12, and 'Column Start' plus 'Column Width' must not exceed 12."
 msgstr ""
 
 #. module: ssi_dashboard
