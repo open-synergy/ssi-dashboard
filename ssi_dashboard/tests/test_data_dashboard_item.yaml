@@ -4,26 +4,26 @@ setup:
       action: "ref"
       xml_id: "base.model_res_partner"
       save_as: "res_partner_model"
-    - step: "Create data source for items"
-      action: "create"
-      model: "dashboard.data_source"
-      save_as: "data_source"
-      values:
-        name: "Partners"
-        code: "DASH-ITEM-DS-01"
-        type: "orm"
-        model_id: "REC: res_partner_model.id"
-    - step: "Create dashboard for items"
-      action: "create"
-      model: "dashboard.dashboard"
-      save_as: "dashboard"
-      values:
-        name: "Item Test Dashboard"
-        code: "DASH-ITEM-DASH-01"
 
 scenarios:
   - name: "Create Item Without Active Uses Default True"
     steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-01"
       - step: "Create item"
         action: "create"
         model: "dashboard.item"
@@ -43,6 +43,22 @@ scenarios:
 
   - name: "Deactivate Item"
     steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-02"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-02"
       - step: "Create item"
         action: "create"
         model: "dashboard.item"
@@ -68,6 +84,22 @@ scenarios:
 
   - name: "Delete Item"
     steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-03"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-03"
       - step: "Create item"
         action: "create"
         model: "dashboard.item"

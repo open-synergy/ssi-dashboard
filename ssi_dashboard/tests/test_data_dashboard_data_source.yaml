@@ -136,7 +136,7 @@ scenarios:
         action: "form"
         model: "dashboard.data_source"
         save_as: "data_source"
-        save: false
+        save: true
         ops:
           - set: {name: "Form Data Source"}
           - set: {code: "DS-FORM-01"}
