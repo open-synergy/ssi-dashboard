@@ -303,8 +303,8 @@ scenarios:
           name: "Custom Range Source"
           code: "DS-DATERANGE-CUSTOM-01"
           date_range: "custom"
-          date_start: "2026-01-01"
-          date_end: "2026-01-31"
+          date_start: 2026-01-01
+          date_end: 2026-01-31
       - step: "Assert custom date range stored"
         action: "assert"
         target: "data_source"
@@ -314,10 +314,10 @@ scenarios:
             expected: "custom"
           date_start:
             type: "value"
-            expected: "2026-01-01"
+            expected: 2026-01-01
           date_end:
             type: "value"
-            expected: "2026-01-31"
+            expected: 2026-01-31
 
   - name: "Data Source Without Date Field Defaults To All Time"
     steps:
@@ -350,15 +350,15 @@ scenarios:
           - set: {name: "Form Date Range Source"}
           - set: {code: "DS-DATERANGE-FORM-01"}
           - set: {date_range: "custom"}
-          - set: {date_start: "2026-02-01"}
-          - set: {date_end: "2026-02-28"}
+          - set: {date_start: 2026-02-01}
+          - set: {date_end: 2026-02-28}
           - assert:
               date_start:
                 type: "value"
-                expected: "2026-02-01"
+                expected: 2026-02-01
               date_end:
                 type: "value"
-                expected: "2026-02-28"
+                expected: 2026-02-28
           - set: {date_range: "this_month"}
           - assert:
               date_start:
@@ -391,8 +391,8 @@ scenarios:
           name: "Bad Custom Range Order"
           code: "DS-DATERANGE-BADORDER-01"
           date_range: "custom"
-          date_start: "2026-03-31"
-          date_end: "2026-03-01"
+          date_start: 2026-03-31
+          date_end: 2026-03-01
 
   - name: "Create Measure With Non Numeric Field Is Rejected"
     steps:
