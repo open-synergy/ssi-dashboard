@@ -1,0 +1,120 @@
+setup:
+  steps:
+    - step: "Get res.partner model"
+      action: "ref"
+      xml_id: "base.model_res_partner"
+      save_as: "res_partner_model"
+
+scenarios:
+  - name: "Create Item Without Active Uses Default True"
+    steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-01"
+      - step: "Create item"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item A"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Assert active defaults to True"
+        action: "assert"
+        target: "item"
+        asserts:
+          active:
+            type: "value"
+            operator: "is_truthy"
+
+  - name: "Deactivate Item"
+    steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-02"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-02"
+      - step: "Create item"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item B"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+          active: true
+      - step: "Deactivate item"
+        action: "write"
+        target: "item"
+        values:
+          active: false
+      - step: "Assert item deactivated"
+        action: "assert"
+        target: "item"
+        asserts:
+          active:
+            type: "value"
+            operator: "is_falsy"
+
+  - name: "Delete Item"
+    steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-03"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-03"
+      - step: "Create item"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item To Delete"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Delete item"
+        action: "unlink"
+        target: "item"
+      - step: "Verify deleted"
+        action: "search"
+        model: "dashboard.item"
+        domain: [["name", "=", "Item To Delete"]]
+        save_as: "result"
+        expect_count: 0

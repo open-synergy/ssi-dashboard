@@ -50,7 +50,10 @@
                             <field name="type" />
                             <field name="model_id" />
                             <field name="domain" />
-                            <field name="config" />
+                            <field name="measure_field_id" />
+                            <field name="aggregate" />
+                            <field name="group_by_field_id" />
+                            <field name="limit" />
                         </group>
                     </page>
                 </xpath>

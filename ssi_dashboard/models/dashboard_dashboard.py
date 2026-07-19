@@ -41,7 +41,6 @@ class DashboardDashboard(models.Model):
     )
 
     color_scheme_id = fields.Many2one(
-        string="Color Scheme",
         comodel_name="dashboard.color_scheme",
         ondelete="restrict",
         help="Color scheme applied when rendering this dashboard. Left "
@@ -70,7 +69,6 @@ class DashboardDashboard(models.Model):
         "dashboard's 'Name'.",
     )
     parent_menu_id = fields.Many2one(
-        string="Parent Menu",
         comodel_name="ir.ui.menu",
         ondelete="restrict",
         help="Menu the generated menu item is placed under. Required when "

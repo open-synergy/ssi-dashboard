@@ -42,7 +42,6 @@ class DashboardItem(models.Model):
         "'_prepare_render_payload_<type>' method.",
     )
     data_source_id = fields.Many2one(
-        string="Data Source",
         comodel_name="dashboard.data_source",
         required=True,
         ondelete="restrict",
@@ -59,6 +58,10 @@ class DashboardItem(models.Model):
         default=1,
         help="Height of this item's tile, in grid rows.",
     )
+    active = fields.Boolean(
+        default=True,
+        help="Untick to hide this item from its dashboard without deleting it.",
+    )
 
     def _prepare_render_payload(self):
         """Build the payload the browser uses to render this item.
@@ -70,7 +73,7 @@ class DashboardItem(models.Model):
         payload is returned as-is.
 
         :return: dict with keys ``id``, ``name``, ``type``,
-            ``column_width``, ``row_height``, ``config`` and ``data``.
+            ``column_width``, ``row_height``, ``active`` and ``data``.
         :rtype: dict
         """
         self.ensure_one()
@@ -80,7 +83,7 @@ class DashboardItem(models.Model):
             "type": self.type,
             "column_width": self.column_width,
             "row_height": self.row_height,
-            "config": self.config,
+            "active": self.active,
             "data": self.data_source_id._fetch_data(self),
         }
         enrich_method = getattr(self, f"_prepare_render_payload_{self.type}", None)
