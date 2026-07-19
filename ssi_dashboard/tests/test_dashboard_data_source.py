@@ -92,13 +92,13 @@ class TestDashboardDataSource(YamlTransactionCase):
                 {"name": "Group By Partner B1", "country_id": country_b.id},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         data_source = self.env["dashboard.data_source"].create(
             {
                 "name": "Partners By Country",
                 "code": "DASH-GROUPBY-COUNTRY-01",
                 "type": "orm",
                 "model_id": partner_model.id,
-                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
             }
@@ -139,13 +139,13 @@ class TestDashboardDataSource(YamlTransactionCase):
                 {"name": "Row Domain Partner B1", "country_id": country_b.id},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         data_source = self.env["dashboard.data_source"].create(
             {
                 "name": "Partners By Country Row Domain",
                 "code": "DASH-ROWDOMAIN-COUNTRY-01",
                 "type": "orm",
                 "model_id": partner_model.id,
-                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
             }
@@ -206,13 +206,13 @@ class TestDashboardDataSource(YamlTransactionCase):
         partners = self.env["res.partner"].create(
             [{"name": "No Group Partner 1"}, {"name": "No Group Partner 2"}]
         )
+        partners.write({"company_id": self.env.company.id})
         data_source = self.env["dashboard.data_source"].create(
             {
                 "name": "All Partners",
                 "code": "DASH-NOGROUPBY-01",
                 "type": "orm",
                 "model_id": partner_model.id,
-                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
             }
         )
@@ -419,13 +419,13 @@ class TestDashboardDataSource(YamlTransactionCase):
                 {"name": "Sum Partner 3", "partner_latitude": 30.0},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         data_source = self.env["dashboard.data_source"].create(
             {
                 "name": "Partners Latitude Sum",
                 "code": "DASH-MEASURE-SUM-01",
                 "type": "orm",
                 "model_id": partner_model.id,
-                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "measure_field_id": latitude_field.id,
                 "aggregate": "sum",
@@ -455,13 +455,13 @@ class TestDashboardDataSource(YamlTransactionCase):
                 {"name": "Multi Measure Partner 3", "partner_latitude": 30.0},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         data_source = self.env["dashboard.data_source"].create(
             {
                 "name": "Partners Latitude Multi Measure",
                 "code": "DASH-MEASURE-MULTI-01",
                 "type": "orm",
                 "model_id": partner_model.id,
-                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "measure_ids": [
                     (
@@ -843,6 +843,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 {"name": "Sort Partner C3", "country_id": country_c.id},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         country_field = self.env["ir.model.fields"].search(
             [("model", "=", "res.partner"), ("name", "=", "country_id")],
             limit=1,
@@ -853,7 +854,6 @@ class TestDashboardDataSource(YamlTransactionCase):
                 "code": "DASH-SORT-MEASURE-01",
                 "type": "orm",
                 "model_id": partner_model.id,
-                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
                 "sort_by": "measure",
@@ -883,6 +883,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 {"name": "Limit Partner C1", "country_id": country_c.id},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         country_field = self.env["ir.model.fields"].search(
             [("model", "=", "res.partner"), ("name", "=", "country_id")],
             limit=1,
@@ -893,7 +894,6 @@ class TestDashboardDataSource(YamlTransactionCase):
                 "code": "DASH-LIMIT-CUT-01",
                 "type": "orm",
                 "model_id": partner_model.id,
-                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
                 "limit": 2,
@@ -920,6 +920,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 {"name": "NoLimit Partner C1", "country_id": country_c.id},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         country_field = self.env["ir.model.fields"].search(
             [("model", "=", "res.partner"), ("name", "=", "country_id")],
             limit=1,
@@ -930,7 +931,6 @@ class TestDashboardDataSource(YamlTransactionCase):
                 "code": "DASH-LIMIT-ZERO-01",
                 "type": "orm",
                 "model_id": partner_model.id,
-                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
                 "limit": 0,
@@ -1038,6 +1038,7 @@ class TestDashboardDataSource(YamlTransactionCase):
         partners = self.env["res.partner"].create(
             [{"name": "Fill Ignored Partner 1", "country_id": country_a.id}]
         )
+        partners.write({"company_id": self.env.company.id})
         country_field = self.env["ir.model.fields"].search(
             [("model", "=", "res.partner"), ("name", "=", "country_id")],
             limit=1,
@@ -1048,7 +1049,6 @@ class TestDashboardDataSource(YamlTransactionCase):
                 "code": "DASH-FILLTEMPORAL-IGNORED-01",
                 "type": "orm",
                 "model_id": partner_model.id,
-                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
                 "fill_temporal": True,
@@ -1260,6 +1260,7 @@ class TestDashboardDataSource(YamlTransactionCase):
                 {"name": "Label Sort Partner ID", "country_id": country_id.id},
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         country_field = self.env["ir.model.fields"].search(
             [("model", "=", "res.partner"), ("name", "=", "country_id")],
             limit=1,
@@ -1270,7 +1271,6 @@ class TestDashboardDataSource(YamlTransactionCase):
                 "code": "DASH-SORT-LABEL-01",
                 "type": "orm",
                 "model_id": partner_model.id,
-                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
                 "sort_by": "label",
@@ -1347,13 +1347,13 @@ class TestDashboardDataSource(YamlTransactionCase):
                 },
             ]
         )
+        partners.write({"company_id": self.env.company.id})
         data_source = self.env["dashboard.data_source"].create(
             {
                 "name": "Partners By Country And Industry",
                 "code": "DASH-SUBGROUPBY-01",
                 "type": "orm",
                 "model_id": partner_model.id,
-                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
                 "sub_group_by_field_id": industry_field.id,
@@ -1396,13 +1396,13 @@ class TestDashboardDataSource(YamlTransactionCase):
         partners = self.env["res.partner"].create(
             [{"name": "Single Dim Partner 1", "country_id": country_a.id}]
         )
+        partners.write({"company_id": self.env.company.id})
         data_source = self.env["dashboard.data_source"].create(
             {
                 "name": "Partners By Country Single Dim",
                 "code": "DASH-SUBGROUPBY-NONE-01",
                 "type": "orm",
                 "model_id": partner_model.id,
-                "company_id": False,
                 "domain": f"[('id', 'in', {partners.ids!r})]",
                 "group_by_field_id": country_field.id,
             }
