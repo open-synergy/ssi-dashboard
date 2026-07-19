@@ -417,6 +417,115 @@ scenarios:
           data_source_id: "REC: data_source.id"
           unit_type: "custom"
 
+  - name: "Create Item Without Layout Coordinates Uses Defaults"
+    steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-13"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-13"
+      - step: "Create item without column_start/row_start"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item Without Layout Coordinates"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Assert column_start and row_start default to 0"
+        action: "assert"
+        target: "item"
+        asserts:
+          column_start:
+            type: "value"
+            expected: 0
+          row_start:
+            type: "value"
+            expected: 0
+
+  - name: "Column Start Plus Column Width Exceeding Grid Is Rejected"
+    steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-14"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-14"
+      - step: "Create item with column_width 4"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item Column Start"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+          column_width: 4
+      - step: "Write column_start to 10 must be rejected"
+        action: "write"
+        target: "item"
+        expect_error:
+          type: "ValidationError"
+        values:
+          column_start: 10
+
+  - name: "Column Width Zero Is Rejected"
+    steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-15"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-15"
+      - step: "Create item"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item Column Width"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Write column_width to 0 must be rejected"
+        action: "write"
+        target: "item"
+        expect_error:
+          type: "ValidationError"
+        values:
+          column_width: 0
+
   - name: "Changing Goal Type To None Clears Goal Value And Goals"
     steps:
       - step: "Create data source for items"

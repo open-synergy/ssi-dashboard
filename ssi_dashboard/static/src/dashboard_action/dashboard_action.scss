@@ -5,6 +5,10 @@
     color: var(--ssi-dashboard-text, #212529);
 
     .o_ssi_dashboard_header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
         margin-bottom: 16px;
 
         .o_ssi_dashboard_title {

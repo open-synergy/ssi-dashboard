@@ -4,20 +4,37 @@
         <div class="o_ssi_dashboard" t-att-style="rootStyle">
             <div class="o_ssi_dashboard_header">
                 <h2 class="o_ssi_dashboard_title" t-esc="dashboard.name" />
-            </div>
-            <DashboardFilterBar
-                filters="dashboard.filters"
-                activeFilterIds="dashboard.active_filter_ids"
-                onChange.bind="onFilterChange"
-            />
-            <div class="o_ssi_dashboard_grid">
-                <DashboardItem
-                    t-foreach="dashboard.items"
-                    t-as="item"
-                    t-key="item.id"
-                    item="item"
+                <button
+                    t-if="state.isAdmin and !state.editMode"
+                    type="button"
+                    class="btn btn-secondary o_ssi_dashboard_edit_layout"
+                    t-on-click="onEditLayoutClick"
+                    t-esc="editLayoutLabel"
                 />
             </div>
+            <t t-if="!state.editMode">
+                <DashboardFilterBar
+                    filters="dashboard.filters"
+                    activeFilterIds="dashboard.active_filter_ids"
+                    onChange.bind="onFilterChange"
+                />
+                <div class="o_ssi_dashboard_grid" t-ref="grid">
+                    <DashboardItem
+                        t-foreach="dashboard.items"
+                        t-as="item"
+                        t-key="item.id"
+                        item="item"
+                        useExplicitPosition="useExplicitPosition"
+                    />
+                </div>
+            </t>
+            <t t-else="">
+                <DashboardLayoutEditor
+                    items="state.editItems"
+                    onSave.bind="onSaveLayoutClick"
+                    onCancel.bind="onCancelLayoutClick"
+                />
+            </t>
         </div>
     </t>
 </templates>

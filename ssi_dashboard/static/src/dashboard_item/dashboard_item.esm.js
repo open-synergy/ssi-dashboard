@@ -22,14 +22,35 @@ const itemWidgetRegistry = registry.category("ssi_dashboard.item_widgets");
  */
 export class DashboardItem extends Component {
     static template = "ssi_dashboard.DashboardItem";
-    static props = {item: Object};
+    static props = {
+        item: Object,
+        useExplicitPosition: {type: Boolean, optional: true},
+    };
 
     get Component() {
         return itemWidgetRegistry.get(this.props.item.type, DashboardItemFallback);
     }
 
+    /**
+     * "props.useExplicitPosition" mirrors dashboard.item's "Aturan tata
+     * letak tunggal" (see models/dashboard_item.py docstring on
+     * "column_start"): when every item of the dashboard is still at the
+     * (0, 0) flowing-placement default, this is false for all of them
+     * and the browser's own CSS grid auto-placement positions the tile
+     * (unchanged from before "column_start"/"row_start" existed). Once
+     * a layout has been saved through the layout editor, this is true
+     * and the tile is positioned at its explicit coordinates instead.
+     *
+     * @returns {String}
+     */
     get style() {
         const item = this.props.item;
+        if (this.props.useExplicitPosition) {
+            return (
+                `grid-column: ${item.column_start + 1} / span ${item.column_width}; ` +
+                `grid-row: ${item.row_start + 1} / span ${item.row_height};`
+            );
+        }
         return `grid-column: span ${item.column_width}; grid-row: span ${item.row_height};`;
     }
 }

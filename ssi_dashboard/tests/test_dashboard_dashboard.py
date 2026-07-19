@@ -82,6 +82,58 @@ class TestDashboardDashboard(YamlTransactionCase):
         self.assertEqual(action["tag"], "ssi_dashboard.dashboard_view")
         self.assertEqual(action["context"]["dashboard_id"], dashboard.id)
 
+    def test_save_layout_writes_coordinates_and_returns_true(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        `save_layout` diuji lewat nilai balik method (harus `True`,
+        Kriteria Penerimaan) sekaligus lewat field yang benar-benar
+        tertulis di `dashboard.item` setelah dipanggil. `action: call`
+        di YAML membuang nilai balik method (L-01) dan sisi actual
+        sebuah assert selalu berupa dotted `getattr` pada record
+        (L-02) — 'nilai balik `True`' pada bagian ini tidak bisa
+        diverifikasi lewat YAML sama sekali. Berjalan sebagai
+        `self.env.user` bawaan `TransactionCase` (OdooBot/uid=1), yang
+        menjadi anggota `group_dashboard_admin` lewat
+        `security/res_groups/dashboard.xml` (`base.user_root`), jadi
+        `_check_save_layout_access` lolos di sini tanpa perlu
+        membuat user tambahan.
+        """
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners",
+                "code": "DASH-SAVE-LAYOUT-DS-01",
+                "type": "orm",
+                "model_id": self.env["ir.model"]._get("res.partner").id,
+            }
+        )
+        dashboard = self.env["dashboard.dashboard"].create(
+            {"name": "Save Layout Dashboard", "code": "DASH-SAVE-LAYOUT-01"}
+        )
+        item = self.env["dashboard.item"].create(
+            {
+                "name": "Item A",
+                "dashboard_id": dashboard.id,
+                "type": "placeholder",
+                "data_source_id": data_source.id,
+            }
+        )
+        result = dashboard.save_layout(
+            [
+                {
+                    "id": item.id,
+                    "column_start": 3,
+                    "row_start": 2,
+                    "column_width": 5,
+                    "row_height": 4,
+                }
+            ]
+        )
+        self.assertTrue(result)
+        self.assertEqual(item.column_start, 3)
+        self.assertEqual(item.row_start, 2)
+        self.assertEqual(item.column_width, 5)
+        self.assertEqual(item.row_height, 4)
+
     def test_unlink_referenced_color_scheme_raises_integrity_error(self):
         """Python murni — pemicu P5 (L-22).
 
