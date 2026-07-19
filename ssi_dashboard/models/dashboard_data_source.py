@@ -138,6 +138,36 @@ class DashboardDataSource(models.Model):
         "datetime field, used to show/hide 'Group By Granularity' in the "
         "form view.",
     )
+    sub_group_by_field_id = fields.Many2one(
+        comodel_name="ir.model.fields",
+        ondelete="set null",
+        domain="[('model_id', '=', model_id)]",
+        help="Optional second field of 'Model' that rows are further "
+        "grouped by, after 'Group By Field' — needed for chart series "
+        "that break the same rows down by a second dimension (e.g. team "
+        "within country). Requires 'Group By Field' to be set and must "
+        "be different from it. Left empty, rows carry a single "
+        "dimension exactly as before this field existed.",
+    )
+    sub_group_by_granularity = fields.Selection(
+        selection=[
+            ("hour", "Hour"),
+            ("day", "Day"),
+            ("week", "Week"),
+            ("month", "Month"),
+            ("quarter", "Quarter"),
+            ("year", "Year"),
+        ],
+        default="month",
+        help="Granularity used to group 'Sub Group By Field' when it is "
+        "a date or datetime field. Ignored for any other field type.",
+    )
+    sub_group_by_field_is_date = fields.Boolean(
+        compute="_compute_sub_group_by_field_is_date",
+        help="Technical field. True when 'Sub Group By Field' is a date "
+        "or datetime field, used to show/hide 'Sub Group By Granularity' "
+        "in the form view.",
+    )
     limit = fields.Integer(
         default=0,
         help="Maximum number of rows to return, applied after 'Sort By' "
@@ -217,6 +247,36 @@ class DashboardDataSource(models.Model):
                 "date",
                 "datetime",
             )
+
+    @api.depends("sub_group_by_field_id.ttype")
+    def _compute_sub_group_by_field_is_date(self):
+        for record in self:
+            record.sub_group_by_field_is_date = record.sub_group_by_field_id.ttype in (
+                "date",
+                "datetime",
+            )
+
+    @api.constrains("group_by_field_id", "sub_group_by_field_id")
+    def _check_sub_group_by_field_id(self):
+        for record in self:
+            if not record.sub_group_by_field_id:
+                continue
+            if not record.group_by_field_id:
+                error_message = f"""
+Context: Configure dashboard data source sub group by field
+Database ID: {record.id}
+Problem: 'Sub Group By Field' is set but 'Group By Field' is empty
+Solution: Set 'Group By Field' first, or clear 'Sub Group By Field'
+"""
+                raise ValidationError(error_message)
+            if record.sub_group_by_field_id == record.group_by_field_id:
+                error_message = f"""
+Context: Configure dashboard data source sub group by field
+Database ID: {record.id}
+Problem: 'Sub Group By Field' is the same as 'Group By Field'
+Solution: Choose a different field for 'Sub Group By Field', or clear it
+"""
+                raise ValidationError(error_message)
 
     @api.constrains("domain", "model_id")
     def _check_domain(self):
@@ -320,6 +380,19 @@ Solution: Set 'Date Start' to a date on or before 'Date End'
         ):
             self.group_by_granularity = False
 
+    @api.onchange("group_by_field_id")
+    def onchange_sub_group_by_field_id(self):
+        if not self.group_by_field_id:
+            self.sub_group_by_field_id = False
+
+    @api.onchange("sub_group_by_field_id")
+    def onchange_sub_group_by_granularity(self):
+        if not self.sub_group_by_field_id or self.sub_group_by_field_id.ttype not in (
+            "date",
+            "datetime",
+        ):
+            self.sub_group_by_granularity = False
+
     def _fetch_data(self, item):
         """Fetch the raw data for a dashboard item.
 
@@ -352,20 +425,53 @@ Solution: Install a module that implements {method_name}
         source, so extension modules can add further grouping dimensions
         without touching :meth:`_fetch_data_orm`.
 
-        :return: list with zero or one string — ``"<field_name>:<granularity>"``
-            when :attr:`group_by_field_id` is a date/datetime field,
-            ``"<field_name>"`` for any other field type, or an empty list
-            when :attr:`group_by_field_id` is not set.
+        :return: list with zero, one, or two strings —
+            ``"<field_name>:<granularity>"`` for a date/datetime field,
+            ``"<field_name>"`` for any other field type. Empty when
+            :attr:`group_by_field_id` is not set. The first item, when
+            present, always comes from :attr:`group_by_field_id`; a
+            second item, from :attr:`sub_group_by_field_id`, is only
+            added when that field is set — so the first dimension stays
+            the main axis.
         :rtype: list
         """
         self.ensure_one()
         if not self.group_by_field_id:
             return []
-        field_name = self.group_by_field_id.name
-        if self.group_by_field_id.ttype in ("date", "datetime"):
-            granularity = self.group_by_granularity or "month"
-            return [f"{field_name}:{granularity}"]
-        return [field_name]
+        spec = [
+            self._prepare_groupby_spec_one(
+                self.group_by_field_id, self.group_by_granularity
+            )
+        ]
+        if self.sub_group_by_field_id:
+            spec.append(
+                self._prepare_groupby_spec_one(
+                    self.sub_group_by_field_id, self.sub_group_by_granularity
+                )
+            )
+        return spec
+
+    def _prepare_groupby_spec_one(self, field, granularity):
+        """Build a single ``_read_group`` groupby spec string for one
+        field, shared by :meth:`_prepare_groupby_spec` for both the
+        primary and the sub grouping dimension.
+
+        :param field: ``ir.model.fields`` record the groupby spec is
+            built for (:attr:`group_by_field_id` or
+            :attr:`sub_group_by_field_id`).
+        :param granularity: granularity to use when ``field`` is a
+            date/datetime field (:attr:`group_by_granularity` or
+            :attr:`sub_group_by_granularity`).
+        :return: ``"<field_name>:<granularity>"`` for a date/datetime
+            field, ``"<field_name>"`` otherwise.
+        :rtype: str
+        """
+        self.ensure_one()
+        field_name = field.name
+        if field.ttype in ("date", "datetime"):
+            granularity = granularity or "month"
+            return f"{field_name}:{granularity}"
+        return field_name
 
     def _prepare_group_key(self, group_value):
         """Normalize a raw ``_read_group`` groupby value into a plain key
@@ -385,7 +491,7 @@ Solution: Install a module that implements {method_name}
 
     def _prepare_group_label(self, group_value):
         """Build a human-readable label for a raw ``_read_group`` groupby
-        value.
+        value of the primary grouping dimension (:attr:`group_by_field_id`).
 
         :param group_value: raw value returned by ``_read_group`` for the
             groupby column, same shape as received by
@@ -394,13 +500,54 @@ Solution: Install a module that implements {method_name}
         :rtype: str
         """
         self.ensure_one()
+        return self._prepare_group_label_for_field(
+            group_value, self.group_by_field_id, self.group_by_granularity
+        )
+
+    def _prepare_sub_group_label(self, group_value):
+        """Build a human-readable label for a raw ``_read_group`` groupby
+        value of the second grouping dimension
+        (:attr:`sub_group_by_field_id`). Construction rules are exactly
+        the same as :meth:`_prepare_group_label`, only reading the sub
+        group's field/granularity instead of the primary one's.
+
+        :param group_value: raw value returned by ``_read_group`` for the
+            sub groupby column, same shape as received by
+            :meth:`_prepare_group_key`.
+        :return: display string. ``"None"`` when the group has no value.
+        :rtype: str
+        """
+        self.ensure_one()
+        return self._prepare_group_label_for_field(
+            group_value, self.sub_group_by_field_id, self.sub_group_by_granularity
+        )
+
+    def _prepare_group_label_for_field(self, group_value, field, granularity):
+        """Shared implementation behind :meth:`_prepare_group_label` and
+        :meth:`_prepare_sub_group_label`, parametrized by which field/
+        granularity pair to read metadata from.
+
+        :param group_value: raw value returned by ``_read_group`` for the
+            groupby column, same shape as received by
+            :meth:`_prepare_group_key`.
+        :param field: ``ir.model.fields`` record the groupby column was
+            built from (:attr:`group_by_field_id` or
+            :attr:`sub_group_by_field_id`).
+        :param granularity: granularity to use when ``field`` is a
+            date/datetime field (:attr:`group_by_granularity` or
+            :attr:`sub_group_by_granularity`).
+        :return: display string. ``"None"`` when the group has no value.
+        :rtype: str
+        """
+        self.ensure_one()
         if isinstance(group_value, models.BaseModel):
             return group_value.sudo().display_name if group_value else "None"
         if not group_value:
             return "None"
-        field = self.group_by_field_id
         if field.ttype in ("date", "datetime"):
-            return self._format_group_by_date_label(group_value)
+            return self._format_group_by_date_label_for_granularity(
+                group_value, granularity
+            )
         if field.ttype == "selection":
             selection = (
                 self.env[self.model_id.model]
@@ -421,7 +568,25 @@ Solution: Install a module that implements {method_name}
         :rtype: str
         """
         self.ensure_one()
-        granularity = self.group_by_granularity or "month"
+        return self._format_group_by_date_label_for_granularity(
+            value, self.group_by_granularity
+        )
+
+    def _format_group_by_date_label_for_granularity(self, value, granularity):
+        """Shared implementation behind :meth:`_format_group_by_date_label`,
+        parametrized by which granularity to format with, so the primary
+        and the sub grouping dimension can each keep their own
+        :attr:`group_by_granularity` / :attr:`sub_group_by_granularity`.
+
+        :param value: ``date`` or ``datetime`` value returned by
+            ``_read_group`` for a temporal groupby column.
+        :param granularity: one of :attr:`group_by_granularity`'s values.
+        :return: locale-aware display string, e.g. ``"2024"`` for
+            granularity ``year``.
+        :rtype: str
+        """
+        self.ensure_one()
+        granularity = granularity or "month"
         locale = get_lang(self.env).code
         date_format = GROUP_BY_DATE_FORMAT.get(
             granularity, GROUP_BY_DATE_FORMAT["month"]
@@ -1062,6 +1227,14 @@ Solution: Install a module that implements this 'Date Range' value
         no grouping field configured, behavior is unchanged: exactly one
         row per configured measure spec, without those two keys.
 
+        When :attr:`sub_group_by_field_id` is also set, each row gets two
+        further keys: ``sub_group_key`` and ``sub_group_label``, built the
+        same way as ``group_key``/``group_label`` but for the second
+        dimension — one row per combination of the two dimensions that
+        has data. Without :attr:`sub_group_by_field_id`, those two keys
+        are absent entirely (not ``False``), keeping single-dimension
+        data sources exactly as before this second dimension existed.
+
         :attr:`date_field_id` / :attr:`date_range` contribute an extra
         domain fragment built by :meth:`_prepare_date_domain`, ANDed
         with :attr:`domain`. A data source without :attr:`date_field_id`
@@ -1102,13 +1275,22 @@ Solution: Set the Model field on this data source
             ]
             return self._postprocess_rows(result)
         result = []
+        has_sub_group = len(groupby) == 2
         for row in rows:
-            group_value, *aggregate_values = row
+            if has_sub_group:
+                group_value, sub_group_value, *aggregate_values = row
+            else:
+                group_value, *aggregate_values = row
             row_dict = {
                 column_names[spec]: value
                 for spec, value in zip(aggregates, aggregate_values, strict=True)
             }
             row_dict["group_key"] = self._prepare_group_key(group_value)
             row_dict["group_label"] = self._prepare_group_label(group_value)
+            if has_sub_group:
+                row_dict["sub_group_key"] = self._prepare_group_key(sub_group_value)
+                row_dict["sub_group_label"] = self._prepare_sub_group_label(
+                    sub_group_value
+                )
             result.append(row_dict)
         return self._postprocess_rows(result)

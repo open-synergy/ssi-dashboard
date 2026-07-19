@@ -115,6 +115,55 @@ scenarios:
             type: "value"
             expected: false
 
+  - name: "Sub Group By Field Without Group By Field Is Rejected"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Find a field on res.partner for sub grouping"
+        action: "search"
+        model: "ir.model.fields"
+        domain: [["model", "=", "res.partner"], ["name", "=", "country_id"]]
+        save_as: "sub_field"
+        limit: 1
+      - step: "Create data source with sub group by but no group by is rejected"
+        action: "create"
+        model: "dashboard.data_source"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Bad Sub Group By"
+          code: "DS-SUBGROUPBY-NOGROUP-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+          sub_group_by_field_id: "REC: sub_field.id"
+
+  - name: "Sub Group By Field Same As Group By Field Is Rejected"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Find a field on res.partner"
+        action: "search"
+        model: "ir.model.fields"
+        domain: [["model", "=", "res.partner"], ["name", "=", "country_id"]]
+        save_as: "same_field"
+        limit: 1
+      - step: "Create data source with sub group by equal to group by is rejected"
+        action: "create"
+        model: "dashboard.data_source"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Bad Sub Group By Same"
+          code: "DS-SUBGROUPBY-SAME-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+          group_by_field_id: "REC: same_field.id"
+          sub_group_by_field_id: "REC: same_field.id"
+
   - name: "Changing Model Clears Measure And Group By Field"
     steps:
       - step: "Get res.partner model"
@@ -216,6 +265,53 @@ scenarios:
           - set: {group_by_field_id: "REC: non_date_field"}
           - assert:
               group_by_granularity:
+                type: "value"
+                operator: "is_falsy"
+
+  - name: "Clearing Group By Field Also Clears Sub Group By Field"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "model_a"
+      - step: "Get res.users model"
+        action: "ref"
+        xml_id: "base.model_res_users"
+        save_as: "model_b"
+      - step: "Find country_id field on res.partner"
+        action: "search"
+        model: "ir.model.fields"
+        domain: [["model", "=", "res.partner"], ["name", "=", "country_id"]]
+        save_as: "group_field"
+        limit: 1
+      - step: "Find industry_id field on res.partner"
+        action: "search"
+        model: "ir.model.fields"
+        domain: [["model", "=", "res.partner"], ["name", "=", "industry_id"]]
+        save_as: "sub_group_field"
+        limit: 1
+      - step: "Fill form, set both group by fields on model A, then switch model"
+        action: "form"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        save: true
+        ops:
+          - set: {name: "Form Sub Group By Source"}
+          - set: {code: "DS-SUBGROUPBY-FORM-01"}
+          - set: {type: "orm"}
+          - set: {model_id: "REC: model_a"}
+          - set: {group_by_field_id: "REC: group_field"}
+          - set: {sub_group_by_field_id: "REC: sub_group_field"}
+          - assert:
+              sub_group_by_field_id:
+                type: "m2o"
+                expected: "REC: sub_group_field"
+          - set: {model_id: "REC: model_b"}
+          - assert:
+              group_by_field_id:
+                type: "value"
+                operator: "is_falsy"
+              sub_group_by_field_id:
                 type: "value"
                 operator: "is_falsy"
 
