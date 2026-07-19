@@ -192,3 +192,24 @@ Solution: Set 'Field', or change 'Filter Type' to another value
             "filter_type": self.filter_type,
             "default_active": self.default_active,
         }
+
+    def _prepare_export_filter_vals(self):
+        """Build this filter's own entry under
+        ``dashboard.dashboard.prepare_export_definition``'s ``filters``
+        key.
+
+        :return: dict with keys ``name``, ``sequence``, ``filter_type``,
+            ``domain``, ``field`` (see
+            ``dashboard.data_source._export_field_ref``) and
+            ``default_active``.
+        :rtype: dict
+        """
+        self.ensure_one()
+        return {
+            "name": self.name,
+            "sequence": self.sequence,
+            "filter_type": self.filter_type,
+            "domain": self.domain,
+            "field": self.env["dashboard.data_source"]._export_field_ref(self.field_id),
+            "default_active": self.default_active,
+        }

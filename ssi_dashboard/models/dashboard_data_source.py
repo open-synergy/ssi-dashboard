@@ -1827,3 +1827,100 @@ Solution: Install a module that implements {method_name}
             method(item, date_range_override=date_range)
             for date_range in self._prepare_comparison_date_range()
         ]
+
+    @api.model
+    def _export_field_ref(self, field):
+        """Build the name-based reference for one ``ir.model.fields``
+        record, shared by every model whose own fields point at one —
+        this data source's own :attr:`measure_field_id`/
+        :attr:`group_by_field_id`/:attr:`sub_group_by_field_id`/
+        :attr:`date_field_id`, plus
+        ``dashboard.data_source.measure.field_id``,
+        ``dashboard.item.drilldown.field_id`` and
+        ``dashboard.filter.field_id`` — called from those models as
+        ``self.env["dashboard.data_source"]._export_field_ref(...)``,
+        the same cross-model call style already used by
+        ``dashboard.filter._check_filter_type_domain`` for
+        :meth:`_eval_domain_text`.
+
+        A numeric ``id`` is never stored: it is meaningless once the
+        exported file is opened against a different database, and
+        ``ir.model.fields`` ids in particular are not even stable
+        across two installs of the same modules (see
+        ``dashboard.dashboard.prepare_export_definition``).
+
+        :param field: ``ir.model.fields`` record, or an empty recordset.
+        :type field: recordset
+        :return: dict with keys ``model`` (:attr:`field.model`) and
+            ``field`` (:attr:`field.name`), or ``False`` when ``field``
+            is empty.
+        :rtype: dict or bool
+        """
+        if not field:
+            return False
+        return {"model": field.model, "field": field.name}
+
+    def _prepare_export_data_source_vals(self):
+        """Build this data source's own entry under
+        ``dashboard.dashboard.prepare_export_definition``'s
+        ``data_sources`` key.
+
+        :attr:`model_id` is stored as :attr:`model_id.model` (e.g.
+        ``'res.partner'``), never as a numeric id. Every
+        ``ir.model.fields`` reference (:attr:`measure_field_id`,
+        :attr:`group_by_field_id`, :attr:`sub_group_by_field_id`,
+        :attr:`date_field_id`, and each row of :attr:`measure_ids`)
+        goes through :meth:`_export_field_ref`.
+
+        ``query`` (added by ``ssi_dashboard_source_query``, only
+        present on a 'query'-typed data source once that module is
+        installed) is deliberately left out of the field list below:
+        raw SQL can embed table names and assumptions specific to one
+        database, so a data source of type 'query' is exported without
+        its ``query``, and ``dashboard.import.action_import`` leaves it
+        for a dashboard administrator to fill in by hand on the
+        imported data source. Since this whitelist never names
+        ``query`` in the first place, the field is left out whether or
+        not that module happens to be installed — nothing has to
+        special-case it here.
+
+        :return: dict with keys ``name``, ``code``, ``type``, ``model``
+            (technical model name or ``False``), ``domain``,
+            ``measure_field``, ``aggregate``, ``group_by_field``,
+            ``group_by_granularity``, ``sub_group_by_field``,
+            ``sub_group_by_granularity``, ``limit``, ``sort_by``,
+            ``sort_order``, ``fill_temporal``, ``measure_ids`` (list,
+            see ``dashboard.data_source.measure._prepare_export_measure_vals``),
+            ``date_field``, ``date_range``, ``date_start``, ``date_end``
+            (ISO date strings or ``False``), ``comparison`` and
+            ``comparison_year_count``.
+        :rtype: dict
+        """
+        self.ensure_one()
+        return {
+            "name": self.name,
+            "code": self.code,
+            "type": self.type,
+            "model": self.model_id.model or False,
+            "domain": self.domain,
+            "measure_field": self._export_field_ref(self.measure_field_id),
+            "aggregate": self.aggregate,
+            "group_by_field": self._export_field_ref(self.group_by_field_id),
+            "group_by_granularity": self.group_by_granularity or False,
+            "sub_group_by_field": self._export_field_ref(self.sub_group_by_field_id),
+            "sub_group_by_granularity": self.sub_group_by_granularity or False,
+            "limit": self.limit,
+            "sort_by": self.sort_by,
+            "sort_order": self.sort_order,
+            "fill_temporal": self.fill_temporal,
+            "measure_ids": [
+                measure._prepare_export_measure_vals()
+                for measure in self.measure_ids.sorted("sequence")
+            ],
+            "date_field": self._export_field_ref(self.date_field_id),
+            "date_range": self.date_range,
+            "date_start": self.date_start and fields.Date.to_string(self.date_start),
+            "date_end": self.date_end and fields.Date.to_string(self.date_end),
+            "comparison": self.comparison,
+            "comparison_year_count": self.comparison_year_count,
+        }

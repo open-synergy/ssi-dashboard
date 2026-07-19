@@ -21,11 +21,13 @@
         "security/ir_model_access/dashboard_dashboard.xml",
         "security/ir_model_access/dashboard_data_source.xml",
         "security/ir_model_access/dashboard_color_scheme.xml",
+        "security/ir_model_access/dashboard_import.xml",
         "menu.xml",
         "views/dashboard_data_source.xml",
         "views/dashboard_color_scheme.xml",
         "views/dashboard_item.xml",
         "views/dashboard_dashboard.xml",
+        "wizard/dashboard_import_views.xml",
     ],
     "assets": {
         "web.assets_backend": [

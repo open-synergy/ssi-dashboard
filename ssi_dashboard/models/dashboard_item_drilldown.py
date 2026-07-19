@@ -103,3 +103,20 @@ Problem: 'Granularity' is set but 'Field' is not a date/datetime field
 Solution: Clear 'Granularity', or choose a date/datetime 'Field'
 """
                 raise UserError(error_message)
+
+    def _prepare_export_drilldown_vals(self):
+        """Build this drill-down level's own entry under
+        ``dashboard.item._prepare_export_item_vals``'s
+        ``drilldown_ids`` key.
+
+        :return: dict with keys ``sequence``, ``field`` (see
+            ``dashboard.data_source._export_field_ref``) and
+            ``granularity`` (or ``False``).
+        :rtype: dict
+        """
+        self.ensure_one()
+        return {
+            "sequence": self.sequence,
+            "field": self.env["dashboard.data_source"]._export_field_ref(self.field_id),
+            "granularity": self.granularity or False,
+        }

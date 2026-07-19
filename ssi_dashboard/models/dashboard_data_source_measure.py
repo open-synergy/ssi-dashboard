@@ -83,3 +83,21 @@ Problem: 'Field' ({measure.field_id.name}) is not a numeric field
 Solution: Select a field of type Integer, Float, or Monetary
 """
                 raise ValidationError(error_message)
+
+    def _prepare_export_measure_vals(self):
+        """Build this measure's own entry under
+        ``dashboard.data_source._prepare_export_data_source_vals``'s
+        ``measure_ids`` key.
+
+        :return: dict with keys ``sequence``, ``name``, ``field`` (see
+            ``dashboard.data_source._export_field_ref``) and
+            ``aggregate``.
+        :rtype: dict
+        """
+        self.ensure_one()
+        return {
+            "sequence": self.sequence,
+            "name": self.name,
+            "field": self.env["dashboard.data_source"]._export_field_ref(self.field_id),
+            "aggregate": self.aggregate,
+        }

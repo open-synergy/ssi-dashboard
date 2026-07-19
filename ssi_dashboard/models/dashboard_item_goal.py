@@ -62,3 +62,18 @@ Solution: Adjust 'Date Start'/'Date End' so no two goals on the same item \
 have overlapping date ranges
 """
                     raise ValidationError(error_message)
+
+    def _prepare_export_goal_vals(self):
+        """Build this dated target's own entry under
+        ``dashboard.item._prepare_export_item_vals``'s ``goal_ids`` key.
+
+        :return: dict with keys ``date_start``, ``date_end`` (ISO date
+            strings) and ``value``.
+        :rtype: dict
+        """
+        self.ensure_one()
+        return {
+            "date_start": fields.Date.to_string(self.date_start),
+            "date_end": fields.Date.to_string(self.date_end),
+            "value": self.value,
+        }

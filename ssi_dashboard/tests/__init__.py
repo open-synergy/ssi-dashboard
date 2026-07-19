@@ -10,3 +10,4 @@ from . import test_dashboard_item
 from . import test_dashboard_item_drilldown
 from . import test_dashboard_item_export
 from . import test_controller_export
+from . import test_dashboard_export_import

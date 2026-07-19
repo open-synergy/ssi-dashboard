@@ -58,6 +58,12 @@
                         string="Open Dashboard"
                         class="btn-primary"
                     />
+                    <button
+                        name="action_export_json"
+                        type="object"
+                        string="Export JSON"
+                        groups="ssi_dashboard.group_dashboard_admin"
+                    />
                 </xpath>
                 <xpath expr="//notebook/page[@name='note']" position="before">
                     <page name="items" string="Items">
