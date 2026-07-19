@@ -72,6 +72,11 @@
                                     optional="hide"
                                     widget="boolean_toggle"
                                 />
+                                <field
+                                    name="allow_export"
+                                    optional="hide"
+                                    widget="boolean_toggle"
+                                />
                                 <field name="column_start" optional="hide" />
                                 <field name="row_start" optional="hide" />
                                 <field name="column_width" />

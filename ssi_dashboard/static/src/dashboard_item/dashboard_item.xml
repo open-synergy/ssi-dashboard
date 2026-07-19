@@ -6,15 +6,35 @@
             t-att-style="style + '; ' + themeStyle"
             t-on-click="onContainerClick"
         >
-            <button
-                t-if="props.isAdmin"
-                type="button"
-                class="btn btn-sm btn-light o_ssi_dashboard_item_edit"
-                t-att-title="editLabel"
-                t-on-click.stop="onEditClick"
-            >
-                <i class="fa fa-pencil" />
-            </button>
+            <div t-if="props.isAdmin or canExport" class="o_ssi_dashboard_item_toolbar">
+                <a
+                    t-if="canExport"
+                    t-att-href="exportXlsxUrl"
+                    class="btn btn-sm btn-light o_ssi_dashboard_item_export_xlsx"
+                    t-att-title="exportXlsxLabel"
+                    t-on-click="onExportClick"
+                >
+                    <i class="fa fa-file-excel-o" />
+                </a>
+                <a
+                    t-if="canExport"
+                    t-att-href="exportCsvUrl"
+                    class="btn btn-sm btn-light o_ssi_dashboard_item_export_csv"
+                    t-att-title="exportCsvLabel"
+                    t-on-click="onExportClick"
+                >
+                    <i class="fa fa-file-text-o" />
+                </a>
+                <button
+                    t-if="props.isAdmin"
+                    type="button"
+                    class="btn btn-sm btn-light o_ssi_dashboard_item_edit"
+                    t-att-title="editLabel"
+                    t-on-click.stop="onEditClick"
+                >
+                    <i class="fa fa-pencil" />
+                </button>
+            </div>
             <div t-if="canDrillBack" class="o_ssi_dashboard_item_drilldown_trail">
                 <button
                     type="button"

@@ -1443,6 +1443,39 @@ Solution: Install a module that implements this 'Date Range' value
         )
         return [spec], {spec: spec}
 
+    def _prepare_export_measure_labels(self):
+        """Build ``(key, label)`` pairs for this data source's
+        configured measure(s), used by
+        :meth:`dashboard.item.prepare_export_data` to build export
+        column headers and pull each column's value out of a row.
+
+        ``key`` always matches :meth:`_prepare_aggregate_spec`'s own
+        ``column_names`` values, so a caller can read ``row[key]``
+        straight off a row built by :meth:`_fetch_data_orm` without
+        duplicating that method's aggregate-spec logic.
+
+        :return: list of 2-tuple ``(key, label)``. One tuple per row of
+            :attr:`measure_ids`, in its own order, both ``key`` and
+            ``label`` set to that row's 'Name' — the same field
+            :meth:`_prepare_aggregate_spec` already keys each row's
+            value by, so a human-readable 'Name' doubles as the export
+            header. When :attr:`measure_ids` is empty, a single tuple
+            built from :attr:`measure_field_id`/:attr:`aggregate`
+            instead: ``label`` is 'Count' when :attr:`aggregate` is
+            'count', :attr:`measure_field_id`'s own label otherwise.
+        :rtype: list
+        """
+        self.ensure_one()
+        _aggregates, column_names = self._prepare_aggregate_spec()
+        if self.measure_ids:
+            return [(name, name) for name in column_names.values()]
+        key = next(iter(column_names.values()))
+        if self.aggregate == "count":
+            label = self.env._("Count")
+        else:
+            label = self.measure_field_id.field_description
+        return [(key, label)]
+
     @api.model
     def _eval_domain_text(self, domain_text):
         """Evaluate a raw domain string into a domain list, substituting

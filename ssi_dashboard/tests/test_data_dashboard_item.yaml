@@ -76,6 +76,41 @@ scenarios:
             type: "value"
             operator: "is_truthy"
 
+  - name: "Create Item Without Allow Export Uses Default True"
+    steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-22"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-22"
+      - step: "Create item without allow_export"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item Without Allow Export"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Assert allow_export defaults to True"
+        action: "assert"
+        target: "item"
+        asserts:
+          allow_export:
+            type: "value"
+            operator: "is_truthy"
+
   - name: "Deactivate Item"
     steps:
       - step: "Create data source for items"

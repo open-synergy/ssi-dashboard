@@ -94,6 +94,14 @@ class DashboardItem(models.Model):
         "happens either way) when 'Data Source' is not of type 'Odoo "
         "Model' — there is no model to open a list of records from.",
     )
+    allow_export = fields.Boolean(
+        default=True,
+        help="Whether this item's currently displayed data can be "
+        "downloaded as XLSX/CSV (see 'prepare_export_data' and "
+        "'controllers/export.py'). Untick to disable download for this "
+        "item — both export endpoints reject the request outright when "
+        "this is off, regardless of what the browser shows.",
+    )
     goal_type = fields.Selection(
         selection=[
             ("none", "No Target"),
@@ -714,6 +722,11 @@ Solution: Request a level between 0 and {chain_length}
         :return: dict with keys ``id``, ``name``, ``type``,
             ``column_start``, ``row_start``, ``column_width``,
             ``row_height``, ``active``, ``allow_open_records``,
+            ``allow_export`` (:attr:`allow_export` as-is, so the browser
+            knows whether to show the download button — see
+            ``static/src/dashboard_item/dashboard_item.esm.js``'s
+            ``canExport``; the export endpoints themselves re-check this
+            server-side regardless of what the browser shows),
             ``has_drilldown`` (``True`` when :attr:`drilldown_ids` has at
             least one row — see :meth:`fetch_drilldown_data`), ``data``,
             ``number_format_config`` (see :meth:`_get_number_format_config`)
@@ -745,6 +758,7 @@ Solution: Request a level between 0 and {chain_length}
             "row_height": self.row_height,
             "active": self.active,
             "allow_open_records": self.allow_open_records,
+            "allow_export": self.allow_export,
             "has_drilldown": bool(self.drilldown_ids),
             "data": self.data_source_id._fetch_data(self, active_filters=active_filters)
             if self.data_source_id
@@ -823,3 +837,81 @@ configuration
             return {"error": str(error)}
         payload["id"] = self.id
         return payload
+
+    def prepare_export_data(self, active_filters=None):
+        """Build the data behind this item's XLSX/CSV download — see
+        ``controllers/export.py``'s ``export_xlsx``/``export_csv``.
+
+        Calls :meth:`_prepare_render_payload` with the very same
+        ``active_filters`` the tile itself was last rendered with, so
+        the exported numbers can never drift from what is on screen —
+        this deliberately reuses the render path instead of reading
+        :attr:`data_source_id` a second, independent way. Every number
+        in the result is an actual numeric value (:attr:`multiplier`
+        applied, rounded to :attr:`precision_digits`), never a
+        formatted string: thousands separators, scale abbreviations
+        ('Short Scale'/'Indian Scale') and the unit symbol are
+        display-only concerns the browser applies (see
+        :meth:`_get_number_format_config`), not something a spreadsheet
+        cell should carry — see :meth:`_round_export_value`.
+
+        Column headers come from :attr:`data_source_id`'s own grouping
+        dimension(s) (:attr:`~dashboard.data_source.group_by_field_id`/
+        :attr:`~dashboard.data_source.sub_group_by_field_id`, when set)
+        followed by one column per configured measure — 'Name' of each
+        row of :attr:`~dashboard.data_source.measure_ids` when set, or a
+        single column derived from :attr:`~dashboard.data_source.
+        measure_field_id`/:attr:`~dashboard.data_source.aggregate`
+        otherwise — see :meth:`dashboard.data_source.
+        _prepare_export_measure_labels`.
+
+        :param active_filters: see :meth:`_prepare_render_payload`.
+        :type active_filters: dict or None
+        :return: dict with keys ``name`` (this item's own :attr:`name`,
+            unsanitized — sanitizing it into a safe filename/HTTP header
+            value is the caller's job, not this method's), ``headers``
+            (list of str) and ``rows`` (list of list, one entry per data
+            row fetched, each the same length as ``headers``).
+        :rtype: dict
+        """
+        self.ensure_one()
+        payload = self._prepare_render_payload(active_filters=active_filters)
+        data_source = self.data_source_id
+        dimension_headers = []
+        has_group = bool(data_source and data_source.group_by_field_id)
+        has_sub_group = bool(has_group and data_source.sub_group_by_field_id)
+        if has_group:
+            dimension_headers.append(data_source.group_by_field_id.field_description)
+            if has_sub_group:
+                dimension_headers.append(
+                    data_source.sub_group_by_field_id.field_description
+                )
+        measure_labels = (
+            data_source._prepare_export_measure_labels() if data_source else []
+        )
+        headers = dimension_headers + [label for _key, label in measure_labels]
+        rows = []
+        for source_row in payload.get("data") or []:
+            row = []
+            if has_group:
+                row.append(source_row.get("group_label") or "")
+                if has_sub_group:
+                    row.append(source_row.get("sub_group_label") or "")
+            for key, _label in measure_labels:
+                row.append(self._round_export_value(source_row.get(key) or 0.0))
+            rows.append(row)
+        return {"name": self.name, "headers": headers, "rows": rows}
+
+    def _round_export_value(self, value):
+        """Apply :attr:`multiplier`/:attr:`precision_digits` to one raw
+        measure value, shared by every row :meth:`prepare_export_data`
+        builds.
+
+        :param value: raw aggregate value, as returned by
+            :meth:`dashboard.data_source._fetch_data_orm`.
+        :type value: int or float
+        :return: ``value`` multiplied then rounded, still a real number.
+        :rtype: float
+        """
+        self.ensure_one()
+        return round(value * self.multiplier, self.precision_digits)
