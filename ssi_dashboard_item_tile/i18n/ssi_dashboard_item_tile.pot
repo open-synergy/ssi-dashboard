@@ -14,6 +14,30 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: ssi_dashboard_item_tile
+#: model:ir.model.fields,help:ssi_dashboard_item_tile.field_dashboard_item__tile_layout
+msgid ""
+"Arrangement the browser renders this tile in. Only used when 'Type' is "
+"'Tile'. 'Value With Comparison' requires the 'Data Source''s 'Comparison' to"
+" be set. 'Value With Target' requires 'Goal Type' to be set."
+msgstr ""
+
+#. module: ssi_dashboard_item_tile
+#: model:ir.model.fields,help:ssi_dashboard_item_tile.field_dashboard_item__tile_background_color
+msgid ""
+"CSS color value used as this tile's background. Only used when 'Type' is "
+"'Tile'. Left empty, the dashboard's own '--ssi-dashboard-surface' color "
+"scheme variable is used instead."
+msgstr ""
+
+#. module: ssi_dashboard_item_tile
+#: model:ir.model.fields,help:ssi_dashboard_item_tile.field_dashboard_item__tile_text_color
+msgid ""
+"CSS color value used for this tile's text. Only used when 'Type' is 'Tile'. "
+"Left empty, the dashboard's own '--ssi-dashboard-text' color scheme variable"
+" is used instead."
+msgstr ""
+
+#. module: ssi_dashboard_item_tile
 #: model:ir.model,name:ssi_dashboard_item_tile.model_dashboard_item
 msgid "Dashboard Item"
 msgstr ""
@@ -21,6 +45,15 @@ msgstr ""
 #. module: ssi_dashboard_item_tile
 #: model:ir.model.fields,field_description:ssi_dashboard_item_tile.field_dashboard_item__display_name
 msgid "Display Name"
+msgstr ""
+
+#. module: ssi_dashboard_item_tile
+#: model:ir.model.fields,help:ssi_dashboard_item_tile.field_dashboard_item__tile_icon
+msgid ""
+"Font Awesome icon class already bundled with the Odoo backend, e.g. 'fa-"
+"shopping-cart'. Only used, and only shown, when 'Type' is 'Tile' and 'Tile "
+"Layout' is 'Value With Icon' or 'Value With Background Icon'. Left empty, no"
+" icon is rendered."
 msgstr ""
 
 #. module: ssi_dashboard_item_tile
@@ -38,10 +71,61 @@ msgstr ""
 
 #. module: ssi_dashboard_item_tile
 #: model:ir.model.fields.selection,name:ssi_dashboard_item_tile.selection__dashboard_item__type__tile
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard_item_tile.dashboard_item_view_form
 msgid "Tile"
+msgstr ""
+
+#. module: ssi_dashboard_item_tile
+#: model:ir.model.fields,field_description:ssi_dashboard_item_tile.field_dashboard_item__tile_background_color
+msgid "Tile Background Color"
+msgstr ""
+
+#. module: ssi_dashboard_item_tile
+#: model:ir.model.fields,field_description:ssi_dashboard_item_tile.field_dashboard_item__tile_icon
+msgid "Tile Icon"
+msgstr ""
+
+#. module: ssi_dashboard_item_tile
+#: model:ir.model.fields,field_description:ssi_dashboard_item_tile.field_dashboard_item__tile_layout
+msgid "Tile Layout"
+msgstr ""
+
+#. module: ssi_dashboard_item_tile
+#: model:ir.model.fields,field_description:ssi_dashboard_item_tile.field_dashboard_item__tile_text_color
+msgid "Tile Text Color"
 msgstr ""
 
 #. module: ssi_dashboard_item_tile
 #: model:ir.model.fields,field_description:ssi_dashboard_item_tile.field_dashboard_item__type
 msgid "Type"
+msgstr ""
+
+#. module: ssi_dashboard_item_tile
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_tile.selection__dashboard_item__tile_layout__layout_1
+msgid "Value Only"
+msgstr ""
+
+#. module: ssi_dashboard_item_tile
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_tile.selection__dashboard_item__tile_layout__layout_6
+msgid "Value With Background Icon"
+msgstr ""
+
+#. module: ssi_dashboard_item_tile
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_tile.selection__dashboard_item__tile_layout__layout_3
+msgid "Value With Comparison"
+msgstr ""
+
+#. module: ssi_dashboard_item_tile
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_tile.selection__dashboard_item__tile_layout__layout_2
+msgid "Value With Icon"
+msgstr ""
+
+#. module: ssi_dashboard_item_tile
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_tile.selection__dashboard_item__tile_layout__layout_5
+msgid "Value With Sparkline"
+msgstr ""
+
+#. module: ssi_dashboard_item_tile
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_tile.selection__dashboard_item__tile_layout__layout_4
+msgid "Value With Target"
 msgstr ""
