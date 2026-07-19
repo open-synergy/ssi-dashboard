@@ -12,4 +12,17 @@
         <field name="perm_create" eval="1" />
         <field name="perm_unlink" eval="1" />
     </record>
+
+    <!-- dashboard.data_source.measure is a detail/child of
+         dashboard.data_source: no group/menu/view of its own, so its
+         access row lives here. -->
+    <record id="dashboard_data_source_measure_admin_access" model="ir.model.access">
+        <field name="name">dashboard.data_source.measure - admin</field>
+        <field name="model_id" ref="model_dashboard_data_source_measure" />
+        <field name="group_id" ref="group_dashboard_admin" />
+        <field name="perm_read" eval="1" />
+        <field name="perm_write" eval="1" />
+        <field name="perm_create" eval="1" />
+        <field name="perm_unlink" eval="1" />
+    </record>
 </odoo>
