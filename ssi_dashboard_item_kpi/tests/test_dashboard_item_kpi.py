@@ -11,15 +11,15 @@ class TestDashboardItemKpi(YamlTransactionCase):
     def test_dashboard_item_kpi(self):
         self.run_yaml_scenario("test_data_dashboard_item_kpi.yaml")
 
-    def _create_kpi_item(self, code_suffix, **item_values):
-        data_source = self.env["dashboard.data_source"].create(
-            {
-                "name": "Partners",
-                "code": f"DASH-KPI-PY-DS-{code_suffix}",
-                "type": "orm",
-                "model_id": self.env.ref("base.model_res_partner").id,
-            }
-        )
+    def _create_kpi_item(self, code_suffix, data_source_values=None, **item_values):
+        data_source_vals = {
+            "name": "Partners",
+            "code": f"DASH-KPI-PY-DS-{code_suffix}",
+            "type": "orm",
+            "model_id": self.env.ref("base.model_res_partner").id,
+        }
+        data_source_vals.update(data_source_values or {})
+        data_source = self.env["dashboard.data_source"].create(data_source_vals)
         dashboard = self.env["dashboard.dashboard"].create(
             {"name": "KPI Dashboard", "code": f"DASH-KPI-PY-{code_suffix}"}
         )
@@ -100,7 +100,17 @@ class TestDashboardItemKpi(YamlTransactionCase):
         cakupan test achievement/direction di atas (yang hanya menguji
         layout 'target') dengan layout 'comparison'.
         """
-        item = self._create_kpi_item("04", kpi_layout="comparison")
+        date_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.partner"), ("name", "=", "create_date")], limit=1
+        )
+        item = self._create_kpi_item(
+            "04",
+            kpi_layout="comparison",
+            data_source_values={
+                "comparison": "previous_period",
+                "date_field_id": date_field.id,
+            },
+        )
         payload = item._prepare_render_payload_kpi(
             {
                 "data": [{"__count": 120}],
