@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <!-- Adds a dedicated, hidden-for-other-types page carrying the 'todo'
+         rows to the item's own standalone form (opened as a dialog — see
+         ssi_dashboard/models/dashboard_item.py,
+         action_open_item_goals()/_open_item_goals()). 'todo_ids' is a
+         One2many, so — like 'goal_ids'/'column_ids' — it cannot be
+         edited inline inside the dashboard form's embedded 'Items' list
+         and needs this dialog. Follows the same pattern as
+         ssi_dashboard_item_list/views/dashboard_item.xml. -->
+    <record id="dashboard_item_view_form" model="ir.ui.view">
+        <field name="name">dashboard.item - form - todo</field>
+        <field name="model">dashboard.item</field>
+        <field name="inherit_id" ref="ssi_dashboard.dashboard_item_view_form" />
+        <field name="arch" type="xml">
+            <data>
+                <xpath expr="//sheet" position="inside">
+                    <notebook>
+                        <page name="todo" string="To Do" invisible="type != 'todo'">
+                            <field name="todo_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle" />
+                                    <field name="name" />
+                                    <field name="line_type" />
+                                    <field
+                                        name="done"
+                                        invisible="line_type == 'section'"
+                                    />
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </xpath>
+            </data>
+        </field>
+    </record>
+
+    <!-- The dialog above is only reachable through a button on the
+         dashboard form's embedded 'Items' list, and that button is only
+         shown for 'Dated Targets' goals or 'list' items (widened by
+         ssi_dashboard_item_list). Widen it so 'todo' items can reach
+         their own 'To Do' page too. -->
+    <record id="dashboard_dashboard_view_form" model="ir.ui.view">
+        <field name="name">dashboard.dashboard - form - todo</field>
+        <field name="model">dashboard.dashboard</field>
+        <field name="inherit_id" ref="ssi_dashboard.dashboard_dashboard_view_form" />
+        <field name="arch" type="xml">
+            <data>
+                <xpath
+                    expr="//button[@name='action_open_item_goals']"
+                    position="attributes"
+                >
+                    <attribute
+                        name="invisible"
+                    >goal_type != 'dated' and type != 'todo'</attribute>
+                </xpath>
+            </data>
+        </field>
+    </record>
+</odoo>

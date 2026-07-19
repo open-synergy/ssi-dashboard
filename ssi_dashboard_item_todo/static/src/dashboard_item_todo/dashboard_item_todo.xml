@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="ssi_dashboard_item_todo.DashboardItemTodo">
+        <div class="o_ssi_dashboard_item_todo">
+            <div class="o_ssi_dashboard_item_todo_label" t-esc="props.item.name" />
+            <ul class="o_ssi_dashboard_item_todo_list">
+                <t t-foreach="state.rows" t-as="row" t-key="row.id">
+                    <li
+                        t-if="row.line_type === 'section'"
+                        class="o_ssi_dashboard_item_todo_section"
+                    >
+                        <span t-esc="row.name" />
+                    </li>
+                    <li t-else="" class="o_ssi_dashboard_item_todo_task">
+                        <input
+                            type="checkbox"
+                            t-att-checked="row.done"
+                            t-on-change="() => this.onToggleDone(row)"
+                        />
+                        <span
+                            t-attf-class="o_ssi_dashboard_item_todo_task_label{{ row.done ? ' o_ssi_dashboard_item_todo_task_done' : '' }}"
+                            t-esc="row.name"
+                        />
+                    </li>
+                </t>
+            </ul>
+        </div>
+    </t>
+</templates>
