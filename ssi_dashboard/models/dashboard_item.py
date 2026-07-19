@@ -1,7 +1,8 @@
 # Copyright 2026 OpenSynergy Indonesia
 # Copyright 2026 PT. Simetri Sinergi Indonesia
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-from odoo import fields, models
+from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class DashboardItem(models.Model):
@@ -62,6 +63,104 @@ class DashboardItem(models.Model):
         default=True,
         help="Untick to hide this item from its dashboard without deleting it.",
     )
+    goal_type = fields.Selection(
+        selection=[
+            ("none", "No Target"),
+            ("fixed", "Fixed Value"),
+            ("dated", "Dated Targets"),
+        ],
+        required=True,
+        default="none",
+        help="Kind of target this item is measured against. 'No Target' "
+        "carries no target value. 'Fixed Value' uses 'Goal Value' for "
+        "every date. 'Dated Targets' looks up 'Goals' for the value that "
+        "applies to a given date, see '_get_goal_value'.",
+    )
+    goal_value = fields.Float(
+        default=0.0,
+        help="Target value applied for every date. Only used when 'Goal "
+        "Type' is 'Fixed Value'.",
+    )
+    goal_ids = fields.One2many(
+        string="Goals",
+        comodel_name="dashboard.item.goal",
+        inverse_name="item_id",
+        help="Dated target rows, each stating the value that applies for "
+        "its own date range. Only used when 'Goal Type' is 'Dated "
+        "Targets'.",
+    )
+
+    @api.constrains("goal_type", "goal_ids")
+    def _check_goal_type_dated_requires_goal_ids(self):
+        for item in self:
+            if item.goal_type == "dated" and not item.goal_ids:
+                error_message = f"""
+Context: Configure dashboard item
+Database ID: {item.id}
+Problem: 'Goal Type' is set to 'Dated Targets' but 'Goals' has no rows
+Solution: Add at least one row to 'Goals', or change 'Goal Type' to \
+another value
+"""
+                raise ValidationError(error_message)
+
+    @api.onchange("goal_type")
+    def onchange_goal_value(self):
+        if self.goal_type == "none":
+            self.goal_value = 0.0
+
+    @api.onchange("goal_type")
+    def onchange_goal_ids(self):
+        if self.goal_type == "none":
+            self.goal_ids = [(5, 0, 0)]
+
+    def _get_goal_value(self, target_date):
+        """Compute the target value that applies to ``target_date``.
+
+        :param target_date: date the target value is looked up for.
+        :type target_date: datetime.date
+        :return: ``0.0`` when 'Goal Type' is 'No Target'; 'Goal Value' when
+            'Goal Type' is 'Fixed Value'; the 'Value' of the first 'Goals'
+            row whose 'Date Start'/'Date End' range contains
+            ``target_date`` when 'Goal Type' is 'Dated Targets' — ``0.0``
+            when no row matches.
+        :rtype: float
+        """
+        self.ensure_one()
+        if self.goal_type == "fixed":
+            return self.goal_value
+        if self.goal_type == "dated":
+            for goal in self.goal_ids:
+                if goal.date_start <= target_date <= goal.date_end:
+                    return goal.value
+            return 0.0
+        return 0.0
+
+    def action_open_item_goals(self):
+        for record in self.sudo():
+            result = record._open_item_goals()
+        return result
+
+    def _open_item_goals(self):
+        """Build the window action that opens this item's own form view in
+        a dialog, so 'Goals' (a nested one2many that cannot be edited
+        inline inside the dashboard form's editable 'Items' list) can be
+        managed.
+
+        :return: dict describing an ``ir.actions.act_window`` targeting
+            this record's form view, opened as a dialog
+            (``target='new'``).
+        :rtype: dict
+        """
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "dashboard.item",
+            "res_id": self.id,
+            "view_mode": "form",
+            "view_id": self.env.ref("ssi_dashboard.dashboard_item_view_form").id,
+            "target": "new",
+            "name": self.name,
+        }
 
     def _prepare_render_payload(self):
         """Build the payload the browser uses to render this item.
@@ -79,7 +178,11 @@ class DashboardItem(models.Model):
             has its ``comparison`` field set to anything other than
             ``none``; absent entirely otherwise, so an item pulling
             from a data source without comparison configured pays no
-            extra query cost.
+            extra query cost. Also carries ``goal`` — result of
+            :meth:`_get_goal_value` for today's date — when
+            :attr:`goal_type` is anything other than ``none``; absent
+            entirely otherwise, so an item without a target configured
+            pays no extra cost.
         :rtype: dict
         """
         self.ensure_one()
@@ -96,6 +199,8 @@ class DashboardItem(models.Model):
             payload["comparison_data"] = self.data_source_id._fetch_comparison_data(
                 self
             )
+        if self.goal_type != "none":
+            payload["goal"] = self._get_goal_value(fields.Date.context_today(self))
         enrich_method = getattr(self, f"_prepare_render_payload_{self.type}", None)
         if enrich_method is not None:
             payload = enrich_method(payload)

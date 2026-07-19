@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <!-- Standalone form, opened as a dialog by
+         dashboard.item.action_open_item_goals()/_open_item_goals() — the
+         dashboard form's 'Items' list is editable="bottom" so a nested
+         one2many ('Goals') cannot be edited inline there. -->
+    <record id="dashboard_item_view_form" model="ir.ui.view">
+        <field name="name">dashboard.item - form</field>
+        <field name="model">dashboard.item</field>
+        <field name="arch" type="xml">
+            <form string="Dashboard Item">
+                <sheet>
+                    <group name="dashboard_item_goal_header">
+                        <field name="name" />
+                        <field name="goal_type" />
+                        <field name="goal_value" invisible="goal_type != 'fixed'" />
+                    </group>
+                    <field name="goal_ids">
+                        <list editable="bottom">
+                            <field name="date_start" />
+                            <field name="date_end" />
+                            <field name="value" />
+                        </list>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>
