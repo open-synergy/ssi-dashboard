@@ -570,7 +570,9 @@ scenarios:
               - 0
               - - "REF: base.group_user"
                 - "REF: ssi_dashboard.group_dashboard_user"
-      - step: "Searching with only the active company allowed finds only that company's and the company-less dashboard"
+      - step:
+          "Searching with only the active company allowed finds only that company's and
+          the company-less dashboard"
         action: "search"
         model: "dashboard.dashboard"
         domain:
