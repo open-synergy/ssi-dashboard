@@ -61,7 +61,7 @@
                 </xpath>
                 <xpath expr="//notebook/page[@name='note']" position="before">
                     <page name="items" string="Items">
-                        <field name="item_ids">
+                        <field name="item_ids" context="{'active_test': False}">
                             <list editable="bottom">
                                 <field name="sequence" widget="handle" />
                                 <field name="name" />
@@ -69,6 +69,7 @@
                                 <field name="data_source_id" />
                                 <field name="column_width" />
                                 <field name="row_height" />
+                                <field name="active" widget="boolean_toggle" />
                             </list>
                         </field>
                     </page>

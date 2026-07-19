@@ -85,3 +85,87 @@ scenarios:
           model_id:
             type: "m2o"
             expected: "REC: res_partner_model"
+
+  - name: "Create Data Source Without Aggregate Or Limit Uses Defaults"
+    steps:
+      - step: "Create data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Generic Source"
+          code: "DS-DEFAULT-01"
+      - step: "Assert aggregate defaults to count and limit to zero"
+        action: "assert"
+        target: "data_source"
+        asserts:
+          aggregate:
+            type: "value"
+            expected: "count"
+          limit:
+            type: "value"
+            expected: 0
+
+  - name: "Changing Model Clears Measure And Group By Field"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "model_a"
+      - step: "Get res.users model"
+        action: "ref"
+        xml_id: "base.model_res_users"
+        save_as: "model_b"
+      - step: "Find a numeric field on res.partner"
+        action: "search"
+        model: "ir.model.fields"
+        domain:
+          [
+            ["model", "=", "res.partner"],
+            ["ttype", "in", ["integer", "float", "monetary"]],
+          ]
+        save_as: "numeric_field_a"
+        limit: 1
+      - step: "Find any field on res.partner"
+        action: "search"
+        model: "ir.model.fields"
+        domain: [["model", "=", "res.partner"]]
+        save_as: "any_field_a"
+        limit: 1
+      - step: "Fill form and set model_id, measure and group by on model A"
+        action: "form"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        save: false
+        ops:
+          - set: {name: "Form Data Source"}
+          - set: {code: "DS-FORM-01"}
+          - set: {type: "orm"}
+          - set: {model_id: "REC: model_a"}
+          - set: {measure_field_id: "REC: numeric_field_a"}
+          - set: {group_by_field_id: "REC: any_field_a"}
+          - set: {model_id: "REC: model_b"}
+          - assert:
+              measure_field_id:
+                type: "value"
+                operator: "is_falsy"
+              group_by_field_id:
+                type: "value"
+                operator: "is_falsy"
+
+  - name: "Invalid Aggregate Value Is Rejected"
+    steps:
+      - step: "Create data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Generic Source"
+          code: "DS-BADAGG-01"
+      - step: "Write invalid aggregate value"
+        action: "write"
+        target: "data_source"
+        expect_error:
+          type: "ValueError"
+        values:
+          aggregate: "median"

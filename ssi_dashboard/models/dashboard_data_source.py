@@ -1,7 +1,7 @@
 # Copyright 2026 OpenSynergy Indonesia
 # Copyright 2026 PT. Simetri Sinergi Indonesia
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-from odoo import fields, models
+from odoo import api, fields, models
 from odoo.exceptions import UserError
 from odoo.tools.safe_eval import safe_eval
 
@@ -43,9 +43,46 @@ class DashboardDataSource(models.Model):
         help="Odoo domain (Python list syntax) applied when reading "
         "'Model'. Only used when 'Type' is 'Odoo Model' (orm).",
     )
-    config = fields.Text(
-        help="JSON configuration consumed by data source types other than 'orm'.",
+    measure_field_id = fields.Many2one(
+        comodel_name="ir.model.fields",
+        ondelete="restrict",
+        domain="[('model_id', '=', model_id), "
+        "('ttype', 'in', ['integer', 'float', 'monetary'])]",
+        help="Numeric field of 'Model' that 'Aggregate' is computed on. "
+        "Left empty, 'Aggregate' falls back to counting records.",
     )
+    aggregate = fields.Selection(
+        selection=[
+            ("count", "Count"),
+            ("sum", "Sum"),
+            ("avg", "Average"),
+            ("min", "Minimum"),
+            ("max", "Maximum"),
+        ],
+        required=True,
+        default="count",
+        help="Aggregation applied to 'Measure Field' (ignored when set to "
+        "'Count', which counts records instead).",
+    )
+    group_by_field_id = fields.Many2one(
+        comodel_name="ir.model.fields",
+        ondelete="restrict",
+        domain="[('model_id', '=', model_id)]",
+        help="Field of 'Model' that rows are grouped by. Left empty, "
+        "'Aggregate' is computed over every matching record as one group.",
+    )
+    limit = fields.Integer(
+        default=0,
+        help="Maximum number of rows to return. 0 means no limit.",
+    )
+
+    @api.onchange("model_id")
+    def onchange_measure_field_id(self):
+        self.measure_field_id = False
+
+    @api.onchange("model_id")
+    def onchange_group_by_field_id(self):
+        self.group_by_field_id = False
 
     def _fetch_data(self, item):
         """Fetch the raw data for a dashboard item.

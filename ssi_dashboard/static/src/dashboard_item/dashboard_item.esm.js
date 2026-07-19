@@ -10,7 +10,7 @@ import {registry} from "@web/core/registry";
  *
  * The "item" prop each registered component receives is one entry of the
  * "items" key returned by dashboard.dashboard.get_dashboard_payload() —
- * id, name, type, column_width, row_height, config and data.
+ * id, name, type, column_width, row_height, active and data.
  */
 const itemWidgetRegistry = registry.category("ssi_dashboard.item_widgets");
 
