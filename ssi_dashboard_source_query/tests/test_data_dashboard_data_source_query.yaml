@@ -1,0 +1,142 @@
+scenarios:
+  - name: "Create Query Data Source"
+    steps:
+      - step: "Create query data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Simple Query"
+          code: "DASH-QUERY-CREATE-01"
+          type: "query"
+          query: "SELECT 1 AS value"
+      - step: "Assert type"
+        action: "assert"
+        target: "data_source"
+        asserts:
+          type:
+            type: "value"
+            expected: "query"
+
+  - name: "Query Type Without Query Is Rejected On Save"
+    steps:
+      - step: "Create query data source without a query is rejected"
+        action: "create"
+        model: "dashboard.data_source"
+        values:
+          name: "Empty Query"
+          code: "DASH-QUERY-EMPTY-01"
+          type: "query"
+        expect_error:
+          type: "ValidationError"
+          message_contains: "Query"
+
+  - name: "Query Not Starting With SELECT Is Rejected"
+    steps:
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Query Dashboard"
+          code: "DASH-QUERY-NOTSELECT-DASH-01"
+      - step: "Create data source with a DELETE statement"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Malicious Delete"
+          code: "DASH-QUERY-NOTSELECT-01"
+          type: "query"
+          query: "DELETE FROM res_partner"
+      - step: "Create item bound to the data source"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Fetching data rejects a non-SELECT statement"
+        action: "call"
+        target: "data_source"
+        method: "_fetch_data"
+        args:
+          - "REC: item"
+        expect_error:
+          type: "UserError"
+          message_contains: "SELECT"
+
+  - name: "Query With A Stacked Statement Is Rejected"
+    steps:
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Query Dashboard"
+          code: "DASH-QUERY-STACKED-DASH-01"
+      - step: "Create data source with a stacked DROP TABLE statement"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Malicious Stacked Statement"
+          code: "DASH-QUERY-STACKED-01"
+          type: "query"
+          query: "SELECT 1; DROP TABLE res_partner"
+      - step: "Create item bound to the data source"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Fetching data rejects a stacked statement"
+        action: "call"
+        target: "data_source"
+        method: "_fetch_data"
+        args:
+          - "REC: item"
+        expect_error:
+          type: "UserError"
+          message_contains: "semicolon"
+
+  - name: "Reading Query Field Without Admin Group Is Denied"
+    steps:
+      - step: "Create dashboard user without admin group"
+        action: "create"
+        model: "res.users"
+        save_as: "dashboard_user"
+        values:
+          name: "Dashboard User Only"
+          login: "dashboard-user-only-query@example.com"
+          group_ids:
+            [
+              [
+                6,
+                0,
+                ["REF: base.group_user", "REF: ssi_dashboard.group_dashboard_user"],
+              ],
+            ]
+      - step: "Create query data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Secured Query"
+          code: "DASH-QUERY-TOKEN-01"
+          type: "query"
+          query: "SELECT 1 AS value"
+      - step: "Dashboard user cannot read the query"
+        action: "call"
+        target: "data_source"
+        method: "read"
+        args:
+          - ["query"]
+        as_user: "dashboard_user"
+        expect_error:
+          type: "AccessError"
