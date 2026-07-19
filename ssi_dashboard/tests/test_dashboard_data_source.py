@@ -1267,6 +1267,7 @@ class TestDashboardDataSource(YamlTransactionCase):
         self.assertEqual(counts_by_label.get("January 2026"), 1)
         self.assertEqual(counts_by_label.get("February 2026"), 0)
         self.assertEqual(counts_by_label.get("March 2026"), 1)
+        self.assertEqual(counts_by_label.get("April 2026"), 0)
 
     def test_prepare_comparison_date_range_none_returns_empty_list(self):
         """Python murni — pemicu P1 (L-01, L-02).
@@ -1354,4 +1355,3 @@ class TestDashboardDataSource(YamlTransactionCase):
                 (datetime.date(2024, 3, 1), datetime.date(2024, 3, 31)),
             ],
         )
-        self.assertEqual(counts_by_label.get("April 2026"), 0)
