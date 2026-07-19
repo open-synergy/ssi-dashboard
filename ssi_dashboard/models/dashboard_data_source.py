@@ -35,7 +35,6 @@ class DashboardDataSource(models.Model):
         "'_fetch_data_<type>' method.",
     )
     model_id = fields.Many2one(
-        string="Model",
         comodel_name="ir.model",
         help="Odoo model to read data from. Only used when 'Type' is "
         "'Odoo Model' (orm).",

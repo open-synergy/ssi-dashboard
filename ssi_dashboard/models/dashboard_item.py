@@ -42,7 +42,6 @@ class DashboardItem(models.Model):
         "'_prepare_render_payload_<type>' method.",
     )
     data_source_id = fields.Many2one(
-        string="Data Source",
         comodel_name="dashboard.data_source",
         required=True,
         ondelete="restrict",
