@@ -6,6 +6,7 @@ import datetime
 from odoo_yaml_test import YamlTransactionCase
 from psycopg2 import IntegrityError
 
+from odoo.exceptions import UserError
 from odoo.tests import tagged
 from odoo.tools import mute_logger
 
@@ -543,6 +544,151 @@ class TestDashboardItem(YamlTransactionCase):
         self.assertEqual(
             item.preview_render_payload({}), item._prepare_render_payload()
         )
+
+    def test_prepare_render_payload_includes_allow_open_records_key(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Sama seperti test payload lain di atas: isi dict payload hanya
+        bisa diperiksa lewat nilai balik method (L-01/L-02). Kunci
+        'allow_open_records' pada payload harus sama dengan field
+        'allow_open_records' item itu sendiri (Keputusan Desain:
+        'Payload item mendapat kunci allow_open_records').
+        """
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners",
+                "code": "DASH-ITEM-AOR-PAYLOAD-DS-01",
+                "type": "orm",
+                "model_id": self.env["ir.model"]._get("res.partner").id,
+            }
+        )
+        dashboard = self.env["dashboard.dashboard"].create(
+            {"name": "Allow Open Records Payload Dashboard", "code": "DASH-AOR-PL-01"}
+        )
+        item = self.env["dashboard.item"].create(
+            {
+                "name": "Item A",
+                "dashboard_id": dashboard.id,
+                "type": "placeholder",
+                "data_source_id": data_source.id,
+                "allow_open_records": False,
+            }
+        )
+        payload = item._prepare_render_payload()
+        self.assertIn("allow_open_records", payload)
+        self.assertFalse(payload["allow_open_records"])
+
+    def test_action_open_records_returns_list_form_action(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Nilai balik `action_open_records` (dict aksi window) hanya bisa
+        diverifikasi dengan meng-assert hasil pemanggilan method langsung
+        — `action: call` YAML membuang nilai baliknya (L-01) dan isi
+        dict tidak bisa diperiksa lewat assert dotted path (L-02).
+        Kriteria Penerimaan: `action_open_records()` mengembalikan aksi
+        ber-`view_mode` bernilai `list,form` (konvensi 19.0).
+        """
+        partner_model = self.env["ir.model"]._get("res.partner")
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners",
+                "code": "DASH-ITEM-OPENRECS-DS-01",
+                "type": "orm",
+                "model_id": partner_model.id,
+            }
+        )
+        dashboard = self.env["dashboard.dashboard"].create(
+            {"name": "Open Records Dashboard", "code": "DASH-ITEM-OPENRECS-01"}
+        )
+        item = self.env["dashboard.item"].create(
+            {
+                "name": "Item Open Records",
+                "dashboard_id": dashboard.id,
+                "type": "placeholder",
+                "data_source_id": data_source.id,
+            }
+        )
+        row = data_source._fetch_data(item)[0]
+        action = item.action_open_records(row["row_domain"])
+        self.assertEqual(action["res_model"], "res.partner")
+        self.assertEqual(action["view_mode"], "list,form")
+        self.assertEqual(action["type"], "ir.actions.act_window")
+
+    def test_action_open_records_domain_cannot_override_data_source_domain(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Sama seperti di atas: nilai balik `action_open_records` (dict
+        aksi, khususnya kunci `domain`) hanya bisa diverifikasi lewat
+        pemanggilan method langsung (L-01/L-02). Kriteria Penerimaan:
+        domain 'Data Source' tetap terpasang meski domain kiriman
+        ('row_domain' = `[]` di sini) mencoba menghilangkannya — server
+        memasang ulang domain 'Data Source' sebagai konjungsi.
+        """
+        partner_model = self.env["ir.model"]._get("res.partner")
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Companies Only",
+                "code": "DASH-ITEM-OPENRECS-DOMAIN-DS-01",
+                "type": "orm",
+                "model_id": partner_model.id,
+                "domain": "[('is_company', '=', True)]",
+            }
+        )
+        dashboard = self.env["dashboard.dashboard"].create(
+            {
+                "name": "Open Records Domain Dashboard",
+                "code": "DASH-ITEM-OPENRECS-DOM-01",
+            }
+        )
+        item = self.env["dashboard.item"].create(
+            {
+                "name": "Item Open Records Domain",
+                "dashboard_id": dashboard.id,
+                "type": "placeholder",
+                "data_source_id": data_source.id,
+            }
+        )
+        action = item.action_open_records([])
+        self.assertIn(("is_company", "=", True), action["domain"])
+
+    def test_action_open_records_without_model_id_raises_user_error(self):
+        """Python murni — pemicu P1 (L-01, L-02) — negative path.
+
+        `data_source_id.model_id` tidak `required`, jadi bisa dibuat
+        kosong lewat `create` biasa (tidak butuh bypass SQL) — Kriteria
+        Penerimaan: item atas data source non-'orm'-configured (tanpa
+        'Model') tidak menghasilkan aksi. `expect_error` YAML hanya bisa
+        menguji aksi yang membuang nilai balik (`action: call`); di sini
+        yang diuji justru KETIADAAN nilai balik (exception dilempar
+        sebelum sempat mengembalikan apa pun), sehingga tetap ditulis
+        Python murni supaya jelas method mana yang diuji dan pesan error
+        apa yang diharapkan (L-01/L-02 tidak relevan untuk ini secara
+        ketat, tapi menjaga test tetap satu file dengan test positif di
+        atas yang memang butuh Python murni).
+        """
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "No Model Source",
+                "code": "DASH-ITEM-OPENRECS-NOMODEL-DS-01",
+                "type": "orm",
+            }
+        )
+        dashboard = self.env["dashboard.dashboard"].create(
+            {
+                "name": "Open Records No Model Dashboard",
+                "code": "DASH-ITEM-OPENRECS-NM-01",
+            }
+        )
+        item = self.env["dashboard.item"].create(
+            {
+                "name": "Item Open Records No Model",
+                "dashboard_id": dashboard.id,
+                "type": "placeholder",
+                "data_source_id": data_source.id,
+            }
+        )
+        with self.assertRaises(UserError):
+            item.action_open_records([])
 
     def test_preview_render_payload_unreadable_data_source_returns_error_dict(self):
         """Python murni — pemicu P1 (L-01, L-02).

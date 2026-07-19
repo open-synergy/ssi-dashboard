@@ -559,6 +559,96 @@ Solution: Install a module that implements {method_name}
             return group_value.id
         return group_value
 
+    def _prepare_group_condition_domain(self, group_value, field, granularity):
+        """Build the domain leaf(s) that isolate the record(s) behind one
+        grouping dimension's raw value, used by :meth:`_fetch_data_orm`/
+        :meth:`_fill_temporal_rows` to build each row's ``row_domain``.
+
+        :param group_value: raw value returned by ``_read_group`` for the
+            groupby column (or a bucket-start ``date`` built by
+            :meth:`_fill_temporal_rows` for a zero-value row), same shape
+            as received by :meth:`_prepare_group_key`.
+        :param field: ``ir.model.fields`` record the groupby column was
+            built from (:attr:`group_by_field_id` or
+            :attr:`sub_group_by_field_id`).
+        :param granularity: granularity used when ``field`` is a
+            date/datetime field (:attr:`group_by_granularity` or
+            :attr:`sub_group_by_granularity`).
+        :return: list of domain tuples, meant to be ANDed (implicit
+            ``&``) with the rest of a row's ``row_domain``. A date range
+            (two tuples) for a date/datetime ``field`` — see
+            :meth:`_prepare_group_condition_domain_date`; a single
+            equality tuple otherwise (unwrapping a relational
+            ``group_value`` to its id first).
+        :rtype: list
+        """
+        self.ensure_one()
+        if field.ttype in ("date", "datetime"):
+            return self._prepare_group_condition_domain_date(
+                group_value, field, granularity
+            )
+        if isinstance(group_value, models.BaseModel):
+            group_value = group_value.id
+        return [(field.name, "=", group_value)]
+
+    def _prepare_group_condition_domain_date(self, group_value, field, granularity):
+        """Build the date-range domain leaves behind
+        :meth:`_prepare_group_condition_domain` for a date/datetime
+        ``field``.
+
+        ``group_value`` (or the bucket-start date passed in by
+        :meth:`_fill_temporal_rows`) is floored to its own bucket start
+        with :meth:`_temporal_bucket_start` — a no-op when it is already
+        a bucket start, as ``_read_group`` already returns for a real
+        row — and the upper bound is the start of the *next* bucket
+        (:meth:`_temporal_bucket_next`), so the range is exactly the
+        half-open period ``_read_group`` grouped that row from. Both
+        bounds go through :meth:`_date_range_bound_to_field_value` so a
+        'datetime' ``field`` gets the same local-timezone-to-UTC
+        conversion :meth:`_prepare_date_domain` applies elsewhere.
+
+        :param group_value: raw ``date``/``datetime`` group value, or
+            ``False``/``None`` for an empty group.
+        :param field: ``ir.model.fields`` record, 'date' or 'datetime'
+            typed.
+        :param granularity: granularity to bucket by, one of
+            :attr:`group_by_granularity`'s values. Falls back to
+            ``month`` when falsy, same as :meth:`_prepare_groupby_spec_one`.
+        :return: list of domain tuples. A single ``(field_name, "=",
+            False)`` when ``group_value`` is empty; otherwise two
+            tuples, the half-open bucket range.
+        :rtype: list
+        """
+        self.ensure_one()
+        field_name = field.name
+        if not group_value:
+            return [(field_name, "=", False)]
+        is_datetime = field.ttype == "datetime"
+        granularity = granularity or "month"
+        bucket_date = (
+            group_value.date()
+            if isinstance(group_value, datetime.datetime)
+            else group_value
+        )
+        bucket_start = self._temporal_bucket_start(bucket_date, granularity)
+        bucket_next = self._temporal_bucket_next(bucket_start, granularity)
+        return [
+            (
+                field_name,
+                ">=",
+                self._date_range_bound_to_field_value(
+                    bucket_start, is_datetime, end_of_day=False
+                ),
+            ),
+            (
+                field_name,
+                "<",
+                self._date_range_bound_to_field_value(
+                    bucket_next, is_datetime, end_of_day=False
+                ),
+            ),
+        ]
+
     def _prepare_group_label(self, group_value):
         """Build a human-readable label for a raw ``_read_group`` groupby
         value of the primary grouping dimension (:attr:`group_by_field_id`).
@@ -665,7 +755,7 @@ Solution: Install a module that implements {method_name}
             return babel.dates.format_datetime(value, format=date_format, locale=locale)
         return babel.dates.format_date(value, format=date_format, locale=locale)
 
-    def _postprocess_rows(self, rows):
+    def _postprocess_rows(self, rows, domain=None):
         """Apply :attr:`fill_temporal`, then :attr:`sort_by`/
         :attr:`sort_order`, then :attr:`limit` to the raw rows built by a
         ``_fetch_data_<type>`` method — always in that order, so a chart
@@ -680,11 +770,18 @@ Solution: Install a module that implements {method_name}
         :param rows: raw rows, as built by a ``_fetch_data_<type>``
             method.
         :type rows: list
+        :param domain: base domain the rows were read with, passed
+            through to :meth:`_fill_temporal_rows` so the zero-value
+            rows it may add also carry a ``row_domain`` key. ``None``
+            (the default) leaves those zero-value rows without
+            ``row_domain``, keeping any caller that does not pass this
+            argument working exactly as before ``row_domain`` existed.
+        :type domain: list or None
         :return: rows after fill/sort/limit.
         :rtype: list
         """
         self.ensure_one()
-        rows = self._fill_temporal_rows(rows)
+        rows = self._fill_temporal_rows(rows, domain=domain)
         rows = self._sort_rows(rows)
         rows = self._limit_rows(rows)
         return rows
@@ -753,7 +850,7 @@ Solution: Install a module that implements {method_name}
         }
         return value + step_by_granularity.get(granularity, relativedelta(months=1))
 
-    def _fill_temporal_rows(self, rows):
+    def _fill_temporal_rows(self, rows, domain=None):
         """Add zero-value rows for empty periods between the smallest
         and largest period covered, when :attr:`fill_temporal` is
         enabled and :attr:`group_by_field_id` is a date/datetime field.
@@ -770,6 +867,13 @@ Solution: Install a module that implements {method_name}
             method — rows for a date/datetime groupby carry a
             ``group_key`` that is the bucket-start ``date``/``datetime``.
         :type rows: list
+        :param domain: base domain the rows were read with. When given,
+            every zero-value row added here also gets a ``row_domain``
+            key (base ``domain`` plus the condition matching that empty
+            bucket — see :meth:`_prepare_group_condition_domain`), same
+            as real rows carry. ``None`` (the default) leaves zero-value
+            rows without ``row_domain``.
+        :type domain: list or None
         :return: ``rows`` plus one zero-value row per empty period.
         :rtype: list
         """
@@ -811,6 +915,11 @@ Solution: Install a module that implements {method_name}
                 zero_row = dict(zero_row_template)
                 zero_row["group_key"] = False
                 zero_row["group_label"] = label
+                if domain is not None:
+                    group_condition = self._prepare_group_condition_domain(
+                        cursor, field, granularity
+                    )
+                    zero_row["row_domain"] = domain + group_condition
                 filled_rows.append(zero_row)
                 existing_labels.add(label)
             cursor = self._temporal_bucket_next(cursor, granularity)
@@ -1413,6 +1522,16 @@ Solution: Install a module that implements this 'Date Range' value
         are absent entirely (not ``False``), keeping single-dimension
         data sources exactly as before this second dimension existed.
 
+        Every row also carries a ``row_domain`` key — a domain that,
+        run through ``search``/``search_count`` on :attr:`model_id`,
+        returns exactly the records behind that row: ``domain`` (this
+        method's own base domain, see below) with no grouping applied,
+        or ``domain`` plus the condition(s) matching that row's group
+        (and sub group, when configured) — see
+        :meth:`_prepare_group_condition_domain`. Built server-side, from
+        the same grouping metadata the row's own aggregate was computed
+        from, so it can never drift from what the row actually shows.
+
         :attr:`date_field_id` / :attr:`date_range` contribute an extra
         domain fragment built by :meth:`_prepare_date_domain`, ANDed
         with :attr:`domain`. A data source without :attr:`date_field_id`
@@ -1469,7 +1588,9 @@ Solution: Set the Model field on this data source
                 }
                 for row in rows
             ]
-            return self._postprocess_rows(result)
+            for row_dict in result:
+                row_dict["row_domain"] = domain
+            return self._postprocess_rows(result, domain=domain)
         result = []
         has_sub_group = len(groupby) == 2
         for row in rows:
@@ -1483,13 +1604,22 @@ Solution: Set the Model field on this data source
             }
             row_dict["group_key"] = self._prepare_group_key(group_value)
             row_dict["group_label"] = self._prepare_group_label(group_value)
+            row_domain = domain + self._prepare_group_condition_domain(
+                group_value, self.group_by_field_id, self.group_by_granularity
+            )
             if has_sub_group:
                 row_dict["sub_group_key"] = self._prepare_group_key(sub_group_value)
                 row_dict["sub_group_label"] = self._prepare_sub_group_label(
                     sub_group_value
                 )
+                row_domain = row_domain + self._prepare_group_condition_domain(
+                    sub_group_value,
+                    self.sub_group_by_field_id,
+                    self.sub_group_by_granularity,
+                )
+            row_dict["row_domain"] = row_domain
             result.append(row_dict)
-        return self._postprocess_rows(result)
+        return self._postprocess_rows(result, domain=domain)
 
     def _prepare_comparison_date_range(self):
         """Build the comparison date range(s) matching :attr:`comparison`.

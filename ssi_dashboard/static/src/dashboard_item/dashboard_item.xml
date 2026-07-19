@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
     <t t-name="ssi_dashboard.DashboardItem">
-        <div class="o_ssi_dashboard_item" t-att-style="style + '; ' + themeStyle">
+        <div
+            t-attf-class="o_ssi_dashboard_item{{canOpenRecords ? ' o_ssi_dashboard_item_clickable' : ''}}"
+            t-att-style="style + '; ' + themeStyle"
+            t-on-click="onContainerClick"
+        >
             <button
                 t-if="props.isAdmin"
                 type="button"
