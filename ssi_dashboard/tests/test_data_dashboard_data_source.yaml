@@ -293,6 +293,107 @@ scenarios:
           aggregate: "sum"
           name: "Total"
 
+  - name: "Create Custom Date Range Data Source"
+    steps:
+      - step: "Create data source with custom date range"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Custom Range Source"
+          code: "DS-DATERANGE-CUSTOM-01"
+          date_range: "custom"
+          date_start: 2026-01-01
+          date_end: 2026-01-31
+      - step: "Assert custom date range stored"
+        action: "assert"
+        target: "data_source"
+        asserts:
+          date_range:
+            type: "value"
+            expected: "custom"
+          date_start:
+            type: "value"
+            expected: 2026-01-01
+          date_end:
+            type: "value"
+            expected: 2026-01-31
+
+  - name: "Data Source Without Date Field Defaults To All Time"
+    steps:
+      - step: "Create data source without date range configured"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Generic Source"
+          code: "DS-DATERANGE-DEFAULT-01"
+      - step: "Assert date range defaults to all_time and date field is empty"
+        action: "assert"
+        target: "data_source"
+        asserts:
+          date_range:
+            type: "value"
+            expected: "all_time"
+          date_field_id:
+            type: "value"
+            operator: "is_falsy"
+
+  - name: "Changing Date Range Away From Custom Clears Custom Dates"
+    steps:
+      - step: "Fill form with custom range then switch away from custom"
+        action: "form"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        save: true
+        ops:
+          - set: {name: "Form Date Range Source"}
+          - set: {code: "DS-DATERANGE-FORM-01"}
+          - set: {date_range: "custom"}
+          - set: {date_start: 2026-02-01}
+          - set: {date_end: 2026-02-28}
+          - assert:
+              date_start:
+                type: "value"
+                expected: 2026-02-01
+              date_end:
+                type: "value"
+                expected: 2026-02-28
+          - set: {date_range: "this_month"}
+          - assert:
+              date_start:
+                type: "value"
+                operator: "is_falsy"
+              date_end:
+                type: "value"
+                operator: "is_falsy"
+
+  - name: "Custom Date Range Without Start Or End Is Rejected"
+    steps:
+      - step: "Create custom date range data source without dates is rejected"
+        action: "create"
+        model: "dashboard.data_source"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Bad Custom Range"
+          code: "DS-DATERANGE-NODATES-01"
+          date_range: "custom"
+
+  - name: "Custom Date Range With Start After End Is Rejected"
+    steps:
+      - step: "Create custom date range data source with start after end is rejected"
+        action: "create"
+        model: "dashboard.data_source"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Bad Custom Range Order"
+          code: "DS-DATERANGE-BADORDER-01"
+          date_range: "custom"
+          date_start: 2026-03-31
+          date_end: 2026-03-01
+
   - name: "Create Measure With Non Numeric Field Is Rejected"
     steps:
       - step: "Create data source"

@@ -60,6 +60,15 @@
                             />
                             <field name="limit" />
                         </group>
+                        <group name="dashboard_data_source_date_range">
+                            <field name="date_field_id" />
+                            <field name="date_range" />
+                            <field
+                                name="date_start"
+                                invisible="date_range != 'custom'"
+                            />
+                            <field name="date_end" invisible="date_range != 'custom'" />
+                        </group>
                     </page>
                     <page name="measures" string="Measures">
                         <field name="measure_ids">
