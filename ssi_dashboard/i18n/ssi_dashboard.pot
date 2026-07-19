@@ -132,6 +132,11 @@ msgid "Another measure with that name already exists on this data source."
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sort_order__asc
+msgid "Ascending"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__message_attachment_count
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__message_attachment_count
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__message_attachment_count
@@ -363,6 +368,11 @@ msgid "Day"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sort_order__desc
+msgid "Descending"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__sequence
 msgid "Determines the display order of items on the dashboard."
 msgstr ""
@@ -406,6 +416,20 @@ msgstr ""
 msgid ""
 "Field of 'Model' that rows are grouped by. Left empty, 'Aggregate' is "
 "computed over every matching record as one group."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__sort_by
+msgid ""
+"Field rows are sorted by before 'Limit' cuts them off. 'Group Label' sorts "
+"by the row's group label. 'Measure Value' sorts by the first measure in "
+"'Measures' order, or the single measure built from 'Measure Field' / "
+"'Aggregate' when 'Measures' is empty. Ignored when set to 'Unsorted'."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__fill_temporal
+msgid "Fill Temporal"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -474,6 +498,11 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__group_by_granularity
 msgid "Group By Granularity"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sort_by__label
+msgid "Group Label"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -694,12 +723,19 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__limit
-msgid "Maximum number of rows to return. 0 means no limit."
+msgid ""
+"Maximum number of rows to return, applied after 'Sort By' sorts the rows. 0 "
+"means no limit. Negative values are rejected."
 msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__measure_field_id
 msgid "Measure Field"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sort_by__measure
+msgid "Measure Value"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -974,6 +1010,23 @@ msgid "Sequence"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__sort_by
+msgid "Sort By"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__sort_order
+msgid "Sort Order"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__sort_order
+msgid ""
+"Sort direction applied when 'Sort By' is not 'Unsorted'. Ignored when 'Sort "
+"By' is 'Unsorted'."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_color_scheme__activity_state
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__activity_state
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__activity_state
@@ -1041,6 +1094,11 @@ msgid "Type of the exception activity on record."
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sort_by__none
+msgid "Unsorted"
+msgstr ""
+
+#. module: ssi_dashboard
 #. odoo-javascript
 #: code:addons/ssi_dashboard/static/src/dashboard_item_fallback/dashboard_item_fallback.xml:0
 msgid "Unsupported item type:"
@@ -1069,6 +1127,15 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__week_to_date
 msgid "Week to Date"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__fill_temporal
+msgid ""
+"When enabled and 'Group By Field' is a date/datetime field, empty periods "
+"between the smallest and largest period with data are added as zero-value "
+"rows, so a time series chart does not break its line. Silently ignored when "
+"'Group By Field' is not a date/datetime field."
 msgstr ""
 
 #. module: ssi_dashboard
