@@ -1,21 +1,30 @@
 # Copyright 2026 OpenSynergy Indonesia
 # Copyright 2026 PT. Simetri Sinergi Indonesia
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-import json
+from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
-from odoo import fields, models
-from odoo.exceptions import UserError
-
-_VALID_CHART_TYPES = ("bar", "line", "pie")
-_DEFAULT_CHART_TYPE = "bar"
+_CHART_TYPE_SELECTION = [
+    ("bar", "Bar"),
+    ("horizontal_bar", "Horizontal Bar"),
+    ("line", "Line"),
+    ("area", "Area"),
+    ("pie", "Pie"),
+    ("doughnut", "Doughnut"),
+    ("polar", "Polar Area"),
+]
 
 
 class DashboardItem(models.Model):
-    """Extends `dashboard.item` with the 'chart' type: a bar, line or pie
-    chart built from data grouped by one field ('group_by') and, optionally,
-    aggregated over another ('measure') — both read out of the item's
-    existing `config` JSON field. Adds no field of its own to :attr:`type`
-    beyond the selection value."""
+    """Extends `dashboard.item` with the 'chart' type: a chart built out of
+    the real, structured fields already added to `dashboard.data_source`
+    (`group_by_field_id`, `sub_group_by_field_id`, `measure_field_id` /
+    `measure_ids`, `_prepare_groupby_spec`, `_prepare_aggregate_spec`) — no
+    `config` JSON is read here. Supports seven chart kinds
+    (:attr:`chart_type`) and assembles either one dataset per second
+    dimension value (:attr:`dashboard.data_source.sub_group_by_field_id`)
+    or one dataset per configured measure, never both at once (see
+    :meth:`_check_chart_multi_measure_requires_no_sub_group`)."""
 
     _name = "dashboard.item"
     _inherit = [
@@ -28,150 +37,215 @@ class DashboardItem(models.Model):
         ],
         ondelete={"chart": "set default"},
     )
+    chart_type = fields.Selection(
+        selection=_CHART_TYPE_SELECTION,
+        default="bar",
+        required=True,
+        help="Kind of chart rendered by the browser. Only used when 'Type' "
+        "is 'Chart'. 'Horizontal Bar' and 'Area' are rendered as Chart.js "
+        "'bar'/'line' charts with a client-side option added (horizontal "
+        "index axis / area fill) — the server sends this value unchanged, "
+        "the mapping happens in the browser.",
+    )
+    chart_show_legend = fields.Boolean(
+        default=True,
+        help="Show the chart's legend. Only used when 'Type' is 'Chart'.",
+    )
+
+    @api.constrains("type", "data_source_id")
+    def _check_chart_requires_group_by_field(self):
+        for item in self:
+            if item.type != "chart":
+                continue
+            if not item.data_source_id.group_by_field_id:
+                error_message = f"""
+Context: Configure dashboard item chart
+Database ID: {item.id}
+Problem: 'Type' is set to 'Chart' but 'Data Source' \
+('{item.data_source_id.name}') has no 'Group By Field'
+Solution: Set 'Group By Field' on 'Data Source' ('{item.data_source_id.name}'), \
+or choose a different 'Type'
+"""
+                raise ValidationError(error_message)
+
+    @api.constrains("type", "data_source_id")
+    def _check_chart_multi_measure_requires_no_sub_group(self):
+        for item in self:
+            if item.type != "chart":
+                continue
+            data_source = item.data_source_id
+            if data_source.sub_group_by_field_id and len(data_source.measure_ids) > 1:
+                error_message = f"""
+Context: Configure dashboard item chart
+Database ID: {item.id}
+Problem: 'Data Source' ('{data_source.name}') has both more than one row in \
+'Measures' and 'Sub Group By Field' set, which produces an ambiguous set of \
+chart datasets
+Solution: Reduce 'Measures' on 'Data Source' ('{data_source.name}') to at \
+most one row, or clear its 'Sub Group By Field'
+"""
+                raise ValidationError(error_message)
 
     def _prepare_render_payload_chart(self, payload):
         """Enrich the render payload of a 'chart' item.
 
-        Reads 'chart_type' (one of 'bar', 'line', 'pie', defaulting to
-        'bar'), 'group_by' (required field name) and 'measure' (optional
-        field name to sum; counts records per group when empty) out of
-        :attr:`config` (JSON).
-
         :param payload: dict built by
             :meth:`dashboard.item._prepare_render_payload`.
-        :return: `payload`, with 'chart_type' (str) and 'chart_data' (dict
-            with keys 'labels' and 'datasets', see
-            :meth:`_compute_chart_data`) added.
+        :return: `payload`, with a 'chart' key added — dict with 'type'
+            (:attr:`chart_type`), 'labels' (see
+            :meth:`_get_chart_labels`), 'datasets' (see
+            :meth:`_get_chart_datasets`) and 'show_legend'
+            (:attr:`chart_show_legend`).
         :rtype: dict
-        :raises UserError: when :attr:`config` is missing, is not valid
-            JSON, is valid JSON that is not an object, names no
-            'group_by', or names a 'chart_type' outside 'bar'/'line'/'pie'.
         """
         self.ensure_one()
-        chart_type, group_by, measure = self._get_chart_config()
         data = payload.get("data") or []
-        payload["chart_type"] = chart_type
-        payload["chart_data"] = self._compute_chart_data(data, group_by, measure)
+        labels = self._get_chart_labels(data)
+        payload["chart"] = {
+            "type": self.chart_type,
+            "labels": labels,
+            "datasets": self._get_chart_datasets(data, labels),
+            "show_legend": self.chart_show_legend,
+        }
         return payload
 
-    def _get_chart_config(self):
-        """Parse this item's :attr:`config` for the 'chart' item type.
+    def _get_chart_labels(self, data):
+        """Build the chart's x-axis labels out of fetched `data`.
 
-        :return: tuple ``(chart_type, group_by, measure)`` — `chart_type`
-            is one of 'bar'/'line'/'pie', `group_by` is the field name
-            rows are bucketed by, `measure` is the field name summed per
-            group (``None`` when not configured, in which case each group
-            is counted instead).
-        :rtype: tuple
-        :raises UserError: when :attr:`config` is missing, is not valid
-            JSON, is valid JSON that is not an object, names no
-            'group_by', or names a 'chart_type' outside 'bar'/'line'/'pie'.
+        :param data: list of dict, the item's fetched data
+            (``payload["data"]``) — each row carries a 'group_label' key,
+            guaranteed by :meth:`_check_chart_requires_group_by_field`
+            requiring :attr:`dashboard.data_source.group_by_field_id` to
+            be set for any 'chart' item.
+        :return: list of str, one per unique 'group_label' value, in
+            first-seen order.
+        :rtype: list
+        """
+        labels = []
+        seen = set()
+        for row in data:
+            label = row.get("group_label")
+            if label not in seen:
+                seen.add(label)
+                labels.append(label)
+        return labels
+
+    def _get_chart_measure_specs(self):
+        """Build the ``(row_key, dataset_label)`` pairs this item's
+        datasets are read from, one per configured measure of
+        :attr:`dashboard.item.data_source_id`.
+
+        Delegates to
+        :meth:`dashboard.data_source._prepare_aggregate_spec` so this
+        method never needs to know whether :attr:`measure_ids` or the
+        single :attr:`measure_field_id` / :attr:`aggregate` pair is in
+        effect.
+
+        :return: list of 2-tuple ``(row_key, label)``. When the data
+            source has at least one row in :attr:`measure_ids`, one pair
+            per row — both `row_key` and `label` are that measure's
+            'Name' (fetched rows already carry that same key, see
+            :meth:`dashboard.data_source._fetch_data_orm`). Otherwise a
+            single pair whose `row_key` is the internal aggregate spec
+            (e.g. ``"__count"``) and whose `label` is this item's own
+            :attr:`name`, so a data source without any :attr:`measure_ids`
+            row still gets a sensible dataset label.
+        :rtype: list
         """
         self.ensure_one()
-        config = self._parse_chart_config_json()
-        chart_type = config.get("chart_type") or _DEFAULT_CHART_TYPE
-        if chart_type not in _VALID_CHART_TYPES:
-            error_message = f"""
-Context: Render dashboard item 'chart' payload
-Database ID: {self.id}
-Problem: 'Config' key 'chart_type' has unsupported value '{chart_type}'
-Solution: Set 'chart_type' to one of: {", ".join(_VALID_CHART_TYPES)}
-"""
-            raise UserError(error_message)
-        group_by = config.get("group_by")
-        if not group_by:
-            error_message = f"""
-Context: Render dashboard item 'chart' payload
-Database ID: {self.id}
-Problem: 'Config' does not name a 'group_by' field
-Solution: Set 'group_by' to the field name to bucket rows by, e.g. \
-{{"group_by": "state", "measure": "amount"}}
-"""
-            raise UserError(error_message)
-        measure = config.get("measure") or None
-        return chart_type, group_by, measure
+        data_source = self.data_source_id
+        _aggregates, column_names = data_source._prepare_aggregate_spec()
+        if data_source.measure_ids:
+            return [(name, name) for name in column_names.values()]
+        (row_key,) = column_names.values()
+        return [(row_key, self.name)]
 
-    def _parse_chart_config_json(self):
-        """Parse this item's :attr:`config` as a JSON object.
-
-        :return: the parsed JSON object.
-        :rtype: dict
-        :raises UserError: when :attr:`config` is empty, is not valid
-            JSON, or is valid JSON that is not an object.
-        """
-        self.ensure_one()
-        if not self.config:
-            error_message = f"""
-Context: Render dashboard item 'chart' payload
-Database ID: {self.id}
-Problem: 'Config' is empty, but the 'chart' item type requires 'group_by'
-Solution: Set 'Config' to a JSON object, e.g. \
-{{"group_by": "state", "measure": "amount"}}
-"""
-            raise UserError(error_message)
-        try:
-            config = json.loads(self.config)
-        except ValueError as parse_error:
-            error_message = f"""
-Context: Render dashboard item 'chart' payload
-Database ID: {self.id}
-Problem: 'Config' is not valid JSON ({parse_error})
-Solution: Fix the JSON syntax in the 'Config' field, e.g. \
-{{"group_by": "state", "measure": "amount"}}
-"""
-            raise UserError(error_message) from parse_error
-        if not isinstance(config, dict):
-            error_message = f"""
-Context: Render dashboard item 'chart' payload
-Database ID: {self.id}
-Problem: 'Config' is valid JSON but is not a JSON object
-Solution: Set 'Config' to a JSON object, e.g. \
-{{"group_by": "state", "measure": "amount"}}
-"""
-            raise UserError(error_message)
-        return config
-
-    def _compute_chart_data(self, data, group_by, measure):
-        """Group `data` into the labels/datasets structure a chart needs.
-
-        Buckets rows of `data` by their `group_by` key, in first-seen
-        order, then builds a single dataset out of `measure` (summed per
-        group) or, when `measure` is empty, the row count per group.
+    def _get_chart_datasets(self, data, labels):
+        """Build the chart's datasets out of fetched `data`.
 
         :param data: list of dict, the item's fetched data
             (``payload["data"]``).
-        :param group_by: field name each row of `data` is bucketed by.
-            Rows missing this key, or whose value is ``None``, are
-            bucketed under an empty label.
-        :param measure: field name to sum per group. Rows missing this
-            key, or whose value is ``None``, contribute 0. When falsy,
-            each group's value is its row count instead.
-        :return: dict with keys 'labels' (list of str, one per group, in
-            first-seen order) and 'datasets' (list holding a single dict —
-            'label': this item's :attr:`name`, 'data': list of numbers,
-            one per entry of 'labels', in the same order).
-        :rtype: dict
+        :param labels: list of str, from :meth:`_get_chart_labels` — every
+            dataset's 'data' is aligned to this list, one value per
+            label, in the same order.
+        :return: list of dict with keys 'label' (str) and 'data' (list of
+            number, same length as `labels`). One dataset per unique
+            'sub_group_label' when :attr:`dashboard.data_source.sub_group_by_field_id`
+            is set on this item's data source (see
+            :meth:`_get_chart_datasets_by_sub_group`); otherwise one
+            dataset per configured measure (see
+            :meth:`_get_chart_datasets_by_measure`). A label/measure (or
+            label/sub-group) combination absent from `data` contributes
+            ``0``, never a missing entry.
+        :rtype: list
         """
-        labels = []
-        values_by_label = {}
+        self.ensure_one()
+        if self.data_source_id.sub_group_by_field_id:
+            return self._get_chart_datasets_by_sub_group(data, labels)
+        return self._get_chart_datasets_by_measure(data, labels)
+
+    def _get_chart_datasets_by_sub_group(self, data, labels):
+        """Build one dataset per unique 'sub_group_label', used by
+        :meth:`_get_chart_datasets` when this item's data source has
+        :attr:`dashboard.data_source.sub_group_by_field_id` set. Only
+        ever called with exactly one configured measure — combining
+        several measures with a second dimension is rejected by
+        :meth:`_check_chart_multi_measure_requires_no_sub_group`.
+
+        :param data: list of dict, the item's fetched data.
+        :param labels: list of str, from :meth:`_get_chart_labels`.
+        :return: list of dict with keys 'label' (a 'sub_group_label'
+            value) and 'data' (list of number, aligned to `labels`, ``0``
+            for a label/sub-group combination absent from `data`), one
+            per unique 'sub_group_label', in first-seen order.
+        :rtype: list
+        """
+        self.ensure_one()
+        row_key, _default_label = self._get_chart_measure_specs()[0]
+        sub_group_labels = []
+        seen = set()
+        values_by_sub_group_and_label = {}
         for row in data:
-            label = row.get(group_by)
-            label = "" if label is None else str(label)
-            if label not in values_by_label:
-                labels.append(label)
-                values_by_label[label] = 0
-            if measure:
-                value = row.get(measure)
-                if value is not None:
-                    values_by_label[label] += value
-            else:
-                values_by_label[label] += 1
-        return {
-            "labels": labels,
-            "datasets": [
-                {
-                    "label": self.name,
-                    "data": [values_by_label[label] for label in labels],
-                }
-            ],
-        }
+            sub_group_label = row.get("sub_group_label")
+            if sub_group_label not in seen:
+                seen.add(sub_group_label)
+                sub_group_labels.append(sub_group_label)
+            key = (sub_group_label, row.get("group_label"))
+            values_by_sub_group_and_label[key] = row.get(row_key) or 0
+        return [
+            {
+                "label": sub_group_label,
+                "data": [
+                    values_by_sub_group_and_label.get((sub_group_label, label), 0)
+                    for label in labels
+                ],
+            }
+            for sub_group_label in sub_group_labels
+        ]
+
+    def _get_chart_datasets_by_measure(self, data, labels):
+        """Build one dataset per configured measure, used by
+        :meth:`_get_chart_datasets` when this item's data source has no
+        :attr:`dashboard.data_source.sub_group_by_field_id` set.
+
+        :param data: list of dict, the item's fetched data — at most one
+            row per 'group_label' in this branch (no second dimension).
+        :param labels: list of str, from :meth:`_get_chart_labels`.
+        :return: list of dict with keys 'label' and 'data' (list of
+            number, aligned to `labels`, ``0`` for a label absent from
+            `data`), one per pair returned by
+            :meth:`_get_chart_measure_specs`, in that order.
+        :rtype: list
+        """
+        self.ensure_one()
+        rows_by_label = {row.get("group_label"): row for row in data}
+        return [
+            {
+                "label": measure_label,
+                "data": [
+                    (rows_by_label.get(label) or {}).get(row_key) or 0
+                    for label in labels
+                ],
+            }
+            for row_key, measure_label in self._get_chart_measure_specs()
+        ]

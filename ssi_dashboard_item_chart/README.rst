@@ -6,19 +6,24 @@
 Dashboard Item - Chart
 ======================
 
-Adds the ``chart`` dashboard item type to the SSI Dashboard framework: a bar,
-line or pie chart rendered by an OWL component registered under
+Adds the ``chart`` dashboard item type to the SSI Dashboard framework: a chart
+rendered by an OWL component registered under
 ``registry.category("ssi_dashboard.item_widgets")``, built on Odoo's own
 bundled Chart.js (``web.chartjs_lib``) — no extra chart library is vendored.
 
-The chart reads ``chart_type`` (one of ``bar``, ``line``, ``pie``, defaulting
-to ``bar``), ``group_by`` (required — the field name rows are bucketed by)
-and ``measure`` (optional — the field name summed per group; each group is
-counted instead when empty) out of the item's ``Config`` JSON field, e.g.
-``{"chart_type": "line", "group_by": "state", "measure": "amount"}``. Series
-colors follow the dashboard's own color scheme through
-``--ssi-dashboard-chart-1`` .. ``--ssi-dashboard-chart-8`` CSS custom
-properties; this module carries no palette of its own.
+Seven chart kinds are supported (``chart_type``, defaulting to ``bar``): Bar,
+Horizontal Bar, Line, Area, Pie, Doughnut and Polar Area. Grouping and
+measures are entirely configured on the item's ``Data Source`` through its
+own real fields (``Group By Field``, ``Sub Group By Field``, ``Measure
+Field``/``Measures``) — this module reads no ``Config`` JSON. A data source
+with a ``Sub Group By Field`` produces one dataset per second-dimension
+value; a data source with several ``Measures`` and no second dimension
+produces one dataset per measure instead — the two cannot be combined, since
+that would make the resulting datasets ambiguous. A ``chart`` item requires
+its data source to have a ``Group By Field`` set. Series colors follow the
+dashboard's own color scheme through ``--ssi-dashboard-chart-1`` ..
+``--ssi-dashboard-chart-8`` CSS custom properties; this module carries no
+palette of its own.
 
 
 Installation

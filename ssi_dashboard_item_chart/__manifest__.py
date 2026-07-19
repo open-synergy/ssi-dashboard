@@ -15,6 +15,9 @@
     "depends": [
         "ssi_dashboard",
     ],
+    "data": [
+        "views/dashboard_item.xml",
+    ],
     "assets": {
         "web.assets_backend": [
             "ssi_dashboard_item_chart/static/src/dashboard_item_chart/*",
