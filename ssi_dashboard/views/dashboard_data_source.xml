@@ -61,6 +61,19 @@
                             <field name="limit" />
                         </group>
                     </page>
+                    <page name="measures" string="Measures">
+                        <field name="measure_ids">
+                            <list editable="bottom">
+                                <field name="sequence" widget="handle" />
+                                <field
+                                    name="field_id"
+                                    domain="[('model_id', '=', parent.model_id), ('ttype', 'in', ['integer', 'float', 'monetary'])]"
+                                />
+                                <field name="aggregate" />
+                                <field name="name" />
+                            </list>
+                        </field>
+                    </page>
                 </xpath>
             </data>
         </field>

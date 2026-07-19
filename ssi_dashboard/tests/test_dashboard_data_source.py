@@ -260,3 +260,132 @@ class TestDashboardDataSource(YamlTransactionCase):
         counts = {row["group_label"]: row["__count"] for row in rows}
         self.assertEqual(counts.get("Month"), 2)
         self.assertEqual(counts.get("None"), 1)
+
+    def test_fetch_data_orm_measure_field_sum_returns_total(self):
+        """Python murni — pemicu P1 (L-01, L-02) dan P2 (L-04).
+
+        Nilai balik `_fetch_data_orm` (agregat `sum`, bukan jumlah
+        record) hanya bisa diverifikasi dengan meng-assert hasil
+        pemanggilan method langsung (L-01/L-02). Perbandingannya memakai
+        `assertAlmostEqual` karena nilai float hasil `sum` tidak dijamin
+        presisi bit demi bit (L-04/P2). `partner_latitude` dipakai
+        sebagai field numerik karena tidak ada field `Monetary` yang
+        tersedia tanpa dependensi tambahan pada rantai modul
+        `ssi_master_data_mixin` (mail, ssi_print_mixin,
+        ssi_sequence_mixin) — constraint measure memvalidasi
+        `integer`/`float`/`monetary` secara setara, jadi `float` melatih
+        jalur kode yang sama.
+        """
+        partner_model = self.env.ref("base.model_res_partner")
+        latitude_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.partner"), ("name", "=", "partner_latitude")],
+            limit=1,
+        )
+        partners = self.env["res.partner"].create(
+            [
+                {"name": "Sum Partner 1", "partner_latitude": 10.0},
+                {"name": "Sum Partner 2", "partner_latitude": 20.0},
+                {"name": "Sum Partner 3", "partner_latitude": 30.0},
+            ]
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners Latitude Sum",
+                "code": "DASH-MEASURE-SUM-01",
+                "type": "orm",
+                "model_id": partner_model.id,
+                "domain": f"[('id', 'in', {partners.ids!r})]",
+                "measure_field_id": latitude_field.id,
+                "aggregate": "sum",
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 1)
+        self.assertAlmostEqual(rows[0]["partner_latitude:sum"], 60.0, places=2)
+
+    def test_fetch_data_orm_multiple_measures_returns_one_key_per_measure(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Nilai balik `_fetch_data_orm` (dict dengan satu kunci per baris
+        `measure_ids`, dinamai sesuai `name` masing-masing measure) hanya
+        bisa diverifikasi dengan meng-assert hasil pemanggilan method
+        langsung (L-01/L-02).
+        """
+        partner_model = self.env.ref("base.model_res_partner")
+        latitude_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.partner"), ("name", "=", "partner_latitude")],
+            limit=1,
+        )
+        partners = self.env["res.partner"].create(
+            [
+                {"name": "Multi Measure Partner 1", "partner_latitude": 10.0},
+                {"name": "Multi Measure Partner 2", "partner_latitude": 20.0},
+                {"name": "Multi Measure Partner 3", "partner_latitude": 30.0},
+            ]
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners Latitude Multi Measure",
+                "code": "DASH-MEASURE-MULTI-01",
+                "type": "orm",
+                "model_id": partner_model.id,
+                "domain": f"[('id', 'in', {partners.ids!r})]",
+                "measure_ids": [
+                    (
+                        0,
+                        0,
+                        {
+                            "field_id": latitude_field.id,
+                            "aggregate": "sum",
+                            "name": "total_latitude",
+                        },
+                    ),
+                    (
+                        0,
+                        0,
+                        {
+                            "aggregate": "count",
+                            "name": "partner_count",
+                        },
+                    ),
+                ],
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 1)
+        self.assertAlmostEqual(rows[0]["total_latitude"], 60.0, places=2)
+        self.assertEqual(rows[0]["partner_count"], 3)
+
+    def test_create_duplicate_measure_name_raises_integrity_error(self):
+        """Python murni — pemicu P5 (L-22).
+
+        `dashboard.data_source.measure` memvalidasi keunikan
+        `(data_source_id, name)` lewat `models.Constraint`, constraint
+        tingkat database. Membuat measure kedua dengan `name` yang sama
+        pada `data_source` yang sama melempar
+        `psycopg2.errors.UniqueViolation` (subclass
+        `psycopg2.IntegrityError`), tipe yang tidak termasuk 12 tipe yang
+        dikenali `expect_error` (L-22), sehingga tidak bisa diuji lewat
+        YAML. `mute_logger` membungkam log ERROR `odoo.sql_db` yang
+        normal muncul saat Postgres menolak query ini — errornya memang
+        diharapkan dan sudah ditangkap lewat `assertRaises`.
+        """
+        data_source = self.env["dashboard.data_source"].create(
+            {"name": "Dup Measure Source", "code": "DASH-MEASURE-DUP-01"}
+        )
+        self.env["dashboard.data_source.measure"].create(
+            {
+                "data_source_id": data_source.id,
+                "aggregate": "count",
+                "name": "Total",
+            }
+        )
+        with mute_logger("odoo.sql_db"), self.assertRaises(IntegrityError):
+            with self.env.cr.savepoint():
+                self.env["dashboard.data_source.measure"].create(
+                    {
+                        "data_source_id": data_source.id,
+                        "aggregate": "count",
+                        "name": "Total",
+                    }
+                )

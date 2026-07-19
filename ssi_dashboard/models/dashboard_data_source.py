@@ -108,6 +108,17 @@ class DashboardDataSource(models.Model):
         default=0,
         help="Maximum number of rows to return. 0 means no limit.",
     )
+    measure_ids = fields.One2many(
+        string="Measures",
+        comodel_name="dashboard.data_source.measure",
+        inverse_name="data_source_id",
+        help="Measures computed per row. When at least one row is set "
+        "here, it is used instead of 'Measure Field' / 'Aggregate' and "
+        "each row of data carries one value per measure, keyed by that "
+        "measure's 'Name'. Left empty, 'Measure Field' / 'Aggregate' are "
+        "used as a single measure, keeping older data sources working "
+        "unchanged.",
+    )
 
     @api.depends("group_by_field_id.ttype")
     def _compute_group_by_field_is_date(self):
@@ -243,6 +254,50 @@ Solution: Install a module that implements {method_name}
             return babel.dates.format_datetime(value, format=date_format, locale=locale)
         return babel.dates.format_date(value, format=date_format, locale=locale)
 
+    def _prepare_aggregate_spec(self):
+        """Build the ``_read_group`` aggregate specification for this data
+        source, so :meth:`_fetch_data_orm` does not need to know whether
+        :attr:`measure_ids` or the single :attr:`measure_field_id` /
+        :attr:`aggregate` pair is in effect.
+
+        When :attr:`measure_ids` is set, it takes precedence and
+        :attr:`measure_field_id` / :attr:`aggregate` are ignored — one
+        spec is built per measure row, in :attr:`measure_ids` order.
+        Otherwise, a single spec is built from :attr:`measure_field_id`
+        and :attr:`aggregate`, keeping older data sources (created before
+        :attr:`measure_ids` existed) working unchanged.
+
+        :return: 2-tuple ``(aggregates, column_names)``. ``aggregates``
+            is a list of string specs accepted by ``_read_group``'s
+            ``aggregates`` argument (e.g. ``"amount_total:sum"``,
+            ``"__count"``). ``column_names`` maps each spec to the key
+            its value is stored under in the rows built by
+            :meth:`_fetch_data_orm` — the measure's ``name`` when
+            :attr:`measure_ids` is set, or the spec itself otherwise (so
+            the single-measure fallback keeps its historical output key,
+            e.g. ``"__count"``).
+        :rtype: tuple
+        """
+        self.ensure_one()
+        if self.measure_ids:
+            aggregates = []
+            column_names = {}
+            for measure in self.measure_ids:
+                spec = (
+                    "__count"
+                    if measure.aggregate == "count"
+                    else f"{measure.field_id.name}:{measure.aggregate}"
+                )
+                aggregates.append(spec)
+                column_names[spec] = measure.name
+            return aggregates, column_names
+        spec = (
+            "__count"
+            if self.aggregate == "count"
+            else f"{self.measure_field_id.name}:{self.aggregate}"
+        )
+        return [spec], {spec: spec}
+
     def _fetch_data_orm(self, item):
         """Fetch data for the 'orm' data source type.
 
@@ -252,11 +307,16 @@ Solution: Install a module that implements {method_name}
         used here and its tuple result is turned back into the list of
         dict this method's contract promises.
 
+        Aggregate values are built by :meth:`_prepare_aggregate_spec`, so
+        a row carries one key per configured measure (see
+        :attr:`measure_ids`) instead of always being a plain record
+        count.
+
         When :attr:`group_by_field_id` is set, each row is enriched with
         two extra keys: ``group_key`` (raw group value, for a future
         drill-down domain) and ``group_label`` (human-readable label). With
         no grouping field configured, behavior is unchanged: exactly one
-        aggregate row without those two keys.
+        row per configured measure spec, without those two keys.
 
         :param item: ``dashboard.item`` record requesting the data.
         :return: list of dict, one per group returned by ``_read_group``.
@@ -275,15 +335,24 @@ Solution: Set the Model field on this data source
             raise UserError(error_message)
         domain = safe_eval(self.domain) if self.domain else []
         model = self.env[self.model_id.model].sudo()
-        aggregates = ["__count"]
+        aggregates, column_names = self._prepare_aggregate_spec()
         groupby = self._prepare_groupby_spec()
         rows = model._read_group(domain, groupby=groupby, aggregates=aggregates)
         if not groupby:
-            return [dict(zip(aggregates, row, strict=True)) for row in rows]
+            return [
+                {
+                    column_names[spec]: value
+                    for spec, value in zip(aggregates, row, strict=True)
+                }
+                for row in rows
+            ]
         result = []
         for row in rows:
             group_value, *aggregate_values = row
-            row_dict = dict(zip(aggregates, aggregate_values, strict=True))
+            row_dict = {
+                column_names[spec]: value
+                for spec, value in zip(aggregates, aggregate_values, strict=True)
+            }
             row_dict["group_key"] = self._prepare_group_key(group_value)
             row_dict["group_label"] = self._prepare_group_label(group_value)
             result.append(row_dict)

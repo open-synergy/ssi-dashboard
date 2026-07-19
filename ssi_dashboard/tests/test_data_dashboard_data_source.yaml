@@ -245,3 +245,76 @@ scenarios:
           type: "ValueError"
         values:
           group_by_granularity: "decade"
+
+  - name: "Create Measure With Aggregate Count And No Field Is Allowed"
+    steps:
+      - step: "Create data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Generic Source"
+          code: "DS-MEASURE-COUNT-01"
+      - step: "Create measure with aggregate count and no field"
+        action: "create"
+        model: "dashboard.data_source.measure"
+        save_as: "measure"
+        values:
+          data_source_id: "REC: data_source.id"
+          aggregate: "count"
+          name: "Total"
+      - step: "Assert measure created without a field"
+        action: "assert"
+        target: "measure"
+        asserts:
+          id:
+            type: "value"
+            operator: "is_truthy"
+          field_id:
+            type: "value"
+            operator: "is_falsy"
+
+  - name: "Create Measure With Aggregate Sum And No Field Is Rejected"
+    steps:
+      - step: "Create data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Generic Source"
+          code: "DS-MEASURE-NOFIELD-01"
+      - step: "Create measure sum without field is rejected"
+        action: "create"
+        model: "dashboard.data_source.measure"
+        expect_error:
+          type: "ValidationError"
+        values:
+          data_source_id: "REC: data_source.id"
+          aggregate: "sum"
+          name: "Total"
+
+  - name: "Create Measure With Non Numeric Field Is Rejected"
+    steps:
+      - step: "Create data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Generic Source"
+          code: "DS-MEASURE-BADTYPE-01"
+      - step: "Find a char field on res.partner"
+        action: "search"
+        model: "ir.model.fields"
+        domain: [["model", "=", "res.partner"], ["name", "=", "name"]]
+        save_as: "char_field"
+        limit: 1
+      - step: "Create measure sum with char field is rejected"
+        action: "create"
+        model: "dashboard.data_source.measure"
+        expect_error:
+          type: "ValidationError"
+        values:
+          data_source_id: "REC: data_source.id"
+          aggregate: "sum"
+          field_id: "REC: char_field.id"
+          name: "Total"
