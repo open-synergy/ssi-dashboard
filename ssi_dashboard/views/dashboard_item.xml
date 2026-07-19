@@ -16,6 +16,7 @@
                     <group name="dashboard_item_goal_header">
                         <field name="name" />
                         <field name="goal_type" />
+                        <field name="goal_value" invisible="goal_type != 'fixed'" />
                     </group>
                     <field name="goal_ids">
                         <list editable="bottom">
