@@ -89,6 +89,121 @@ class DashboardItem(models.Model):
         "its own date range. Only used when 'Goal Type' is 'Dated "
         "Targets'.",
     )
+    multiplier = fields.Float(
+        default=1.0,
+        help="Factor the raw value is multiplied by before the browser "
+        "formats it, e.g. use 0.000001 to show a value in millions. "
+        "Must not be 0.",
+    )
+    unit_type = fields.Selection(
+        selection=[
+            ("none", "No Unit"),
+            ("monetary", "Currency"),
+            ("custom", "Custom Text"),
+        ],
+        required=True,
+        default="none",
+        help="Kind of unit shown alongside the value. 'No Unit' shows the "
+        "value alone. 'Currency' shows 'Currency''s symbol, and requires "
+        "'Currency' to be filled in. 'Custom Text' shows 'Unit Text', and "
+        "requires 'Unit Text' to be filled in.",
+    )
+    currency_id = fields.Many2one(
+        comodel_name="res.currency",
+        ondelete="restrict",
+        help="Currency whose symbol is shown alongside the value. Only "
+        "used, and required, when 'Unit Type' is 'Currency'.",
+    )
+    unit_text = fields.Char(
+        help="Free-form unit text shown alongside the value, e.g. 'kg', "
+        "'pcs', '%'. Only used, and required, when 'Unit Type' is "
+        "'Custom Text'.",
+    )
+    unit_position = fields.Selection(
+        selection=[
+            ("before", "Before Value"),
+            ("after", "After Value"),
+        ],
+        required=True,
+        default="after",
+        help="Where the unit is shown relative to the value.",
+    )
+    number_format = fields.Selection(
+        selection=[
+            ("exact", "Exact"),
+            ("short", "Short Scale"),
+            ("indian", "Indian Scale"),
+        ],
+        required=True,
+        default="exact",
+        help="How the browser abbreviates the value. 'Exact' shows the "
+        "full number. 'Short Scale' abbreviates using thousand/million/"
+        "billion suffixes. 'Indian Scale' abbreviates using lakh/crore "
+        "suffixes.",
+    )
+    precision_digits = fields.Integer(
+        default=2,
+        help="Number of digits shown after the decimal point. Must be between 0 and 6.",
+    )
+
+    @api.constrains("multiplier")
+    def _check_multiplier_not_zero(self):
+        for item in self:
+            if item.multiplier == 0.0:
+                error_message = f"""
+Context: Configure dashboard item
+Database ID: {item.id}
+Problem: 'Multiplier' is set to 0
+Solution: Set 'Multiplier' to a non-zero value
+"""
+                raise ValidationError(error_message)
+
+    @api.constrains("precision_digits")
+    def _check_precision_digits_range(self):
+        for item in self:
+            if not 0 <= item.precision_digits <= 6:
+                error_message = f"""
+Context: Configure dashboard item
+Database ID: {item.id}
+Problem: 'Precision Digits' is set to {item.precision_digits}, which is \
+outside the allowed range of 0 to 6
+Solution: Set 'Precision Digits' to a value between 0 and 6
+"""
+                raise ValidationError(error_message)
+
+    @api.constrains("unit_type", "currency_id")
+    def _check_unit_type_monetary_requires_currency(self):
+        for item in self:
+            if item.unit_type == "monetary" and not item.currency_id:
+                error_message = f"""
+Context: Configure dashboard item
+Database ID: {item.id}
+Problem: 'Unit Type' is set to 'Currency' but 'Currency' is empty
+Solution: Fill in 'Currency', or change 'Unit Type' to another value
+"""
+                raise ValidationError(error_message)
+
+    @api.constrains("unit_type", "unit_text")
+    def _check_unit_type_custom_requires_unit_text(self):
+        for item in self:
+            if item.unit_type == "custom" and not item.unit_text:
+                error_message = f"""
+Context: Configure dashboard item
+Database ID: {item.id}
+Problem: 'Unit Type' is set to 'Custom Text' but 'Unit Text' is empty
+Solution: Fill in 'Unit Text', or change 'Unit Type' to another value
+"""
+                raise ValidationError(error_message)
+
+    @api.onchange("unit_type")
+    def onchange_currency_id(self):
+        if self.unit_type != "monetary":
+            self.currency_id = False
+
+    @api.onchange("unit_type")
+    def onchange_unit_text(self):
+        if self.unit_type != "custom":
+            self.unit_text = False
 
     @api.constrains("goal_type", "goal_ids")
     def _check_goal_type_dated_requires_goal_ids(self):
@@ -162,6 +277,37 @@ another value
             "name": self.name,
         }
 
+    def _get_number_format_config(self):
+        """Build the number formatting configuration passed to the browser.
+
+        No formatting happens server-side — this is a passthrough of the
+        item's own configuration fields so the browser can format the raw
+        value following the user's locale (and still have the raw value
+        available to draw charts).
+
+        :return: dict with keys ``multiplier``, ``unit_type``,
+            ``unit_symbol`` (:attr:`currency_id`'s symbol when
+            :attr:`unit_type` is ``monetary``, :attr:`unit_text` when
+            ``custom``, empty string when ``none``), ``unit_position``,
+            ``number_format`` and ``precision_digits``.
+        :rtype: dict
+        """
+        self.ensure_one()
+        if self.unit_type == "monetary":
+            unit_symbol = self.currency_id.symbol
+        elif self.unit_type == "custom":
+            unit_symbol = self.unit_text
+        else:
+            unit_symbol = ""
+        return {
+            "multiplier": self.multiplier,
+            "unit_type": self.unit_type,
+            "unit_symbol": unit_symbol,
+            "unit_position": self.unit_position,
+            "number_format": self.number_format,
+            "precision_digits": self.precision_digits,
+        }
+
     def _prepare_render_payload(self):
         """Build the payload the browser uses to render this item.
 
@@ -172,7 +318,8 @@ another value
         payload is returned as-is.
 
         :return: dict with keys ``id``, ``name``, ``type``,
-            ``column_width``, ``row_height``, ``active`` and ``data``.
+            ``column_width``, ``row_height``, ``active``, ``data`` and
+            ``number_format_config`` (see :meth:`_get_number_format_config`).
             Also carries ``comparison_data`` — list of list of dict,
             one list per comparison range — when :attr:`data_source_id`
             has its ``comparison`` field set to anything other than
@@ -194,6 +341,7 @@ another value
             "row_height": self.row_height,
             "active": self.active,
             "data": self.data_source_id._fetch_data(self),
+            "number_format_config": self._get_number_format_config(),
         }
         if self.data_source_id.comparison != "none":
             payload["comparison_data"] = self.data_source_id._fetch_comparison_data(
