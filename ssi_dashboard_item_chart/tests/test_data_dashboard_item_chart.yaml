@@ -37,7 +37,7 @@ scenarios:
           dashboard_id: "REC: dashboard.id"
           type: "chart"
           data_source_id: "REC: data_source.id"
-      - step: "Assert chart_type defaults to bar and chart_show_legend to True"
+      - step: "Assert chart_type/chart_show_legend and the new chart options all default"
         action: "assert"
         target: "item"
         asserts:
@@ -50,6 +50,18 @@ scenarios:
           chart_show_legend:
             type: "value"
             expected: true
+          chart_stacked:
+            type: "value"
+            expected: false
+          chart_semi_circle:
+            type: "value"
+            expected: false
+          chart_cumulative:
+            type: "value"
+            expected: false
+          chart_data_label:
+            type: "value"
+            expected: "none"
 
   - name: "Chart Item On Data Source Without Group By Field Is Rejected"
     steps:
@@ -163,3 +175,187 @@ scenarios:
           dashboard_id: "REC: dashboard.id"
           type: "chart"
           data_source_id: "REC: data_source.id"
+
+  - name: "Changing chart_type From Pie To Bar Resets chart_semi_circle"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Find country_id field on res.partner"
+        action: "search"
+        model: "ir.model.fields"
+        domain: [["model", "=", "res.partner"], ["name", "=", "country_id"]]
+        save_as: "group_by_field"
+        limit: 1
+      - step: "Create ORM data source with a Group By Field"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-CHART-DS-04"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+          group_by_field_id: "REC: group_by_field.id"
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Chart Dashboard"
+          code: "DASH-CHART-04"
+      - step: "Set chart_type to pie, enable chart_semi_circle, then switch to bar"
+        action: "form"
+        model: "dashboard.item"
+        save_as: "item"
+        ops:
+          - set:
+              name: "Chart Item"
+          - set:
+              dashboard_id: "REC: dashboard"
+          - set:
+              type: "chart"
+          - set:
+              data_source_id: "REC: data_source"
+          - set:
+              chart_type: "pie"
+          - set:
+              chart_semi_circle: true
+          - assert:
+              chart_semi_circle:
+                type: "value"
+                expected: true
+          - set:
+              chart_type: "bar"
+          - assert:
+              chart_semi_circle:
+                type: "value"
+                expected: false
+        save: true
+
+  - name: "Chart Item chart_stacked On Pie Chart Type Is Rejected"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Find country_id field on res.partner"
+        action: "search"
+        model: "ir.model.fields"
+        domain: [["model", "=", "res.partner"], ["name", "=", "country_id"]]
+        save_as: "group_by_field"
+        limit: 1
+      - step: "Create ORM data source with a Group By Field"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-CHART-DS-05"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+          group_by_field_id: "REC: group_by_field.id"
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Chart Dashboard"
+          code: "DASH-CHART-05"
+      - step: "Create chart item with chart_type pie and chart_stacked True is rejected"
+        action: "create"
+        model: "dashboard.item"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Broken Stacked Pie Chart"
+          dashboard_id: "REC: dashboard.id"
+          type: "chart"
+          data_source_id: "REC: data_source.id"
+          chart_type: "pie"
+          chart_stacked: true
+
+  - name: "Chart Item chart_semi_circle On Bar Chart Type Is Rejected"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Find country_id field on res.partner"
+        action: "search"
+        model: "ir.model.fields"
+        domain: [["model", "=", "res.partner"], ["name", "=", "country_id"]]
+        save_as: "group_by_field"
+        limit: 1
+      - step: "Create ORM data source with a Group By Field"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-CHART-DS-06"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+          group_by_field_id: "REC: group_by_field.id"
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Chart Dashboard"
+          code: "DASH-CHART-06"
+      - step: "Create chart item with chart_type bar and chart_semi_circle True is rejected"
+        action: "create"
+        model: "dashboard.item"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Broken Semi Circle Bar Chart"
+          dashboard_id: "REC: dashboard.id"
+          type: "chart"
+          data_source_id: "REC: data_source.id"
+          chart_type: "bar"
+          chart_semi_circle: true
+
+  - name: "Chart Item chart_cumulative On Doughnut Chart Type Is Rejected"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Find country_id field on res.partner"
+        action: "search"
+        model: "ir.model.fields"
+        domain: [["model", "=", "res.partner"], ["name", "=", "country_id"]]
+        save_as: "group_by_field"
+        limit: 1
+      - step: "Create ORM data source with a Group By Field"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-CHART-DS-07"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+          group_by_field_id: "REC: group_by_field.id"
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Chart Dashboard"
+          code: "DASH-CHART-07"
+      - step: "Create chart item with chart_type doughnut and chart_cumulative True is rejected"
+        action: "create"
+        model: "dashboard.item"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Broken Cumulative Doughnut Chart"
+          dashboard_id: "REC: dashboard.id"
+          type: "chart"
+          data_source_id: "REC: data_source.id"
+          chart_type: "doughnut"
+          chart_cumulative: true

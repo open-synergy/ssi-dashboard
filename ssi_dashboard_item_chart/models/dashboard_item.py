@@ -14,6 +14,22 @@ _CHART_TYPE_SELECTION = [
     ("polar", "Polar Area"),
 ]
 
+_CHART_DATA_LABEL_SELECTION = [
+    ("none", "Hidden"),
+    ("value", "Value"),
+    ("percent", "Percentage"),
+]
+
+# `chart_type` values that support `chart_stacked`.
+_CHART_STACKED_TYPES = ("bar", "horizontal_bar", "area")
+
+# `chart_type` values that support `chart_semi_circle`.
+_CHART_SEMI_CIRCLE_TYPES = ("pie", "doughnut")
+
+# `chart_type` values that reject `chart_cumulative` — a running total is
+# meaningless on a proportion chart.
+_CHART_CUMULATIVE_EXCLUDED_TYPES = ("pie", "doughnut", "polar")
+
 
 class DashboardItem(models.Model):
     """Extends `dashboard.item` with the 'chart' type: a chart built out of
@@ -24,7 +40,12 @@ class DashboardItem(models.Model):
     (:attr:`chart_type`) and assembles either one dataset per second
     dimension value (:attr:`dashboard.data_source.sub_group_by_field_id`)
     or one dataset per configured measure, never both at once (see
-    :meth:`_check_chart_multi_measure_requires_no_sub_group`)."""
+    :meth:`_check_chart_multi_measure_requires_no_sub_group`). Also adds
+    composition/readability options on top of the seven chart kinds:
+    stacking datasets (:attr:`chart_stacked`), drawing pie/doughnut as a
+    half circle (:attr:`chart_semi_circle`), an extra running-total
+    dataset drawn as a line (:attr:`chart_cumulative`), and on-chart data
+    labels (:attr:`chart_data_label`)."""
 
     _name = "dashboard.item"
     _inherit = [
@@ -51,6 +72,98 @@ class DashboardItem(models.Model):
         default=True,
         help="Show the chart's legend. Only used when 'Type' is 'Chart'.",
     )
+    chart_stacked = fields.Boolean(
+        default=False,
+        help="Stack this chart's datasets on top of each other instead of "
+        "side by side. Only used when 'Type' is 'Chart' and only "
+        "supported when 'Chart Type' is 'Bar', 'Horizontal Bar' or "
+        "'Area'.",
+    )
+    chart_semi_circle = fields.Boolean(
+        default=False,
+        help="Draw this chart as a half circle instead of a full circle. "
+        "Only used when 'Type' is 'Chart' and only supported when 'Chart "
+        "Type' is 'Pie' or 'Doughnut'.",
+    )
+    chart_cumulative = fields.Boolean(
+        default=False,
+        help="Add one extra dataset with the running cumulative total of "
+        "this chart's first dataset, always drawn as a line regardless "
+        "of 'Chart Type'. Only used when 'Type' is 'Chart' and not "
+        "available when 'Chart Type' is 'Pie', 'Doughnut' or 'Polar "
+        "Area'.",
+    )
+    chart_data_label = fields.Selection(
+        selection=_CHART_DATA_LABEL_SELECTION,
+        default="none",
+        required=True,
+        help="Show each data point's value directly on the chart. "
+        "'Percentage' shows each point's share of its own dataset's "
+        "total instead of its raw value. Only used when 'Type' is "
+        "'Chart'.",
+    )
+
+    @api.onchange("chart_type")
+    def _onchange_chart_type(self):
+        """Reset :attr:`chart_stacked`/:attr:`chart_semi_circle` when the
+        newly chosen :attr:`chart_type` no longer supports them — mirrors
+        :meth:`_check_chart_stacked_requires_supported_type` and
+        :meth:`_check_chart_semi_circle_requires_supported_type` so the
+        form never gets stuck offering a combination the constraint would
+        reject on save."""
+        for item in self:
+            if item.chart_type not in _CHART_STACKED_TYPES:
+                item.chart_stacked = False
+            if item.chart_type not in _CHART_SEMI_CIRCLE_TYPES:
+                item.chart_semi_circle = False
+
+    @api.constrains("type", "chart_type", "chart_stacked")
+    def _check_chart_stacked_requires_supported_type(self):
+        for item in self:
+            if item.type != "chart" or not item.chart_stacked:
+                continue
+            if item.chart_type not in _CHART_STACKED_TYPES:
+                error_message = f"""
+Context: Configure dashboard item chart
+Database ID: {item.id}
+Problem: 'Stacked' is enabled but 'Chart Type' ('{item.chart_type}') does \
+not support it
+Solution: Disable 'Stacked', or set 'Chart Type' to 'Bar', 'Horizontal \
+Bar' or 'Area'
+"""
+                raise ValidationError(error_message)
+
+    @api.constrains("type", "chart_type", "chart_semi_circle")
+    def _check_chart_semi_circle_requires_supported_type(self):
+        for item in self:
+            if item.type != "chart" or not item.chart_semi_circle:
+                continue
+            if item.chart_type not in _CHART_SEMI_CIRCLE_TYPES:
+                error_message = f"""
+Context: Configure dashboard item chart
+Database ID: {item.id}
+Problem: 'Semi Circle' is enabled but 'Chart Type' ('{item.chart_type}') \
+does not support it
+Solution: Disable 'Semi Circle', or set 'Chart Type' to 'Pie' or \
+'Doughnut'
+"""
+                raise ValidationError(error_message)
+
+    @api.constrains("type", "chart_type", "chart_cumulative")
+    def _check_chart_cumulative_requires_supported_type(self):
+        for item in self:
+            if item.type != "chart" or not item.chart_cumulative:
+                continue
+            if item.chart_type in _CHART_CUMULATIVE_EXCLUDED_TYPES:
+                error_message = f"""
+Context: Configure dashboard item chart
+Database ID: {item.id}
+Problem: 'Cumulative' is enabled but 'Chart Type' ('{item.chart_type}') \
+does not support it
+Solution: Disable 'Cumulative', or choose a 'Chart Type' other than \
+'Pie', 'Doughnut' or 'Polar Area'
+"""
+                raise ValidationError(error_message)
 
     @api.constrains("type", "data_source_id")
     def _check_chart_requires_group_by_field(self):
@@ -94,20 +207,68 @@ most one row, or clear its 'Sub Group By Field'
         :return: `payload`, with a 'chart' key added — dict with 'type'
             (:attr:`chart_type`), 'labels' (see
             :meth:`_get_chart_labels`), 'datasets' (see
-            :meth:`_get_chart_datasets`) and 'show_legend'
-            (:attr:`chart_show_legend`).
+            :meth:`_get_chart_datasets`, with one extra entry appended by
+            :meth:`_add_chart_cumulative_dataset` when
+            :attr:`chart_cumulative` is set), 'show_legend'
+            (:attr:`chart_show_legend`), 'stacked' (:attr:`chart_stacked`),
+            'semi_circle' (:attr:`chart_semi_circle`), 'cumulative'
+            (:attr:`chart_cumulative`) and 'data_label'
+            (:attr:`chart_data_label`).
         :rtype: dict
         """
         self.ensure_one()
         data = payload.get("data") or []
         labels = self._get_chart_labels(data)
+        datasets = self._get_chart_datasets(data, labels)
+        if self.chart_cumulative:
+            datasets = self._add_chart_cumulative_dataset(datasets)
         payload["chart"] = {
             "type": self.chart_type,
             "labels": labels,
-            "datasets": self._get_chart_datasets(data, labels),
+            "datasets": datasets,
             "show_legend": self.chart_show_legend,
+            "stacked": self.chart_stacked,
+            "semi_circle": self.chart_semi_circle,
+            "cumulative": self.chart_cumulative,
+            "data_label": self.chart_data_label,
         }
         return payload
+
+    def _add_chart_cumulative_dataset(self, datasets):
+        """Append one extra dataset holding the running cumulative total
+        of `datasets`' first entry, used by
+        :meth:`_prepare_render_payload_chart` when :attr:`chart_cumulative`
+        is set.
+
+        The extra dataset is tagged with a ``render_as`` key set to
+        ``"line"`` so every consumer of this payload — the OWL chart
+        component as well as any future export — draws it as a line even
+        when the chart itself is a bar chart, following the same
+        accumulation rule everywhere.
+
+        :param datasets: list of dict, from :meth:`_get_chart_datasets` —
+            not modified in place.
+        :return: `datasets` plus one extra dict with keys 'label', 'data'
+            (running total of `datasets[0]['data']`, same length) and
+            'render_as' (``"line"``). Returned unchanged if `datasets` is
+            empty.
+        :rtype: list
+        """
+        self.ensure_one()
+        if not datasets:
+            return datasets
+        first_dataset = datasets[0]
+        running_total = 0
+        cumulative_data = []
+        for value in first_dataset["data"]:
+            running_total += value or 0
+            cumulative_data.append(running_total)
+        cumulative_dataset = {
+            "label": f"{first_dataset['label']} (Cumulative)",
+            "data": cumulative_data,
+            "render_as": "line",
+        }
+        return datasets + [cumulative_dataset]
 
     def _get_chart_labels(self, data):
         """Build the chart's x-axis labels out of fetched `data`.

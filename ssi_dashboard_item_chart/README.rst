@@ -25,6 +25,14 @@ dashboard's own color scheme through ``--ssi-dashboard-chart-1`` ..
 ``--ssi-dashboard-chart-8`` CSS custom properties; this module carries no
 palette of its own.
 
+Composition and readability options are available on top of the seven chart
+kinds: ``chart_stacked`` stacks datasets on Bar/Horizontal Bar/Area charts,
+``chart_semi_circle`` draws Pie/Doughnut charts as a half circle,
+``chart_cumulative`` adds one extra dataset with the running cumulative
+total of the chart's first dataset (always drawn as a line, not available
+on Pie/Doughnut/Polar Area), and ``chart_data_label`` shows each data
+point's value or percentage-of-series-total directly on the chart.
+
 
 Installation
 ============
