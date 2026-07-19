@@ -8,14 +8,23 @@ Dashboard Item - Tile
 
 Adds the ``tile`` dashboard item type to the SSI Dashboard framework: a single
 aggregate number, with its label, rendered by an OWL component registered under
-``registry.category("ssi_dashboard.item_widgets")``.
+``registry.category("ssi_dashboard.item_widgets")``. The aggregation itself
+(measure/aggregate, grouping, comparison, target) is entirely computed by the
+core ``dashboard.item``/``dashboard.data_source`` — this module only formats and
+decorates the first row of the item's fetched data.
 
-The aggregation reads ``measure`` (the field name to aggregate over the item's
-fetched data) and ``aggregate`` (one of ``sum``, ``avg``, ``min``, ``max``,
-``count``) out of the item's ``Config`` JSON field, defaulting to ``count`` when
-``Config`` is empty or names neither key. Tile color follows the dashboard's own
-color scheme through the ``--ssi-dashboard-primary`` CSS custom property; this
-module carries no palette of its own.
+Each tile item is configured through real fields, not a JSON blob:
+
+* ``Tile Layout`` — one of six arrangements: Value Only, Value With Icon, Value
+  With Comparison, Value With Target, Value With Sparkline, Value With
+  Background Icon. ``Value With Comparison`` requires the data source's
+  ``Comparison`` to be set; ``Value With Target`` requires the item's
+  ``Goal Type`` to be set.
+* ``Tile Icon`` — a Font Awesome icon class already bundled with the Odoo
+  backend, e.g. ``fa-shopping-cart``.
+* ``Tile Background Color`` / ``Tile Text Color`` — CSS color values. Left
+  empty, the dashboard's own ``--ssi-dashboard-surface`` /
+  ``--ssi-dashboard-text`` color scheme variables are used instead.
 
 
 Installation

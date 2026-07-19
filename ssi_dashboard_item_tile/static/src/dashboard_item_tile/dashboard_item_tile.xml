@@ -1,9 +1,38 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
     <t t-name="ssi_dashboard_item_tile.DashboardItemTile">
-        <div class="o_ssi_dashboard_item_tile">
+        <div
+            t-attf-class="o_ssi_dashboard_item_tile o_ssi_dashboard_item_tile_{{props.item.tile_layout}}"
+            t-att-style="tileStyle"
+        >
+            <i
+                t-if="props.item.tile_layout === 'layout_6' and iconClass"
+                t-att-class="iconClass + ' o_ssi_dashboard_item_tile_background_icon'"
+            />
+            <i
+                t-if="props.item.tile_layout === 'layout_2' and iconClass"
+                t-att-class="iconClass + ' o_ssi_dashboard_item_tile_icon'"
+            />
             <div class="o_ssi_dashboard_item_tile_value" t-esc="formattedValue" />
-            <div class="o_ssi_dashboard_item_tile_label" t-esc="props.item.label" />
+            <div class="o_ssi_dashboard_item_tile_label" t-esc="props.item.name" />
+            <div
+                t-if="props.item.tile_layout === 'layout_3' and formattedComparisonValue"
+                class="o_ssi_dashboard_item_tile_comparison"
+                t-esc="formattedComparisonValue"
+            />
+            <div
+                t-if="props.item.tile_layout === 'layout_4' and formattedGoalValue"
+                class="o_ssi_dashboard_item_tile_goal"
+                t-esc="formattedGoalValue"
+            />
+            <svg
+                t-if="props.item.tile_layout === 'layout_5' and sparklinePoints"
+                class="o_ssi_dashboard_item_tile_sparkline"
+                viewBox="0 0 100 30"
+                preserveAspectRatio="none"
+            >
+                <polyline t-att-points="sparklinePoints" />
+            </svg>
         </div>
     </t>
 </templates>
