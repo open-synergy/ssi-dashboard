@@ -1,0 +1,62 @@
+.o_ssi_dashboard_item_kpi {
+    position: relative;
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    padding: 12px;
+    border: 1px solid var(--ssi-dashboard-border, #dee2e6);
+    border-left: 4px solid var(--ssi-dashboard-primary, #0d6efd);
+    border-radius: 4px;
+
+    .o_ssi_dashboard_item_kpi_label {
+        font-size: 0.85em;
+        opacity: 0.75;
+    }
+
+    .o_ssi_dashboard_item_kpi_value {
+        font-size: 1.75em;
+        font-weight: bold;
+    }
+
+    .o_ssi_dashboard_item_kpi_progress {
+        width: 100%;
+        height: 6px;
+        margin-top: 6px;
+        background-color: var(--ssi-dashboard-border, #dee2e6);
+        border-radius: 3px;
+        overflow: hidden;
+
+        .o_ssi_dashboard_item_kpi_progress_bar {
+            height: 100%;
+            background-color: var(--ssi-dashboard-primary, #0d6efd);
+        }
+    }
+
+    .o_ssi_dashboard_item_kpi_comparison {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 6px;
+        font-size: 0.85em;
+
+        .o_ssi_dashboard_item_kpi_reference_label {
+            margin-left: 4px;
+            opacity: 0.75;
+        }
+    }
+
+    .o_ssi_dashboard_item_kpi_direction_up {
+        color: var(--ssi-dashboard-success, #198754);
+    }
+
+    .o_ssi_dashboard_item_kpi_direction_down {
+        color: var(--ssi-dashboard-danger, #dc3545);
+    }
+
+    .o_ssi_dashboard_item_kpi_direction_flat {
+        color: var(--ssi-dashboard-text, #6c757d);
+        opacity: 0.75;
+    }
+}

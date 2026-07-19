@@ -1,0 +1,158 @@
+scenarios:
+  - name: "Create KPI Item With Target Defaults to Percentage Display"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Create ORM data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-KPI-DS-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "KPI Dashboard"
+          code: "DASH-KPI-01"
+      - step: "Create kpi item with a fixed target"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Partner Count"
+          dashboard_id: "REC: dashboard.id"
+          type: "kpi"
+          data_source_id: "REC: data_source.id"
+          goal_type: "fixed"
+          goal_value: 100.0
+      - step: "Assert kpi_layout/kpi_display default"
+        action: "assert"
+        target: "item"
+        asserts:
+          type:
+            type: "value"
+            expected: "kpi"
+          kpi_layout:
+            type: "value"
+            expected: "target"
+          kpi_display:
+            type: "value"
+            expected: "percentage"
+
+  - name: "KPI Layout With Target Requires a Goal"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Create ORM data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-KPI-DS-02"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "KPI Dashboard"
+          code: "DASH-KPI-02"
+      - step: "kpi_layout target with goal_type none is rejected"
+        action: "create"
+        model: "dashboard.item"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Broken Target KPI"
+          dashboard_id: "REC: dashboard.id"
+          type: "kpi"
+          data_source_id: "REC: data_source.id"
+          kpi_layout: "target"
+          goal_type: "none"
+
+  - name: "KPI Layout Data Comparison Requires Data Source Comparison"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Create ORM data source without comparison"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-KPI-DS-03"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+          comparison: "none"
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "KPI Dashboard"
+          code: "DASH-KPI-03"
+      - step: "kpi_layout comparison over a data source without comparison is rejected"
+        action: "create"
+        model: "dashboard.item"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Broken Comparison KPI"
+          dashboard_id: "REC: dashboard.id"
+          type: "kpi"
+          data_source_id: "REC: data_source.id"
+          kpi_layout: "comparison"
+
+  - name: "Writing an Out-of-Selection KPI Display Is Rejected"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Create ORM data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-KPI-DS-04"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "KPI Dashboard"
+          code: "DASH-KPI-04"
+      - step: "Create kpi item with a fixed target"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Partner Count"
+          dashboard_id: "REC: dashboard.id"
+          type: "kpi"
+          data_source_id: "REC: data_source.id"
+          goal_type: "fixed"
+          goal_value: 100.0
+      - step: "Write an out-of-selection kpi_display"
+        action: "write"
+        target: "item"
+        expect_error:
+          type: "ValueError"
+        values:
+          kpi_display: "fraction"

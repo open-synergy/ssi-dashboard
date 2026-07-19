@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <!-- Adds the 'kpi' fields as more inline-editable columns on the
+         dashboard form's embedded 'Items' list, following the same
+         per-row invisible pattern already used there for 'goal_value'
+         and by ssi_dashboard_item_chart for its own fields
+         (ssi_dashboard/views/dashboard_dashboard.xml). This is the main,
+         intended way of editing them. -->
+    <record id="dashboard_dashboard_view_form" model="ir.ui.view">
+        <field name="name">dashboard.dashboard - form - kpi</field>
+        <field name="model">dashboard.dashboard</field>
+        <field name="inherit_id" ref="ssi_dashboard.dashboard_dashboard_view_form" />
+        <field name="arch" type="xml">
+            <data>
+                <xpath
+                    expr="//field[@name='item_ids']/list/field[@name='goal_value']"
+                    position="after"
+                >
+                    <field name="kpi_layout" invisible="type != 'kpi'" />
+                    <field name="kpi_display" invisible="type != 'kpi'" />
+                    <field name="kpi_invert_direction" invisible="type != 'kpi'" />
+                </xpath>
+            </data>
+        </field>
+    </record>
+
+    <!-- Also adds the same fields to the item's own standalone form,
+         following the same hidden-unless-this-type notebook page pattern
+         already used by ssi_dashboard_item_tile/ssi_dashboard_item_chart
+         — so 'kpi_layout'/'kpi_display' are reachable through the Form
+         API for onchange/constraint testing. Not wired to a button of
+         its own: like 'chart', a 'kpi' item has no nested one2many
+         needing a dialog, so this page is only reached by test code, not
+         by end users. -->
+    <record id="dashboard_item_view_form" model="ir.ui.view">
+        <field name="name">dashboard.item - form - kpi</field>
+        <field name="model">dashboard.item</field>
+        <field name="inherit_id" ref="ssi_dashboard.dashboard_item_view_form" />
+        <field name="arch" type="xml">
+            <data>
+                <xpath expr="//sheet" position="inside">
+                    <notebook>
+                        <page name="kpi" string="KPI" invisible="type != 'kpi'">
+                            <group name="dashboard_item_kpi_configuration">
+                                <field name="kpi_layout" />
+                                <field name="kpi_display" />
+                                <field name="kpi_invert_direction" />
+                            </group>
+                        </page>
+                    </notebook>
+                </xpath>
+            </data>
+        </field>
+    </record>
+</odoo>
