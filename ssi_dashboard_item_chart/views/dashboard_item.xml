@@ -6,12 +6,8 @@
     <!-- Adds the 'chart' fields as more inline-editable columns on the
          dashboard form's embedded 'Items' list, following the same
          per-row invisible pattern already used there for 'goal_value'
-         (ssi_dashboard/views/dashboard_dashboard.xml). Unlike
-         ssi_dashboard_item_tile's fields, these are plain
-         Selection/Boolean fields — no nested one2many involved — so they
-         need no standalone dialog form of their own, and this module
-         does not touch the 'action_open_item_goals' button's
-         visibility. -->
+         (ssi_dashboard/views/dashboard_dashboard.xml). This is the main,
+         intended way of editing them. -->
     <record id="dashboard_dashboard_view_form" model="ir.ui.view">
         <field name="name">dashboard.dashboard - form - chart</field>
         <field name="model">dashboard.dashboard</field>
@@ -28,6 +24,39 @@
                     <field name="chart_semi_circle" invisible="type != 'chart'" />
                     <field name="chart_cumulative" invisible="type != 'chart'" />
                     <field name="chart_data_label" invisible="type != 'chart'" />
+                </xpath>
+            </data>
+        </field>
+    </record>
+
+    <!-- Also adds the same fields to the item's own standalone form,
+         following the same hidden-unless-this-type notebook page pattern
+         already used by ssi_dashboard_item_tile's 'Tile' page — so
+         'chart_type'/'chart_semi_circle' are reachable through the Form
+         API for onchange testing (see tests/test_data_dashboard_item_chart.yaml,
+         'Changing chart_type From Pie To Bar Resets chart_semi_circle').
+         Not wired to a button of its own: unlike 'tile', a 'chart' item
+         has no nested one2many needing a dialog, so this page is only
+         reached by test code, not by end users. -->
+    <record id="dashboard_item_view_form" model="ir.ui.view">
+        <field name="name">dashboard.item - form - chart</field>
+        <field name="model">dashboard.item</field>
+        <field name="inherit_id" ref="ssi_dashboard.dashboard_item_view_form" />
+        <field name="arch" type="xml">
+            <data>
+                <xpath expr="//sheet" position="inside">
+                    <notebook>
+                        <page name="chart" string="Chart" invisible="type != 'chart'">
+                            <group name="dashboard_item_chart_configuration">
+                                <field name="chart_type" />
+                                <field name="chart_show_legend" />
+                                <field name="chart_stacked" />
+                                <field name="chart_semi_circle" />
+                                <field name="chart_cumulative" />
+                                <field name="chart_data_label" />
+                            </group>
+                        </page>
+                    </notebook>
                 </xpath>
             </data>
         </field>

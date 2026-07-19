@@ -37,7 +37,8 @@ scenarios:
           dashboard_id: "REC: dashboard.id"
           type: "chart"
           data_source_id: "REC: data_source.id"
-      - step: "Assert chart_type/chart_show_legend and the new chart options all default"
+      - step:
+          "Assert chart_type/chart_show_legend and the new chart options all default"
         action: "assert"
         target: "item"
         asserts:
@@ -205,23 +206,21 @@ scenarios:
         values:
           name: "Chart Dashboard"
           code: "DASH-CHART-04"
-      - step: "Set chart_type to pie, enable chart_semi_circle, then switch to bar"
-        action: "form"
+      - step: "Create chart item with chart_type pie and chart_semi_circle True"
+        action: "create"
         model: "dashboard.item"
         save_as: "item"
+        values:
+          name: "Chart Item"
+          dashboard_id: "REC: dashboard.id"
+          type: "chart"
+          data_source_id: "REC: data_source.id"
+          chart_type: "pie"
+          chart_semi_circle: true
+      - step: "Switch chart_type to bar on the existing item via the Form API"
+        action: "form"
+        target: "item"
         ops:
-          - set:
-              name: "Chart Item"
-          - set:
-              dashboard_id: "REC: dashboard"
-          - set:
-              type: "chart"
-          - set:
-              data_source_id: "REC: data_source"
-          - set:
-              chart_type: "pie"
-          - set:
-              chart_semi_circle: true
           - assert:
               chart_semi_circle:
                 type: "value"
@@ -305,7 +304,8 @@ scenarios:
         values:
           name: "Chart Dashboard"
           code: "DASH-CHART-06"
-      - step: "Create chart item with chart_type bar and chart_semi_circle True is rejected"
+      - step:
+          "Create chart item with chart_type bar and chart_semi_circle True is rejected"
         action: "create"
         model: "dashboard.item"
         expect_error:
@@ -347,7 +347,9 @@ scenarios:
         values:
           name: "Chart Dashboard"
           code: "DASH-CHART-07"
-      - step: "Create chart item with chart_type doughnut and chart_cumulative True is rejected"
+      - step:
+          "Create chart item with chart_type doughnut and chart_cumulative True is
+          rejected"
         action: "create"
         model: "dashboard.item"
         expect_error:
