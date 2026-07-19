@@ -11,7 +11,9 @@ class TestDashboardItemChart(YamlTransactionCase):
     def test_dashboard_item_chart(self):
         self.run_yaml_scenario("test_data_dashboard_item_chart.yaml")
 
-    def _create_chart_item(self, model_xml_id, group_by_name, sub_group_by_name=None):
+    def _create_chart_item(
+        self, model_xml_id, group_by_name, sub_group_by_name=None, item_values=None
+    ):
         """Shared helper: build a data source (with an optional second
         grouping dimension) and a chart item on top of it, without going
         through a real ``_fetch_data_orm`` query — every test below feeds
@@ -24,6 +26,8 @@ class TestDashboardItemChart(YamlTransactionCase):
             By Field'.
         :param sub_group_by_name: optional field name used as 'Sub Group
             By Field'.
+        :param item_values: optional dict merged into the ``dashboard.item``
+            ``create()`` values (e.g. ``{"chart_cumulative": True}``).
         :return: the created ``dashboard.item`` record.
         """
         model = self.env.ref(model_xml_id)
@@ -48,14 +52,14 @@ class TestDashboardItemChart(YamlTransactionCase):
         dashboard = self.env["dashboard.dashboard"].create(
             {"name": "Chart Dashboard", "code": f"DASH-CHART-PY-{values['code']}"}
         )
-        return self.env["dashboard.item"].create(
-            {
-                "name": "Chart Item",
-                "dashboard_id": dashboard.id,
-                "type": "chart",
-                "data_source_id": data_source.id,
-            }
-        )
+        item_create_values = {
+            "name": "Chart Item",
+            "dashboard_id": dashboard.id,
+            "type": "chart",
+            "data_source_id": data_source.id,
+        }
+        item_create_values.update(item_values or {})
+        return self.env["dashboard.item"].create(item_create_values)
 
     def test_chart_payload_two_dimensions_one_dataset_per_sub_group(self):
         """Python murni — P1/P3: nilai balik `_prepare_render_payload_chart`
@@ -180,3 +184,35 @@ class TestDashboardItemChart(YamlTransactionCase):
                 {"label": "Measure B", "data": [100.0, 40.0]},
             ],
         )
+
+    def test_chart_cumulative_appends_one_running_total_dataset(self):
+        """Python murni — P1/P3: nilai balik `_prepare_render_payload_chart`
+        dan isi/urutan `datasets` yang di-assert; `action: call`/`assert`
+        YAML membuang nilai balik method (L-01) dan tak menjangkau urutan
+        elemen list bertingkat (L-07).
+
+        ``chart_cumulative`` = ``True`` menambah tepat satu dataset di
+        akhir ``datasets``, berisi akumulasi berjalan dari dataset
+        pertama (10, 20, 30 -> 10, 30, 60), ditandai ``render_as`` ==
+        ``"line"``.
+        """
+        item = self._create_chart_item(
+            "base.model_res_partner",
+            "country_id",
+            item_values={"chart_cumulative": True},
+        )
+        rows = [
+            {"group_label": "Indonesia", "__count": 10},
+            {"group_label": "Singapore", "__count": 20},
+            {"group_label": "Malaysia", "__count": 30},
+        ]
+
+        payload = item._prepare_render_payload_chart({"data": rows})
+
+        chart = payload["chart"]
+        self.assertTrue(chart["cumulative"])
+        self.assertEqual(len(chart["datasets"]), 2)
+        first_dataset, cumulative_dataset = chart["datasets"]
+        self.assertEqual(first_dataset["data"], [10, 20, 30])
+        self.assertEqual(cumulative_dataset["data"], [10, 30, 60])
+        self.assertEqual(cumulative_dataset["render_as"], "line")
