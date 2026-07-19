@@ -14,8 +14,28 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: ssi_dashboard_item_chart
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_chart.selection__dashboard_item__chart_type__area
+msgid "Area"
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_chart.selection__dashboard_item__chart_type__bar
+msgid "Bar"
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
 #: model:ir.model.fields.selection,name:ssi_dashboard_item_chart.selection__dashboard_item__type__chart
 msgid "Chart"
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
+#: model:ir.model.fields,field_description:ssi_dashboard_item_chart.field_dashboard_item__chart_show_legend
+msgid "Chart Show Legend"
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
+#: model:ir.model.fields,field_description:ssi_dashboard_item_chart.field_dashboard_item__chart_type
+msgid "Chart Type"
 msgstr ""
 
 #. module: ssi_dashboard_item_chart
@@ -29,8 +49,27 @@ msgid "Display Name"
 msgstr ""
 
 #. module: ssi_dashboard_item_chart
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_chart.selection__dashboard_item__chart_type__doughnut
+msgid "Doughnut"
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_chart.selection__dashboard_item__chart_type__horizontal_bar
+msgid "Horizontal Bar"
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
 #: model:ir.model.fields,field_description:ssi_dashboard_item_chart.field_dashboard_item__id
 msgid "ID"
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
+#: model:ir.model.fields,help:ssi_dashboard_item_chart.field_dashboard_item__chart_type
+msgid ""
+"Kind of chart rendered by the browser. Only used when 'Type' is 'Chart'. "
+"'Horizontal Bar' and 'Area' are rendered as Chart.js 'bar'/'line' charts "
+"with a client-side option added (horizontal index axis / area fill) — the "
+"server sends this value unchanged, the mapping happens in the browser."
 msgstr ""
 
 #. module: ssi_dashboard_item_chart
@@ -39,6 +78,26 @@ msgid ""
 "Kind of tile rendered by the browser. Extension modules add more choices via"
 " 'selection_add' and may implement a matching "
 "'_prepare_render_payload_<type>' method."
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_chart.selection__dashboard_item__chart_type__line
+msgid "Line"
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_chart.selection__dashboard_item__chart_type__pie
+msgid "Pie"
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_chart.selection__dashboard_item__chart_type__polar
+msgid "Polar Area"
+msgstr ""
+
+#. module: ssi_dashboard_item_chart
+#: model:ir.model.fields,help:ssi_dashboard_item_chart.field_dashboard_item__chart_show_legend
+msgid "Show the chart's legend. Only used when 'Type' is 'Chart'."
 msgstr ""
 
 #. module: ssi_dashboard_item_chart
