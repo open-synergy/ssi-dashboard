@@ -215,6 +215,26 @@ msgid "Column Width"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__comparison
+msgid "Comparison"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__comparison_year_count
+msgid "Comparison Year Count"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__comparison
+msgid ""
+"Comparison range computed alongside the current period and returned "
+"separately (see 'comparison_data'). 'Previous Period' shifts the current "
+"range (from 'Date Range') backward by its own duration. 'Same Period "
+"Previous Year' shifts the current range backward by 'Comparison Year Count' "
+"years, keeping the same start/end day. Requires 'Date Field' to be set."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__config
 msgid "Config"
 msgstr ""
@@ -886,6 +906,11 @@ msgid "Next Year"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__comparison__none
+msgid "No Comparison"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__note
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__note
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__note
@@ -918,6 +943,14 @@ msgstr ""
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__message_has_error_counter
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__message_has_error_counter
 msgid "Number of messages with delivery error"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__comparison_year_count
+msgid ""
+"Number of years back to compare against, one comparison range per year. Only"
+" used when 'Comparison' is 'Same Period Previous Year'. Must be between 1 "
+"and 5."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -997,6 +1030,11 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__comparison__previous_period
+msgid "Previous Period"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__quarter
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sub_group_by_granularity__quarter
 msgid "Quarter"
@@ -1022,6 +1060,11 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__row_height
 msgid "Row Height"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__comparison__previous_year
+msgid "Same Period Previous Year"
 msgstr ""
 
 #. module: ssi_dashboard
