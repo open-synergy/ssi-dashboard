@@ -1,0 +1,152 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* ssi_dashboard_item_todo
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,field_description:ssi_dashboard_item_todo.field_dashboard_item_todo__item_id
+msgid "# Item"
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,field_description:ssi_dashboard_item_todo.field_dashboard_item_todo__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,field_description:ssi_dashboard_item_todo.field_dashboard_item_todo__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model,name:ssi_dashboard_item_todo.model_dashboard_item
+msgid "Dashboard Item"
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model,name:ssi_dashboard_item_todo.model_dashboard_item_todo
+msgid "Dashboard Item To Do Row"
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,help:ssi_dashboard_item_todo.field_dashboard_item_todo__item_id
+msgid "Dashboard item (of 'Type' 'To Do') this row belongs to."
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,help:ssi_dashboard_item_todo.field_dashboard_item_todo__sequence
+msgid "Determines the display order of rows on the checklist."
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,field_description:ssi_dashboard_item_todo.field_dashboard_item__display_name
+#: model:ir.model.fields,field_description:ssi_dashboard_item_todo.field_dashboard_item_todo__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,field_description:ssi_dashboard_item_todo.field_dashboard_item_todo__done
+msgid "Done"
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,field_description:ssi_dashboard_item_todo.field_dashboard_item__id
+#: model:ir.model.fields,field_description:ssi_dashboard_item_todo.field_dashboard_item_todo__id
+msgid "ID"
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,help:ssi_dashboard_item_todo.field_dashboard_item_todo__line_type
+msgid ""
+"Kind of row. 'Section' is a heading and ignores 'Done'. 'Task' is a "
+"checkable row toggled through 'toggle_todo_done'."
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,help:ssi_dashboard_item_todo.field_dashboard_item__type
+msgid ""
+"Kind of tile rendered by the browser. Extension modules add more choices via"
+" 'selection_add' and may implement a matching "
+"'_prepare_render_payload_<type>' method."
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,field_description:ssi_dashboard_item_todo.field_dashboard_item_todo__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,field_description:ssi_dashboard_item_todo.field_dashboard_item_todo__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,field_description:ssi_dashboard_item_todo.field_dashboard_item_todo__line_type
+msgid "Line Type"
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,field_description:ssi_dashboard_item_todo.field_dashboard_item_todo__name
+msgid "Name"
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_todo.selection__dashboard_item_todo__line_type__section
+msgid "Section"
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,help:ssi_dashboard_item_todo.field_dashboard_item__todo_ids
+msgid ""
+"Section/task rows rendered as a checklist. Only used when 'Type' is 'To Do'."
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,field_description:ssi_dashboard_item_todo.field_dashboard_item_todo__sequence
+msgid "Sequence"
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_todo.selection__dashboard_item_todo__line_type__task
+msgid "Task"
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,help:ssi_dashboard_item_todo.field_dashboard_item_todo__name
+msgid ""
+"Text shown for this row — a heading for 'Section', a checkable label for "
+"'Task'."
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,help:ssi_dashboard_item_todo.field_dashboard_item_todo__done
+msgid ""
+"Ticked state of a 'Task' row, toggled by 'toggle_todo_done'. Ignored by "
+"'Section' rows."
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields.selection,name:ssi_dashboard_item_todo.selection__dashboard_item__type__todo
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard_item_todo.dashboard_item_view_form
+msgid "To Do"
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,field_description:ssi_dashboard_item_todo.field_dashboard_item__todo_ids
+msgid "To Do Rows"
+msgstr ""
+
+#. module: ssi_dashboard_item_todo
+#: model:ir.model.fields,field_description:ssi_dashboard_item_todo.field_dashboard_item__type
+msgid "Type"
+msgstr ""
