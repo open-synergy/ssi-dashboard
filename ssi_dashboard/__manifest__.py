@@ -26,4 +26,11 @@
         "views/dashboard_color_scheme.xml",
         "views/dashboard_dashboard.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "ssi_dashboard/static/src/dashboard_action/*",
+            "ssi_dashboard/static/src/dashboard_item/*",
+            "ssi_dashboard/static/src/dashboard_item_fallback/*",
+        ],
+    },
 }

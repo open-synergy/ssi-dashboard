@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="ssi_dashboard.DashboardItemFallback">
+        <div class="o_ssi_dashboard_item_fallback">
+            <div class="o_ssi_dashboard_item_fallback_name" t-esc="props.item.name" />
+            <div class="o_ssi_dashboard_item_fallback_message">
+                Unsupported item type: <t t-esc="props.item.type" />
+            </div>
+        </div>
+    </t>
+</templates>

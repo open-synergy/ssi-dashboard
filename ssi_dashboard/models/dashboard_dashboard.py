@@ -67,3 +67,26 @@ class DashboardDashboard(models.Model):
             "color_scheme": color_scheme,
             "items": [item._prepare_render_payload() for item in items],
         }
+
+    def action_open_dashboard(self):
+        for record in self.sudo():
+            result = record._open_dashboard()
+        return result
+
+    def _open_dashboard(self):
+        """Build the client action that opens this dashboard in the browser.
+
+        :return: dict describing an ``ir.actions.client`` bound to the
+            OWL client action registered under the
+            ``ssi_dashboard.dashboard_view`` tag, with :attr:`id` passed
+            through ``context['dashboard_id']`` so the browser side knows
+            which dashboard to fetch via :meth:`get_dashboard_payload`.
+        :rtype: dict
+        """
+        self.ensure_one()
+        return {
+            "type": "ir.actions.client",
+            "tag": "ssi_dashboard.dashboard_view",
+            "name": self.name,
+            "context": {"dashboard_id": self.id},
+        }
