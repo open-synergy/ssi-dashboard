@@ -1,6 +1,6 @@
 [project]
 name = "odoo-addons-open-synergy-ssi-dashboard"
-version = "19.0.20260719.6"
+version = "19.0.20260719.7"
 dependencies = [
     "odoo-addon-ssi_dashboard==19.0.*",
     "odoo-addon-ssi_dashboard_color_scheme_ssi==19.0.*",
@@ -8,6 +8,7 @@ dependencies = [
     "odoo-addon-ssi_dashboard_item_kpi==19.0.*",
     "odoo-addon-ssi_dashboard_item_list==19.0.*",
     "odoo-addon-ssi_dashboard_item_tile==19.0.*",
+    "odoo-addon-ssi_dashboard_item_todo==19.0.*",
     "odoo-addon-ssi_dashboard_source_api==19.0.*",
 ]
 classifiers=[

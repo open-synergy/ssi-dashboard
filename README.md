@@ -61,6 +61,7 @@ addon | version | maintainers | summary
 [ssi_dashboard_item_kpi](ssi_dashboard_item_kpi/) | 19.0.1.0.0 |  | Dashboard Item - KPI
 [ssi_dashboard_item_list](ssi_dashboard_item_list/) | 19.0.1.1.0 |  | Dashboard Item - List
 [ssi_dashboard_item_tile](ssi_dashboard_item_tile/) | 19.0.1.1.0 |  | Dashboard Item - Tile
+[ssi_dashboard_item_todo](ssi_dashboard_item_todo/) | 19.0.1.0.0 |  | Dashboard Item - To Do
 [ssi_dashboard_source_api](ssi_dashboard_source_api/) | 19.0.1.0.0 |  | Dashboard Source - REST API
 
 [//]: # (end addons)
