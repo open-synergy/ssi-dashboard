@@ -34,4 +34,12 @@
         grid-auto-rows: 96px;
         gap: 16px;
     }
+
+    // Applies while this element is shown through the native Fullscreen
+    // API (see dashboard_action.esm.js, onFullscreenClick()) — the
+    // element already fills the screen at that point, this only makes
+    // sure its own content can scroll instead of being clipped.
+    &:fullscreen {
+        overflow: auto;
+    }
 }

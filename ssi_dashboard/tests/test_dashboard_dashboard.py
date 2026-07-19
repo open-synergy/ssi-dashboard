@@ -99,6 +99,25 @@ class TestDashboardDashboard(YamlTransactionCase):
         payload = dashboard.get_dashboard_payload()
         self.assertEqual(payload["refresh_interval"], 0)
 
+    def test_get_dashboard_payload_includes_fullscreen_enabled(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Sama seperti test payload lain di atas: nilai balik method,
+        bukan efek samping pada record (L-01, L-02). Payload harus
+        memuat kunci 'fullscreen_enabled' persis sama dengan field
+        'fullscreen_enabled' milik dashboard (Kriteria Penerimaan).
+        """
+        dashboard = self.env["dashboard.dashboard"].create(
+            {
+                "name": "Fullscreen Payload Dashboard",
+                "code": "DASH-PAYLOAD-FULLSCREEN-01",
+                "fullscreen_enabled": False,
+            }
+        )
+        payload = dashboard.get_dashboard_payload()
+        self.assertIn("fullscreen_enabled", payload)
+        self.assertFalse(payload["fullscreen_enabled"])
+
     def test_action_open_dashboard_returns_client_action(self):
         """Python murni — pemicu P1 (L-01, L-02).
 

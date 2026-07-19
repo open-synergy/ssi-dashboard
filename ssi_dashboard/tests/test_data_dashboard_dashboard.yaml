@@ -492,6 +492,23 @@ scenarios:
         values:
           refresh_interval: 300
 
+  - name: "Creating Dashboard Defaults Fullscreen Enabled To True"
+    steps:
+      - step: "Create dashboard without setting fullscreen_enabled"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Default Fullscreen Dashboard"
+          code: "DASH-FULLSCREEN-DEFAULT-01"
+      - step: "Assert fullscreen_enabled defaults to True"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          fullscreen_enabled:
+            type: "value"
+            operator: "is_truthy"
+
   - name: "Save Layout By Non Admin User Is Rejected"
     steps:
       - step: "Get res.partner model"

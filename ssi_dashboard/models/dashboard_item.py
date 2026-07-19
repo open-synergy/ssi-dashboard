@@ -168,6 +168,34 @@ class DashboardItem(models.Model):
         default=2,
         help="Number of digits shown after the decimal point. Must be between 0 and 6.",
     )
+    item_theme = fields.Selection(
+        selection=[
+            ("inherit", "Inherit From Dashboard"),
+            ("primary", "Primary"),
+            ("success", "Success"),
+            ("warning", "Warning"),
+            ("danger", "Danger"),
+            ("custom", "Custom Colors"),
+        ],
+        required=True,
+        default="inherit",
+        help="Color theme applied to this item's tile, overriding the "
+        "dashboard's own color scheme. 'Inherit From Dashboard' applies "
+        "no override. 'Primary'/'Success'/'Warning'/'Danger' refer to "
+        "the matching key already defined on the dashboard's color "
+        "scheme ('--ssi-dashboard-<key>') — the browser resolves the "
+        "color, this field never stores one. 'Custom Colors' uses "
+        "'Header Color'/'Border Color' instead.",
+    )
+    item_header_color = fields.Char(
+        help="CSS color value used as this tile's header background. "
+        "Only used, and only shown, when 'Item Theme' is 'Custom "
+        "Colors'.",
+    )
+    item_border_color = fields.Char(
+        help="CSS color value used as this tile's border. Only used, "
+        "and only shown, when 'Item Theme' is 'Custom Colors'.",
+    )
 
     def _is_data_source_required(self):
         """Whether :attr:`data_source_id` must be filled in for this
@@ -310,6 +338,28 @@ Solution: Fill in 'Unit Text', or change 'Unit Type' to another value
         if self.unit_type != "custom":
             self.unit_text = False
 
+    @api.constrains("item_theme", "item_header_color", "item_border_color")
+    def _check_item_theme_custom_requires_color(self):
+        for item in self:
+            if item.item_theme == "custom" and not (
+                item.item_header_color or item.item_border_color
+            ):
+                error_message = f"""
+Context: Configure dashboard item
+Database ID: {item.id}
+Problem: 'Item Theme' is set to 'Custom Colors' but neither 'Header \
+Color' nor 'Border Color' is filled in
+Solution: Fill in 'Header Color' and/or 'Border Color', or change 'Item \
+Theme' to another value
+"""
+                raise ValidationError(error_message)
+
+    @api.onchange("item_theme")
+    def onchange_item_theme_colors(self):
+        if self.item_theme != "custom":
+            self.item_header_color = False
+            self.item_border_color = False
+
     @api.constrains("goal_type", "goal_ids")
     def _check_goal_type_dated_requires_goal_ids(self):
         for item in self:
@@ -413,6 +463,36 @@ another value
             "precision_digits": self.precision_digits,
         }
 
+    def _get_theme_config(self):
+        """Build the theme configuration passed to the browser.
+
+        No color resolution happens server-side for the built-in
+        palette keys — this only tells the browser which theme applies,
+        and the browser resolves 'primary'/'success'/'warning'/'danger'
+        against the dashboard's own color scheme CSS variables (see
+        :meth:`dashboard.color_scheme._prepare_css_variables`), so
+        changing the color scheme keeps affecting every item themed
+        that way without touching this item's own data.
+
+        :return: dict with keys ``name`` (:attr:`item_theme`),
+            ``header_color`` and ``border_color`` — both ``None`` unless
+            :attr:`item_theme` is ``custom``, in which case they carry
+            :attr:`item_header_color`/:attr:`item_border_color` as-is.
+        :rtype: dict
+        """
+        self.ensure_one()
+        if self.item_theme == "custom":
+            header_color = self.item_header_color or None
+            border_color = self.item_border_color or None
+        else:
+            header_color = None
+            border_color = None
+        return {
+            "name": self.item_theme,
+            "header_color": header_color,
+            "border_color": border_color,
+        }
+
     def _prepare_render_payload(self, active_filters=None):
         """Build the payload the browser uses to render this item.
 
@@ -436,8 +516,9 @@ another value
         :type active_filters: dict or None
         :return: dict with keys ``id``, ``name``, ``type``,
             ``column_start``, ``row_start``, ``column_width``,
-            ``row_height``, ``active``, ``data`` and
-            ``number_format_config`` (see :meth:`_get_number_format_config`).
+            ``row_height``, ``active``, ``data``,
+            ``number_format_config`` (see :meth:`_get_number_format_config`)
+            and ``theme`` (see :meth:`_get_theme_config`).
             ``data`` is an empty list when :attr:`data_source_id` is
             empty (types that override :meth:`_is_data_source_required`
             to return ``False``), instead of fetching anything. Also
@@ -468,6 +549,7 @@ another value
             if self.data_source_id
             else [],
             "number_format_config": self._get_number_format_config(),
+            "theme": self._get_theme_config(),
         }
         if self.data_source_id and self.data_source_id.comparison != "none":
             payload["comparison_data"] = self.data_source_id._fetch_comparison_data(

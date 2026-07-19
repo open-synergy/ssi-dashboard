@@ -11,6 +11,15 @@
 
     .o_ssi_dashboard_item_fallback_name {
         font-weight: bold;
+        // Header background driven by the
+        // "--ssi-dashboard-item-header-color" custom property set on the
+        // wrapping ".o_ssi_dashboard_item" by DashboardItem's
+        // "themeStyle" getter (see
+        // dashboard_item/dashboard_item.esm.js) — transparent unless the
+        // item's theme is anything other than "inherit".
+        background-color: var(--ssi-dashboard-item-header-color, transparent);
+        border-radius: 4px;
+        padding: 2px 6px;
     }
 
     .o_ssi_dashboard_item_fallback_message {

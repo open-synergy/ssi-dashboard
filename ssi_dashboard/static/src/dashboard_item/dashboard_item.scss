@@ -1,0 +1,9 @@
+.o_ssi_dashboard_item {
+    // Accent border driven by the "--ssi-dashboard-item-border-color"
+    // custom property set from DashboardItem's "themeStyle" getter (see
+    // dashboard_item.esm.js) — only rendered once a theme other than
+    // "inherit" sets that property, so items left at the default theme
+    // show no extra border here.
+    border-left: 4px solid var(--ssi-dashboard-item-border-color, transparent);
+    border-radius: 4px;
+}

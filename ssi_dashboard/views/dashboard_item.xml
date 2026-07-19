@@ -27,6 +27,17 @@
                         <field name="unit_text" invisible="unit_type != 'custom'" />
                         <field name="unit_position" invisible="unit_type == 'none'" />
                     </group>
+                    <group name="dashboard_item_theme" string="Theme">
+                        <field name="item_theme" />
+                        <field
+                            name="item_header_color"
+                            invisible="item_theme != 'custom'"
+                        />
+                        <field
+                            name="item_border_color"
+                            invisible="item_theme != 'custom'"
+                        />
+                    </group>
                     <field name="goal_ids">
                         <list editable="bottom">
                             <field name="date_start" />

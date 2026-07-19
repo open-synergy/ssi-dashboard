@@ -53,4 +53,47 @@ export class DashboardItem extends Component {
         }
         return `grid-column: span ${item.column_width}; grid-row: span ${item.row_height};`;
     }
+
+    /**
+     * Turn "props.item.theme" (see models/dashboard_item.py,
+     * _get_theme_config()) into the "--ssi-dashboard-item-header-color"/
+     * "--ssi-dashboard-item-border-color" CSS custom properties consumed
+     * by this component's own SCSS and by whichever component renders
+     * the item's content (e.g. DashboardItemFallback) — so both the
+     * tile's border and any header area it renders pick up the same
+     * theme without either side hardcoding it.
+     *
+     * "theme.name" "inherit" sets neither property, leaving the
+     * dashboard's own styling untouched. "primary"/"success"/"warning"/
+     * "danger" point both properties at the matching
+     * "--ssi-dashboard-<name>" variable already set on the dashboard's
+     * root element by DashboardAction's "rootStyle" (built server-side
+     * from the color scheme) — the browser resolves the color, this
+     * component never copies it. "custom" uses "theme.header_color"/
+     * "theme.border_color" verbatim, falling back to not setting the
+     * property when a color is empty.
+     *
+     * @returns {String}
+     */
+    get themeStyle() {
+        const theme = this.props.item.theme;
+        if (!theme || theme.name === "inherit") {
+            return "";
+        }
+        const isCustom = theme.name === "custom";
+        const headerColor = isCustom
+            ? theme.header_color
+            : `var(--ssi-dashboard-${theme.name})`;
+        const borderColor = isCustom
+            ? theme.border_color
+            : `var(--ssi-dashboard-${theme.name})`;
+        const declarations = [];
+        if (headerColor) {
+            declarations.push(`--ssi-dashboard-item-header-color: ${headerColor}`);
+        }
+        if (borderColor) {
+            declarations.push(`--ssi-dashboard-item-border-color: ${borderColor}`);
+        }
+        return declarations.join("; ");
+    }
 }
