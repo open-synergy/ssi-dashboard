@@ -34,6 +34,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__active
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__active
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__active
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__active
 msgid "Active"
 msgstr ""
 
@@ -71,6 +72,18 @@ msgid "Administrator"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__aggregate
+msgid "Aggregate"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__aggregate
+msgid ""
+"Aggregation applied to 'Measure Field' (ignored when set to 'Count', which "
+"counts records instead)."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__group_ids
 msgid "Allowed Groups"
 msgstr ""
@@ -100,6 +113,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__message_attachment_count
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__message_attachment_count
 msgid "Attachment Count"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__aggregate__avg
+msgid "Average"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -168,7 +186,6 @@ msgid "Column Width"
 msgstr ""
 
 #. module: ssi_dashboard
-#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__config
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__config
 msgid "Config"
 msgstr ""
@@ -178,6 +195,11 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_dashboard_view_form
 #: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_data_source_view_form
 msgid "Configuration"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__aggregate__count
+msgid "Count"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -281,6 +303,13 @@ msgid "Domain"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__group_by_field_id
+msgid ""
+"Field of 'Model' that rows are grouped by. Left empty, 'Aggregate' is "
+"computed over every matching record as one group."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__message_follower_ids
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__message_follower_ids
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__message_follower_ids
@@ -314,6 +343,11 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__menu_id
 msgid "Generated Menu"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__group_by_field_id
+msgid "Group By Field"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -386,11 +420,6 @@ msgid "Items"
 msgstr ""
 
 #. module: ssi_dashboard
-#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__config
-msgid "JSON configuration consumed by data source types other than 'orm'."
-msgstr ""
-
-#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__config
 msgid "JSON configuration specific to this item's 'Type'."
 msgstr ""
@@ -446,6 +475,11 @@ msgid "Last Updated on"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__limit
+msgid "Limit"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_color_scheme__active
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__active
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__active
@@ -469,6 +503,21 @@ msgid ""
 "* Click 'Generate Code' button to automatically assign code.\n"
 "  Sequence template must be set to perform this action\n"
 "  Only master data with '/' code will be assign automatic code"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__aggregate__max
+msgid "Maximum"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__limit
+msgid "Maximum number of rows to return. 0 means no limit."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__measure_field_id
+msgid "Measure Field"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -512,6 +561,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__message_ids
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__message_ids
 msgid "Messages"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__aggregate__min
+msgid "Minimum"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -591,6 +645,13 @@ msgid "Number of messages with delivery error"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__measure_field_id
+msgid ""
+"Numeric field of 'Model' that 'Aggregate' is computed on. Left empty, "
+"'Aggregate' falls back to counting records."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__type__orm
 msgid "Odoo Model"
 msgstr ""
@@ -658,6 +719,11 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__aggregate__sum
+msgid "Sum"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__item_ids
 msgid "Tiles placed on this dashboard."
 msgstr ""
@@ -679,6 +745,11 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/ssi_dashboard/static/src/dashboard_item_fallback/dashboard_item_fallback.xml:0
 msgid "Unsupported item type:"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__active
+msgid "Untick to hide this item from its dashboard without deleting it."
 msgstr ""
 
 #. module: ssi_dashboard
