@@ -169,3 +169,79 @@ scenarios:
           type: "ValueError"
         values:
           aggregate: "median"
+
+  - name: "Selecting Date Field Keeps Granularity, Non-Date Clears It"
+    steps:
+      - step: "Get res.currency.rate model"
+        action: "ref"
+        xml_id: "base.model_res_currency_rate"
+        save_as: "model_a"
+      - step: "Find the 'name' (date) field on res.currency.rate"
+        action: "search"
+        model: "ir.model.fields"
+        domain: [["model", "=", "res.currency.rate"], ["name", "=", "name"]]
+        save_as: "date_field"
+        limit: 1
+      - step: "Find the 'rate' (non-date) field on res.currency.rate"
+        action: "search"
+        model: "ir.model.fields"
+        domain: [["model", "=", "res.currency.rate"], ["name", "=", "rate"]]
+        save_as: "non_date_field"
+        limit: 1
+      - step: "Fill form: date field keeps a set granularity, non-date clears it"
+        action: "form"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        save: true
+        ops:
+          - set: {name: "Form Granularity Source"}
+          - set: {code: "DS-GRAN-FORM-01"}
+          - set: {type: "orm"}
+          - set: {model_id: "REC: model_a"}
+          - set: {group_by_field_id: "REC: date_field"}
+          - set: {group_by_granularity: "year"}
+          - assert:
+              group_by_granularity:
+                type: "value"
+                expected: "year"
+          - set: {group_by_field_id: "REC: non_date_field"}
+          - assert:
+              group_by_granularity:
+                type: "value"
+                operator: "is_falsy"
+
+  - name: "Fetch Data Without Model Configured Is Rejected"
+    steps:
+      - step: "Create data source without a target model"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "No Model Source"
+          code: "DS-NOMODEL-01"
+          type: "orm"
+      - step: "Fetching data without a target model raises UserError"
+        action: "call"
+        target: "data_source"
+        method: "_fetch_data"
+        args:
+          - "REC: data_source"
+        expect_error:
+          type: "UserError"
+
+  - name: "Invalid Group By Granularity Value Is Rejected"
+    steps:
+      - step: "Create data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Generic Source"
+          code: "DS-BADGRAN-01"
+      - step: "Write invalid granularity value"
+        action: "write"
+        target: "data_source"
+        expect_error:
+          type: "ValueError"
+        values:
+          group_by_granularity: "decade"
