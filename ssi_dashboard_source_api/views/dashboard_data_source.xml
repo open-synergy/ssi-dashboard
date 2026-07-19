@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <record id="dashboard_data_source_view_form" model="ir.ui.view">
+        <field name="name">dashboard.data_source - form - api</field>
+        <field name="model">dashboard.data_source</field>
+        <field name="inherit_id" ref="ssi_dashboard.dashboard_data_source_view_form" />
+        <field name="arch" type="xml">
+            <data>
+                <xpath
+                    expr="//group[@name='dashboard_data_source_configuration']"
+                    position="after"
+                >
+                    <group
+                        name="dashboard_data_source_api_configuration"
+                        string="REST API"
+                        invisible="type != 'api'"
+                    >
+                        <field name="api_url" />
+                        <field name="api_method" />
+                        <field name="api_auth_type" />
+                        <field
+                            name="api_username"
+                            invisible="api_auth_type != 'basic'"
+                        />
+                        <field
+                            name="api_password"
+                            invisible="api_auth_type != 'basic'"
+                            password="True"
+                        />
+                        <field
+                            name="api_token"
+                            invisible="api_auth_type not in ('bearer', 'header')"
+                            password="True"
+                        />
+                        <field
+                            name="api_auth_header"
+                            invisible="api_auth_type != 'header'"
+                        />
+                        <field name="api_payload" invisible="api_method != 'post'" />
+                        <field name="api_result_path" />
+                        <field name="api_timeout" />
+                    </group>
+                </xpath>
+            </data>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,96 @@
+scenarios:
+  - name: "Create API Data Source"
+    steps:
+      - step: "Create API data source"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "External Metrics"
+          code: "DASH-API-CREATE-01"
+          type: "api"
+          api_url: "https://example.test/api/metrics"
+      - step: "Assert type and default timeout"
+        action: "assert"
+        target: "data_source"
+        asserts:
+          type:
+            type: "value"
+            expected: "api"
+          api_timeout:
+            type: "value"
+            expected: 10
+
+  - name: "Fetching Data Without API URL Is Rejected"
+    steps:
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "API Dashboard"
+          code: "DASH-API-EMPTY-DASH-01"
+      - step: "Create API data source without URL"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Unconfigured API"
+          code: "DASH-API-EMPTY-01"
+          type: "api"
+      - step: "Create item bound to the unconfigured data source"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Fetching data without API URL is rejected"
+        action: "call"
+        target: "data_source"
+        method: "_fetch_data"
+        args:
+          - "REC: item"
+        expect_error:
+          type: "UserError"
+          message_contains: "API URL"
+
+  - name: "Reading API Token Without Admin Group Is Denied"
+    steps:
+      - step: "Create dashboard user without admin group"
+        action: "create"
+        model: "res.users"
+        save_as: "dashboard_user"
+        values:
+          name: "Dashboard User Only"
+          login: "dashboard-user-only@example.com"
+          group_ids:
+            [
+              [
+                6,
+                0,
+                ["REF: base.group_user", "REF: ssi_dashboard.group_dashboard_user"],
+              ],
+            ]
+      - step: "Create API data source with a token"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Secured API"
+          code: "DASH-API-TOKEN-01"
+          type: "api"
+          api_url: "https://example.test/api/secured"
+          api_auth_type: "bearer"
+          api_token: "super-secret-token"
+      - step: "Dashboard user cannot read API token"
+        action: "call"
+        target: "data_source"
+        method: "read"
+        args:
+          - ["api_token"]
+        as_user: "dashboard_user"
+        expect_error:
+          type: "AccessError"
