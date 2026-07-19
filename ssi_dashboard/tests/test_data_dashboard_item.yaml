@@ -118,3 +118,166 @@ scenarios:
         domain: [["name", "=", "Item To Delete"]]
         save_as: "result"
         expect_count: 0
+
+  - name: "Create Item Without Goal Type Defaults To None"
+    steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-04"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-04"
+      - step: "Create item without goal_type"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item Without Goal Type"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Assert goal_type defaults to none"
+        action: "assert"
+        target: "item"
+        asserts:
+          goal_type:
+            type: "value"
+            expected: "none"
+
+  - name: "Dated Goal Type Without Goal Rows Is Rejected"
+    steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-05"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-05"
+      - step: "Create item with goal_type dated but no goal rows"
+        action: "create"
+        model: "dashboard.item"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Item Dated Without Goals"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+          goal_type: "dated"
+
+  - name: "Overlapping Dated Goals On Same Item Are Rejected"
+    steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-06"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-06"
+      - step: "Create item with a first dated goal row"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item With Overlapping Goals"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+          goal_type: "dated"
+          goal_ids:
+            - - 0
+              - 0
+              - date_start: "2026-01-01"
+                date_end: "2026-01-31"
+                value: 500
+      - step: "Add a second goal row overlapping the first must be rejected"
+        action: "create"
+        model: "dashboard.item.goal"
+        expect_error:
+          type: "ValidationError"
+        values:
+          item_id: "REC: item.id"
+          date_start: "2026-01-15"
+          date_end: "2026-02-15"
+          value: 700
+
+  - name: "Changing Goal Type To None Clears Goal Value And Goals"
+    steps:
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-ITEM-DS-07"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard for items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Item Test Dashboard"
+          code: "DASH-ITEM-DASH-07"
+      - step: "Create item with a fixed goal value and a dated goal row"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item Onchange Goal"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+          goal_type: "fixed"
+          goal_value: 250
+      - step: "Add a dated goal row directly so goal_ids is not already empty"
+        action: "create"
+        model: "dashboard.item.goal"
+        values:
+          item_id: "REC: item.id"
+          date_start: "2026-01-01"
+          date_end: "2026-01-31"
+          value: 500
+      - step: "Open item in a form and switch goal_type to none"
+        action: "form"
+        target: "item"
+        save: false
+        ops:
+          - set: {goal_type: "none"}
+          - assert:
+              goal_value:
+                type: "value"
+                expected: 0.0
+          - assert:
+              goal_ids:
+                type: "o2m"
+                check: "count"
+                expected_count: 0

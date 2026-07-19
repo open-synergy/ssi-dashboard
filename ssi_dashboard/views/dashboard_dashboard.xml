@@ -69,6 +69,18 @@
                                 <field name="data_source_id" />
                                 <field name="column_width" />
                                 <field name="row_height" />
+                                <field name="goal_type" />
+                                <field
+                                    name="goal_value"
+                                    invisible="goal_type != 'fixed'"
+                                />
+                                <button
+                                    name="action_open_item_goals"
+                                    type="object"
+                                    title="Configure Goals"
+                                    icon="fa-bullseye"
+                                    invisible="goal_type != 'dated'"
+                                />
                                 <field name="active" widget="boolean_toggle" />
                             </list>
                         </field>

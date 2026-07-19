@@ -24,6 +24,7 @@
         "menu.xml",
         "views/dashboard_data_source.xml",
         "views/dashboard_color_scheme.xml",
+        "views/dashboard_item.xml",
         "views/dashboard_dashboard.xml",
     ],
     "assets": {

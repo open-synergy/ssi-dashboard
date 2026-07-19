@@ -6,5 +6,6 @@ from . import dashboard_color_scheme_color  # noqa: F401
 from . import dashboard_color_scheme  # noqa: F401
 from . import dashboard_data_source_measure  # noqa: F401
 from . import dashboard_data_source  # noqa: F401
+from . import dashboard_item_goal  # noqa: F401
 from . import dashboard_item  # noqa: F401
 from . import dashboard_dashboard  # noqa: F401
