@@ -88,6 +88,70 @@
         <field name="key">border</field>
         <field name="value">#d0d5dd</field>
     </record>
+    <record
+        id="dashboard_color_scheme_ssi_light_color_chart_1"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_light" />
+        <field name="key">chart-1</field>
+        <field name="value">#1f6feb</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_light_color_chart_2"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_light" />
+        <field name="key">chart-2</field>
+        <field name="value">#c2410c</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_light_color_chart_3"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_light" />
+        <field name="key">chart-3</field>
+        <field name="value">#8250df</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_light_color_chart_4"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_light" />
+        <field name="key">chart-4</field>
+        <field name="value">#1a7f37</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_light_color_chart_5"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_light" />
+        <field name="key">chart-5</field>
+        <field name="value">#cf222e</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_light_color_chart_6"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_light" />
+        <field name="key">chart-6</field>
+        <field name="value">#0b7285</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_light_color_chart_7"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_light" />
+        <field name="key">chart-7</field>
+        <field name="value">#9a6700</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_light_color_chart_8"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_light" />
+        <field name="key">chart-8</field>
+        <field name="value">#a3195b</field>
+    </record>
 
     <!-- SSI Dark -->
     <record id="dashboard_color_scheme_ssi_dark" model="dashboard.color_scheme">
@@ -173,6 +237,70 @@
         <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
         <field name="key">border</field>
         <field name="value">#30363d</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_dark_color_chart_1"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
+        <field name="key">chart-1</field>
+        <field name="value">#58a6ff</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_dark_color_chart_2"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
+        <field name="key">chart-2</field>
+        <field name="value">#ffa657</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_dark_color_chart_3"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
+        <field name="key">chart-3</field>
+        <field name="value">#d2a8ff</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_dark_color_chart_4"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
+        <field name="key">chart-4</field>
+        <field name="value">#7ee787</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_dark_color_chart_5"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
+        <field name="key">chart-5</field>
+        <field name="value">#ff7b72</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_dark_color_chart_6"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
+        <field name="key">chart-6</field>
+        <field name="value">#39c5cf</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_dark_color_chart_7"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
+        <field name="key">chart-7</field>
+        <field name="value">#e3b341</field>
+    </record>
+    <record
+        id="dashboard_color_scheme_ssi_dark_color_chart_8"
+        model="dashboard.color_scheme.color"
+    >
+        <field name="color_scheme_id" ref="dashboard_color_scheme_ssi_dark" />
+        <field name="key">chart-8</field>
+        <field name="value">#ff9bce</field>
     </record>
 
     <!-- SSI Corporate Blue -->
