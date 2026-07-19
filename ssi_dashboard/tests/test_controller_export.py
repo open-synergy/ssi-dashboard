@@ -2,6 +2,7 @@
 # Copyright 2026 PT. Simetri Sinergi Indonesia
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 from odoo.tests import HttpCase, new_test_user, tagged
+from odoo.tools import mute_logger
 
 
 @tagged("post_install", "-at_install")
@@ -46,12 +47,19 @@ class TestDashboardItemExportController(HttpCase):
         values.update(item_vals)
         return self.env["dashboard.item"].create(values)
 
+    @mute_logger("odoo.http")
     def test_export_xlsx_rejects_item_with_allow_export_disabled(self):
         """Skenario Uji negatif: panggil endpoint XLSX untuk item ber-
         'Allow Export' = False → respons gagal, bukan berkas. The
         requesting user is otherwise a normal dashboard user (has read
         access) so the failure is unambiguously about 'allow_export',
         not about access rights.
+
+        `mute_logger("odoo.http")` bungkam baris WARNING NORMAL yang
+        dicetak `odoo.http`'s dispatcher saat `UserError` yang sengaja
+        dipicu di sini merambat keluar dari route `type="http"`; tanpa
+        ini `oca_checklog_odoo` menggagalkan CI walau test lulus (lihat
+        `python-escape-hatch.md` bagian "Jebakan CI").
         """
         item = self._create_item("XLSX-01", allow_export=False)
         user = new_test_user(
@@ -63,11 +71,17 @@ class TestDashboardItemExportController(HttpCase):
         response = self.url_open(f"/ssi_dashboard/export/xlsx?item_id={item.id}")
         self.assertNotEqual(response.status_code, 200)
 
+    @mute_logger("odoo.http")
     def test_export_csv_rejects_user_without_read_access(self):
         """Skenario Uji negatif: panggil endpoint CSV sebagai user tanpa
         hak baca item ('Allow Export' stays at its True default, so the
         failure is unambiguously about access, not about
         'allow_export') → respons gagal.
+
+        `mute_logger("odoo.http")` — sama seperti di atas, membungkam
+        baris WARNING normal yang dicetak `odoo.http` saat `AccessError`
+        yang sengaja dipicu di sini merambat keluar dari route
+        `type="http"`.
         """
         item = self._create_item("CSV-01")
         user = new_test_user(
