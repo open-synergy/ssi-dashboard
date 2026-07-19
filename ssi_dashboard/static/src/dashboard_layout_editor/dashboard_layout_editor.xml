@@ -3,10 +3,7 @@
     <t t-name="ssi_dashboard.DashboardLayoutEditor">
         <div class="o_ssi_dashboard_layout_editor">
             <div class="o_ssi_dashboard_layout_editor_toolbar">
-                <span
-                    class="o_ssi_dashboard_layout_editor_hint"
-                    t-esc="hintLabel"
-                />
+                <span class="o_ssi_dashboard_layout_editor_hint" t-esc="hintLabel" />
                 <button
                     type="button"
                     class="btn btn-primary o_ssi_dashboard_layout_save"
@@ -29,10 +26,7 @@
                     t-att-style="tileStyle(tile)"
                     t-on-pointerdown="(ev) => this.onTilePointerDown(ev, tile.id)"
                 >
-                    <span
-                        class="o_ssi_dashboard_layout_tile_name"
-                        t-esc="tile.name"
-                    />
+                    <span class="o_ssi_dashboard_layout_tile_name" t-esc="tile.name" />
                     <div
                         class="o_ssi_dashboard_layout_resize_handle"
                         t-on-pointerdown="(ev) => this.onResizeHandlePointerDown(ev, tile.id)"

@@ -98,7 +98,9 @@ export class DashboardLayoutEditor extends Component {
         const startY = ev.clientY;
         const startColumnStart = tile.column_start;
         const startRowStart = tile.row_start;
-        const columnStep = gridColumnStep(this.gridRef.el.getBoundingClientRect().width);
+        const columnStep = gridColumnStep(
+            this.gridRef.el.getBoundingClientRect().width
+        );
         const rowStep = gridRowStep();
         const target = ev.currentTarget;
         target.setPointerCapture(ev.pointerId);
@@ -143,7 +145,9 @@ export class DashboardLayoutEditor extends Component {
         const startY = ev.clientY;
         const startWidth = tile.column_width;
         const startHeight = tile.row_height;
-        const columnStep = gridColumnStep(this.gridRef.el.getBoundingClientRect().width);
+        const columnStep = gridColumnStep(
+            this.gridRef.el.getBoundingClientRect().width
+        );
         const rowStep = gridRowStep();
         const target = ev.currentTarget;
         target.setPointerCapture(ev.pointerId);
