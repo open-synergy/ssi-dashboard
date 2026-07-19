@@ -188,7 +188,9 @@ scenarios:
         domain: [["model", "=", "res.currency.rate"], ["name", "=", "rate"]]
         save_as: "non_date_field"
         limit: 1
-      - step: "Fill form: date field keeps granularity, non-date clears it"
+      - step:
+          "Fill form: switching to a date field preserves granularity, non-date clears
+          it"
         action: "form"
         model: "dashboard.data_source"
         save_as: "data_source"
@@ -198,11 +200,13 @@ scenarios:
           - set: {code: "DS-GRAN-FORM-01"}
           - set: {type: "orm"}
           - set: {model_id: "REC: model_a"}
+          - set: {group_by_field_id: "REC: non_date_field"}
+          - set: {group_by_granularity: "year"}
           - set: {group_by_field_id: "REC: date_field"}
           - assert:
               group_by_granularity:
                 type: "value"
-                expected: "month"
+                expected: "year"
           - set: {group_by_field_id: "REC: non_date_field"}
           - assert:
               group_by_granularity:
