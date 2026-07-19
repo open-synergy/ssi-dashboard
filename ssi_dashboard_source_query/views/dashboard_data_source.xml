@@ -22,7 +22,7 @@
                             name="query"
                             nolabel="1"
                             colspan="2"
-                            placeholder="SELECT ... AS group_label, ... FROM ... WHERE date_column BETWEEN %(date_start)s AND %(date_end)s"
+                            placeholder="SELECT ... AS group_label, ... FROM ... WHERE date_column BETWEEN %%(date_start)s AND %%(date_end)s"
                         />
                     </group>
                 </xpath>
