@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <!-- dashboard.item.todo is a detail/child of dashboard.item, which is
+         itself a detail/child of dashboard.dashboard with no group of its
+         own — so, like dashboard.item.column (ssi_dashboard_item_list),
+         its access rows follow the groups defined by ssi_dashboard.
+         Unlike that read-only row, group_dashboard_user also gets write
+         access here, so a regular user can tick/untick a 'Task' row's
+         checkbox through 'toggle_todo_done'. -->
+    <record id="dashboard_item_todo_user_access" model="ir.model.access">
+        <field name="name">dashboard.item.todo - user</field>
+        <field name="model_id" ref="model_dashboard_item_todo" />
+        <field name="group_id" ref="ssi_dashboard.group_dashboard_user" />
+        <field name="perm_read" eval="1" />
+        <field name="perm_write" eval="1" />
+        <field name="perm_create" eval="0" />
+        <field name="perm_unlink" eval="0" />
+    </record>
+
+    <record id="dashboard_item_todo_admin_access" model="ir.model.access">
+        <field name="name">dashboard.item.todo - admin</field>
+        <field name="model_id" ref="model_dashboard_item_todo" />
+        <field name="group_id" ref="ssi_dashboard.group_dashboard_admin" />
+        <field name="perm_read" eval="1" />
+        <field name="perm_write" eval="1" />
+        <field name="perm_create" eval="1" />
+        <field name="perm_unlink" eval="1" />
+    </record>
+</odoo>

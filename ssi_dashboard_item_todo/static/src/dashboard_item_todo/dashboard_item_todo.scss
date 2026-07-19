@@ -1,0 +1,44 @@
+.o_ssi_dashboard_item_todo {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    overflow: auto;
+    padding: 12px;
+    border: 1px solid var(--ssi-dashboard-border, #dee2e6);
+    border-radius: 4px;
+
+    .o_ssi_dashboard_item_todo_label {
+        margin-bottom: 8px;
+        font-size: 0.85em;
+        font-weight: bold;
+        opacity: 0.75;
+    }
+
+    .o_ssi_dashboard_item_todo_list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .o_ssi_dashboard_item_todo_section {
+        margin-top: 8px;
+        font-weight: bold;
+
+        &:first-child {
+            margin-top: 0;
+        }
+    }
+
+    .o_ssi_dashboard_item_todo_task {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 0;
+    }
+
+    .o_ssi_dashboard_item_todo_task_done {
+        color: var(--ssi-dashboard-text, #6c757d);
+        text-decoration: line-through;
+        opacity: 0.75;
+    }
+}

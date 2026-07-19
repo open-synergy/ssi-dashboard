@@ -1,0 +1,133 @@
+scenarios:
+  - name: "Create To Do Item Without Data Source"
+    steps:
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "To Do Dashboard"
+          code: "DASH-TODO-01"
+      - step: "Create todo item without a data source"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Month-End Checklist"
+          dashboard_id: "REC: dashboard.id"
+          type: "todo"
+      - step: "Assert item saved with no data source"
+        action: "assert"
+        target: "item"
+        asserts:
+          type:
+            type: "value"
+            expected: "todo"
+          data_source_id:
+            type: "value"
+            operator: "is_falsy"
+
+  - name: "Placeholder Item Without Data Source Is Rejected"
+    steps:
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Placeholder Dashboard"
+          code: "DASH-TODO-02"
+      - step: "Create placeholder item without a data source must be rejected"
+        action: "create"
+        model: "dashboard.item"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Broken Placeholder"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+
+  - name: "Toggle Todo Done On A Section Row Is Rejected"
+    steps:
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "To Do Dashboard"
+          code: "DASH-TODO-03"
+      - step: "Create todo item"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Month-End Checklist"
+          dashboard_id: "REC: dashboard.id"
+          type: "todo"
+      - step: "Create a section row"
+        action: "create"
+        model: "dashboard.item.todo"
+        save_as: "section_row"
+        values:
+          item_id: "REC: item.id"
+          name: "Accounting"
+          line_type: "section"
+      - step: "Toggling a section row is rejected"
+        action: "call"
+        target: "section_row"
+        method: "toggle_todo_done"
+        expect_error:
+          type: "UserError"
+
+  - name: "Dashboard User Can Toggle A Task Row"
+    steps:
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "To Do Dashboard"
+          code: "DASH-TODO-04"
+      - step: "Create todo item"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Month-End Checklist"
+          dashboard_id: "REC: dashboard.id"
+          type: "todo"
+      - step: "Create a task row"
+        action: "create"
+        model: "dashboard.item.todo"
+        save_as: "task_row"
+        values:
+          item_id: "REC: item.id"
+          name: "Close the books"
+          line_type: "task"
+      - step: "Create a dashboard user"
+        action: "create"
+        model: "res.users"
+        save_as: "dashboard_user"
+        values:
+          name: "Dashboard User Only"
+          login: "dashboard-todo-user@example.com"
+          group_ids:
+            [
+              [
+                6,
+                0,
+                ["REF: base.group_user", "REF: ssi_dashboard.group_dashboard_user"],
+              ],
+            ]
+      - step: "Dashboard user ticks the task row"
+        action: "write"
+        target: "task_row"
+        as_user: "dashboard_user"
+        values:
+          done: true
+      - step: "Assert row is done"
+        action: "assert"
+        target: "task_row"
+        asserts:
+          done:
+            type: "value"
+            operator: "is_truthy"
