@@ -4,9 +4,12 @@
 import datetime
 
 import babel.dates
+import pytz
+from babel import Locale
+from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tools import get_lang
 from odoo.tools.safe_eval import safe_eval
 
@@ -18,6 +21,37 @@ GROUP_BY_DATE_FORMAT = {
     "quarter": "QQQ yyyy",
     "year": "yyyy",
 }
+
+DATE_RANGE_SELECTION = [
+    ("all_time", "All Time"),
+    ("today", "Today"),
+    ("yesterday", "Yesterday"),
+    ("this_week", "This Week"),
+    ("last_week", "Last Week"),
+    ("next_week", "Next Week"),
+    ("this_month", "This Month"),
+    ("last_month", "Last Month"),
+    ("next_month", "Next Month"),
+    ("this_quarter", "This Quarter"),
+    ("last_quarter", "Last Quarter"),
+    ("next_quarter", "Next Quarter"),
+    ("this_year", "This Year"),
+    ("last_year", "Last Year"),
+    ("next_year", "Next Year"),
+    ("week_to_date", "Week to Date"),
+    ("month_to_date", "Month to Date"),
+    ("quarter_to_date", "Quarter to Date"),
+    ("year_to_date", "Year to Date"),
+    ("last_7_days", "Last 7 Days"),
+    ("last_30_days", "Last 30 Days"),
+    ("last_90_days", "Last 90 Days"),
+    ("last_365_days", "Last 365 Days"),
+    ("past_till_now", "Past Till Now"),
+    ("past_excluding_today", "Past Excluding Today"),
+    ("future_starting_now", "Future Starting Now"),
+    ("future_starting_tomorrow", "Future Starting Tomorrow"),
+    ("custom", "Custom"),
+]
 
 
 class DashboardDataSource(models.Model):
@@ -119,6 +153,29 @@ class DashboardDataSource(models.Model):
         "used as a single measure, keeping older data sources working "
         "unchanged.",
     )
+    date_field_id = fields.Many2one(
+        comodel_name="ir.model.fields",
+        ondelete="set null",
+        domain="[('model_id', '=', model_id), ('ttype', 'in', ['date', 'datetime'])]",
+        help="Date or datetime field of 'Model' that 'Date Range' is "
+        "applied on. Left empty, no date filtering is applied regardless "
+        "of 'Date Range'.",
+    )
+    date_range = fields.Selection(
+        selection=DATE_RANGE_SELECTION,
+        required=True,
+        default="all_time",
+        help="Predefined period the data is filtered on, computed in the "
+        "current user's timezone. 'All Time' applies no date filtering. "
+        "'Custom' uses 'Date Start' / 'Date End' instead.",
+    )
+    date_start = fields.Date(
+        help="Custom period start (inclusive). Only used when 'Date "
+        "Range' is 'Custom'.",
+    )
+    date_end = fields.Date(
+        help="Custom period end (inclusive). Only used when 'Date Range' is 'Custom'.",
+    )
 
     @api.depends("group_by_field_id.ttype")
     def _compute_group_by_field_is_date(self):
@@ -128,9 +185,48 @@ class DashboardDataSource(models.Model):
                 "datetime",
             )
 
+    @api.constrains("date_range", "date_start", "date_end")
+    def _check_date_range_custom(self):
+        for record in self:
+            if record.date_range != "custom":
+                continue
+            if not record.date_start or not record.date_end:
+                error_message = f"""
+Context: Configure dashboard data source date range
+Database ID: {record.id}
+Problem: 'Date Range' is set to 'Custom' but 'Date Start' or 'Date End' \
+is empty
+Solution: Set both 'Date Start' and 'Date End', or change 'Date Range' \
+to another value
+"""
+                raise ValidationError(error_message)
+            if record.date_start > record.date_end:
+                error_message = f"""
+Context: Configure dashboard data source date range
+Database ID: {record.id}
+Problem: 'Date Start' ({record.date_start}) is after 'Date End' \
+({record.date_end})
+Solution: Set 'Date Start' to a date on or before 'Date End'
+"""
+                raise ValidationError(error_message)
+
     @api.onchange("model_id")
     def onchange_measure_field_id(self):
         self.measure_field_id = False
+
+    @api.onchange("model_id")
+    def onchange_date_field_id(self):
+        self.date_field_id = False
+
+    @api.onchange("date_range")
+    def onchange_date_start(self):
+        if self.date_range != "custom":
+            self.date_start = False
+
+    @api.onchange("date_range")
+    def onchange_date_end(self):
+        if self.date_range != "custom":
+            self.date_end = False
 
     @api.onchange("model_id")
     def onchange_group_by_field_id(self):
@@ -254,6 +350,354 @@ Solution: Install a module that implements {method_name}
             return babel.dates.format_datetime(value, format=date_format, locale=locale)
         return babel.dates.format_date(value, format=date_format, locale=locale)
 
+    def _get_date_range_tz(self):
+        """Return the current user's timezone for :attr:`date_range`
+        computations.
+
+        :return: ``pytz`` timezone parsed from the current user's
+            :attr:`res.users.tz`, falling back to ``UTC`` when unset or
+            unrecognized.
+        :rtype: datetime.tzinfo
+        """
+        self.ensure_one()
+        tz_name = self.env.user.tz
+        if not tz_name:
+            return pytz.utc
+        try:
+            return pytz.timezone(tz_name)
+        except pytz.UnknownTimeZoneError:
+            return pytz.utc
+
+    def _get_date_range_today(self):
+        """Return "today" as a plain ``date``, in the current user's
+        timezone — so "today" for a user in Jakarta is not "today" UTC.
+
+        :return: current date in :meth:`_get_date_range_tz`.
+        :rtype: datetime.date
+        """
+        self.ensure_one()
+        tz = self._get_date_range_tz()
+        now_utc = pytz.utc.localize(fields.Datetime.now())
+        return now_utc.astimezone(tz).date()
+
+    def _get_date_range_first_week_day(self):
+        """Return the first day of the week for the current user's
+        language, instead of a hardcoded Monday.
+
+        :return: ``0`` (Monday) .. ``6`` (Sunday), from the CLDR
+            ``first_week_day`` of the current user's language — same
+            numbering as ``datetime.date.weekday()``.
+        :rtype: int
+        """
+        self.ensure_one()
+        locale = Locale.parse(get_lang(self.env).code)
+        return locale.first_week_day
+
+    def _prepare_date_range(self):
+        """Translate :attr:`date_range` into concrete date boundaries.
+
+        Boundaries are computed against "today" in the current user's
+        timezone (see :meth:`_get_date_range_today`), and the first day
+        of the week follows the current user's language (see
+        :meth:`_get_date_range_first_week_day`) rather than a hardcoded
+        Monday.
+
+        :return: 2-tuple ``(date_start, date_end)``. Each side is a
+            ``date`` or ``None``. Both sides ``None`` means no date
+            filtering at all (:attr:`date_range` = ``all_time``); only
+            one side ``None`` means that side is open-ended (e.g.
+            ``past_till_now`` has no lower bound, ``future_starting_now``
+            has no upper bound).
+        :rtype: tuple
+        :raises UserError: when :attr:`date_range` has no computation
+            rule — only reachable if an extension module adds a
+            selection value via ``selection_add`` without overriding
+            this method.
+        """
+        self.ensure_one()
+        if self.date_range == "all_time":
+            return None, None
+        if self.date_range == "custom":
+            return self.date_start, self.date_end
+
+        today = self._get_date_range_today()
+        if self.date_range in ("today", "yesterday"):
+            return self._prepare_date_range_day(today)
+        if self.date_range in ("this_week", "last_week", "next_week", "week_to_date"):
+            return self._prepare_date_range_week(today)
+        if self.date_range in (
+            "this_month",
+            "last_month",
+            "next_month",
+            "month_to_date",
+        ):
+            return self._prepare_date_range_month(today)
+        if self.date_range in (
+            "this_quarter",
+            "last_quarter",
+            "next_quarter",
+            "quarter_to_date",
+        ):
+            return self._prepare_date_range_quarter(today)
+        if self.date_range in ("this_year", "last_year", "next_year", "year_to_date"):
+            return self._prepare_date_range_year(today)
+        if self.date_range in (
+            "last_7_days",
+            "last_30_days",
+            "last_90_days",
+            "last_365_days",
+        ):
+            return self._prepare_date_range_last_n_days(today)
+        if self.date_range in (
+            "past_till_now",
+            "past_excluding_today",
+            "future_starting_now",
+            "future_starting_tomorrow",
+        ):
+            return self._prepare_date_range_open_ended(today)
+
+        error_message = f"""
+Context: Compute dashboard data source date range
+Database ID: {self.id}
+Problem: 'Date Range' value '{self.date_range}' has no computation rule
+Solution: Install a module that implements this 'Date Range' value
+"""
+        raise UserError(error_message)
+
+    def _prepare_date_range_day(self, today):
+        """Compute the boundaries for the ``today`` / ``yesterday``
+        :attr:`date_range` values. See :meth:`_prepare_date_range`.
+
+        :param today: "today" in the current user's timezone, from
+            :meth:`_get_date_range_today`.
+        :type today: datetime.date
+        :return: 2-tuple ``(date_start, date_end)``, both the same date.
+        :rtype: tuple
+        """
+        self.ensure_one()
+        if self.date_range == "today":
+            return today, today
+        yesterday = today - datetime.timedelta(days=1)
+        return yesterday, yesterday
+
+    def _prepare_date_range_week(self, today):
+        """Compute the boundaries for the week-based :attr:`date_range`
+        values (``this_week``, ``last_week``, ``next_week``,
+        ``week_to_date``). See :meth:`_prepare_date_range`.
+
+        The week starts on :meth:`_get_date_range_first_week_day`
+        instead of a hardcoded Monday.
+
+        :param today: "today" in the current user's timezone.
+        :type today: datetime.date
+        :return: 2-tuple ``(date_start, date_end)``.
+        :rtype: tuple
+        """
+        self.ensure_one()
+        first_week_day = self._get_date_range_first_week_day()
+        week_start = today - datetime.timedelta(
+            days=(today.weekday() - first_week_day) % 7
+        )
+        week_end = week_start + datetime.timedelta(days=6)
+        if self.date_range == "this_week":
+            return week_start, week_end
+        if self.date_range == "last_week":
+            return (
+                week_start - datetime.timedelta(days=7),
+                week_end - datetime.timedelta(days=7),
+            )
+        if self.date_range == "next_week":
+            return (
+                week_start + datetime.timedelta(days=7),
+                week_end + datetime.timedelta(days=7),
+            )
+        return week_start, today  # week_to_date
+
+    def _prepare_date_range_month(self, today):
+        """Compute the boundaries for the month-based :attr:`date_range`
+        values (``this_month``, ``last_month``, ``next_month``,
+        ``month_to_date``). See :meth:`_prepare_date_range`.
+
+        :param today: "today" in the current user's timezone.
+        :type today: datetime.date
+        :return: 2-tuple ``(date_start, date_end)``.
+        :rtype: tuple
+        """
+        self.ensure_one()
+        month_start = today.replace(day=1)
+        month_end = month_start + relativedelta(months=1, days=-1)
+        if self.date_range == "this_month":
+            return month_start, month_end
+        if self.date_range == "last_month":
+            start = month_start - relativedelta(months=1)
+            return start, start + relativedelta(months=1, days=-1)
+        if self.date_range == "next_month":
+            start = month_start + relativedelta(months=1)
+            return start, start + relativedelta(months=1, days=-1)
+        return month_start, today  # month_to_date
+
+    def _prepare_date_range_quarter(self, today):
+        """Compute the boundaries for the quarter-based
+        :attr:`date_range` values (``this_quarter``, ``last_quarter``,
+        ``next_quarter``, ``quarter_to_date``). See
+        :meth:`_prepare_date_range`.
+
+        :param today: "today" in the current user's timezone.
+        :type today: datetime.date
+        :return: 2-tuple ``(date_start, date_end)``.
+        :rtype: tuple
+        """
+        self.ensure_one()
+        quarter_start_month = ((today.month - 1) // 3) * 3 + 1
+        quarter_start = today.replace(month=quarter_start_month, day=1)
+        quarter_end = quarter_start + relativedelta(months=3, days=-1)
+        if self.date_range == "this_quarter":
+            return quarter_start, quarter_end
+        if self.date_range == "last_quarter":
+            start = quarter_start - relativedelta(months=3)
+            return start, start + relativedelta(months=3, days=-1)
+        if self.date_range == "next_quarter":
+            start = quarter_start + relativedelta(months=3)
+            return start, start + relativedelta(months=3, days=-1)
+        return quarter_start, today  # quarter_to_date
+
+    def _prepare_date_range_year(self, today):
+        """Compute the boundaries for the year-based :attr:`date_range`
+        values (``this_year``, ``last_year``, ``next_year``,
+        ``year_to_date``). See :meth:`_prepare_date_range`.
+
+        :param today: "today" in the current user's timezone.
+        :type today: datetime.date
+        :return: 2-tuple ``(date_start, date_end)``.
+        :rtype: tuple
+        """
+        self.ensure_one()
+        year_start = today.replace(month=1, day=1)
+        year_end = today.replace(month=12, day=31)
+        if self.date_range == "this_year":
+            return year_start, year_end
+        if self.date_range == "last_year":
+            return (
+                year_start.replace(year=year_start.year - 1),
+                year_end.replace(year=year_end.year - 1),
+            )
+        if self.date_range == "next_year":
+            return (
+                year_start.replace(year=year_start.year + 1),
+                year_end.replace(year=year_end.year + 1),
+            )
+        return year_start, today  # year_to_date
+
+    def _prepare_date_range_last_n_days(self, today):
+        """Compute the boundaries for the rolling-window
+        :attr:`date_range` values (``last_7_days``, ``last_30_days``,
+        ``last_90_days``, ``last_365_days``). See
+        :meth:`_prepare_date_range`.
+
+        :param today: "today" in the current user's timezone, also the
+            inclusive upper bound of every value handled here.
+        :type today: datetime.date
+        :return: 2-tuple ``(date_start, date_end)``.
+        :rtype: tuple
+        """
+        self.ensure_one()
+        days_back_by_range = {
+            "last_7_days": 6,
+            "last_30_days": 29,
+            "last_90_days": 89,
+            "last_365_days": 364,
+        }
+        days_back = days_back_by_range[self.date_range]
+        return today - datetime.timedelta(days=days_back), today
+
+    def _prepare_date_range_open_ended(self, today):
+        """Compute the boundaries for the open-ended :attr:`date_range`
+        values (``past_till_now``, ``past_excluding_today``,
+        ``future_starting_now``, ``future_starting_tomorrow``). See
+        :meth:`_prepare_date_range`.
+
+        :param today: "today" in the current user's timezone.
+        :type today: datetime.date
+        :return: 2-tuple ``(date_start, date_end)`` with exactly one
+            side ``None`` (no bound on that side).
+        :rtype: tuple
+        """
+        self.ensure_one()
+        one_day = datetime.timedelta(days=1)
+        if self.date_range == "past_till_now":
+            return None, today
+        if self.date_range == "past_excluding_today":
+            return None, today - one_day
+        if self.date_range == "future_starting_now":
+            return today, None
+        return today + one_day, None  # future_starting_tomorrow
+
+    def _date_range_bound_to_field_value(self, value, is_datetime, end_of_day):
+        """Convert one boundary from :meth:`_prepare_date_range` into the
+        value compared against :attr:`date_field_id`.
+
+        :param value: boundary computed by :meth:`_prepare_date_range`.
+        :type value: datetime.date
+        :param is_datetime: ``True`` when :attr:`date_field_id` is a
+            'datetime' field, so the user's local midnight / end-of-day
+            must be converted into naive UTC — the form ``Datetime``
+            fields are stored/compared in.
+        :type is_datetime: bool
+        :param end_of_day: ``True`` to use ``23:59:59`` as the local
+            time of day instead of ``00:00:00`` — used for the upper
+            bound so the whole last day is included.
+        :type end_of_day: bool
+        :return: ``value`` unchanged for a 'date' field, or the
+            equivalent naive UTC ``datetime`` for a 'datetime' field.
+        """
+        self.ensure_one()
+        if not is_datetime:
+            return value
+        tz = self._get_date_range_tz()
+        time_of_day = datetime.time(23, 59, 59) if end_of_day else datetime.time.min
+        local_dt = tz.localize(datetime.datetime.combine(value, time_of_day))
+        return local_dt.astimezone(pytz.utc).replace(tzinfo=None)
+
+    def _prepare_date_domain(self):
+        """Build the domain fragment date filtering contributes to
+        :meth:`_fetch_data_orm`.
+
+        :return: list of domain tuples on :attr:`date_field_id`, meant
+            to be ANDed (implicit ``&``) with the rest of the domain
+            built in :meth:`_fetch_data_orm`. Empty when
+            :attr:`date_field_id` is not set or :attr:`date_range` is
+            ``all_time``.
+        :rtype: list
+        """
+        self.ensure_one()
+        if not self.date_field_id or self.date_range == "all_time":
+            return []
+        date_start, date_end = self._prepare_date_range()
+        field_name = self.date_field_id.name
+        is_datetime = self.date_field_id.ttype == "datetime"
+        domain = []
+        if date_start is not None:
+            domain.append(
+                (
+                    field_name,
+                    ">=",
+                    self._date_range_bound_to_field_value(
+                        date_start, is_datetime, end_of_day=False
+                    ),
+                )
+            )
+        if date_end is not None:
+            domain.append(
+                (
+                    field_name,
+                    "<=",
+                    self._date_range_bound_to_field_value(
+                        date_end, is_datetime, end_of_day=True
+                    ),
+                )
+            )
+        return domain
+
     def _prepare_aggregate_spec(self):
         """Build the ``_read_group`` aggregate specification for this data
         source, so :meth:`_fetch_data_orm` does not need to know whether
@@ -318,6 +762,11 @@ Solution: Install a module that implements {method_name}
         no grouping field configured, behavior is unchanged: exactly one
         row per configured measure spec, without those two keys.
 
+        :attr:`date_field_id` / :attr:`date_range` contribute an extra
+        domain fragment built by :meth:`_prepare_date_domain`, ANDed
+        with :attr:`domain`. A data source without :attr:`date_field_id`
+        set behaves exactly as before this fragment existed.
+
         :param item: ``dashboard.item`` record requesting the data.
         :return: list of dict, one per group returned by ``_read_group``.
         :rtype: list
@@ -334,6 +783,7 @@ Solution: Set the Model field on this data source
 """
             raise UserError(error_message)
         domain = safe_eval(self.domain) if self.domain else []
+        domain = domain + self._prepare_date_domain()
         model = self.env[self.model_id.model].sudo()
         aggregates, column_names = self._prepare_aggregate_spec()
         groupby = self._prepare_groupby_spec()
