@@ -86,6 +86,14 @@ class DashboardItem(models.Model):
         default=True,
         help="Untick to hide this item from its dashboard without deleting it.",
     )
+    allow_open_records = fields.Boolean(
+        default=True,
+        help="Whether clicking a value or segment of this item's tile "
+        "opens the list of records behind it (see 'action_open_records'). "
+        "Untick to disable the click for this item. Ignored (no click "
+        "happens either way) when 'Data Source' is not of type 'Odoo "
+        "Model' — there is no model to open a list of records from.",
+    )
     goal_type = fields.Selection(
         selection=[
             ("none", "No Target"),
@@ -405,6 +413,73 @@ another value
             return 0.0
         return 0.0
 
+    def action_open_records(self, row_domain=None):
+        for record in self:
+            result = record._open_records(row_domain)
+        return result
+
+    def _open_records(self, row_domain=None):
+        """Build the window action that opens the list of records behind
+        one data row of this item's tile — see ``static/src/
+        dashboard_item/dashboard_item.esm.js``'s click handling.
+
+        Never runs as ``sudo()`` — unlike most of this item's own data
+        reads (e.g. :attr:`data_source_id`'s ``_fetch_data_orm``, which
+        does), the list of records this opens is browsed with the
+        current user's own access rights, so :attr:`~dashboard.
+        data_source.model_id`'s record rules still apply to whoever
+        clicked.
+
+        ``row_domain`` is never trusted as-is: :attr:`data_source_id`'s
+        own 'Domain' (:meth:`dashboard.data_source._prepare_domain`) and
+        date filtering (:meth:`dashboard.data_source._prepare_date_domain`)
+        are rebuilt here, server-side, and ANDed in front of it — so a
+        caller passing a tampered/arbitrary ``row_domain`` (this method
+        is reachable directly over RPC, not only through the tile's own
+        click handler) can only narrow the result down further, never
+        see a record outside what this item's own data source already
+        allows.
+
+        :param row_domain: ``row_domain`` of the data row that was
+            clicked, as built by
+            :meth:`dashboard.data_source._fetch_data_orm`. Any value
+            that is not a ``list`` (including the default ``None``) is
+            treated as an empty domain, opening every record
+            :attr:`data_source_id` itself allows.
+        :type row_domain: list or None
+        :return: dict describing an ``ir.actions.act_window`` targeting
+            :attr:`~dashboard.data_source.model_id`, ``view_mode``
+            ``"list,form"``.
+        :rtype: dict
+        :raises UserError: when :attr:`data_source_id` is empty, or is
+            set but has no :attr:`~dashboard.data_source.model_id` (not
+            of type 'Odoo Model', or of that type but not configured
+            yet) — there is no model to open a list of records from.
+        """
+        self.ensure_one()
+        data_source = self.data_source_id
+        if not data_source or not data_source.model_id:
+            error_message = f"""
+Context: Open records behind dashboard item
+Database ID: {self.id}
+Problem: 'Data Source' is empty, or has no target 'Model', so there is \
+no list of records to open
+Solution: Set 'Data Source' on this item to one of type 'Odoo Model' \
+with 'Model' filled in
+"""
+            raise UserError(error_message)
+        server_domain = (
+            data_source._prepare_domain() + data_source._prepare_date_domain()
+        )
+        client_domain = row_domain if isinstance(row_domain, list) else []
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": data_source.model_id.model,
+            "view_mode": "list,form",
+            "domain": server_domain + client_domain,
+            "name": self.name,
+        }
+
     def action_open_item_goals(self):
         for record in self.sudo():
             result = record._open_item_goals()
@@ -516,7 +591,7 @@ another value
         :type active_filters: dict or None
         :return: dict with keys ``id``, ``name``, ``type``,
             ``column_start``, ``row_start``, ``column_width``,
-            ``row_height``, ``active``, ``data``,
+            ``row_height``, ``active``, ``allow_open_records``, ``data``,
             ``number_format_config`` (see :meth:`_get_number_format_config`)
             and ``theme`` (see :meth:`_get_theme_config`).
             ``data`` is an empty list when :attr:`data_source_id` is
@@ -545,6 +620,7 @@ another value
             "column_width": self.column_width,
             "row_height": self.row_height,
             "active": self.active,
+            "allow_open_records": self.allow_open_records,
             "data": self.data_source_id._fetch_data(self, active_filters=active_filters)
             if self.data_source_id
             else [],

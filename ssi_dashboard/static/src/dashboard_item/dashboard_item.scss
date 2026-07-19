@@ -22,4 +22,15 @@
     &:hover .o_ssi_dashboard_item_edit {
         opacity: 1;
     }
+
+    // Pointer cursor only on elements a type-specific component marked
+    // clickable (see dashboard_item.esm.js's "onContainerClick" and its
+    // "data-ssi-dashboard-row-domain" contract), and only while this
+    // item allows "Open Records" at all ("o_ssi_dashboard_item_clickable",
+    // set from "canOpenRecords") — an item with "Allow Open Records"
+    // unticked never shows a pointer, even for elements that do carry
+    // the attribute.
+    &.o_ssi_dashboard_item_clickable [data-ssi-dashboard-row-domain] {
+        cursor: pointer;
+    }
 }

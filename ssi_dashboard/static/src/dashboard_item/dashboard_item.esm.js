@@ -2,6 +2,7 @@ import {Component} from "@odoo/owl";
 import {DashboardItemFallback} from "../dashboard_item_fallback/dashboard_item_fallback.esm";
 import {_t} from "@web/core/l10n/translation";
 import {registry} from "@web/core/registry";
+import {useService} from "@web/core/utils/hooks";
 
 /**
  * Registry item modules register their dashboard item component into,
@@ -32,6 +33,19 @@ const itemWidgetRegistry = registry.category("ssi_dashboard.item_widgets");
  * wherever it is reused without them, e.g.
  * dashboard_item_preview.esm.js's own preview tile, which never shows
  * the button.
+ *
+ * Also implements "Open Records": clicking a value or segment of the
+ * type-specific component opens the list of records behind it (see
+ * models/dashboard_item.py's "action_open_records"). The type-specific
+ * component never calls the ORM itself — it only marks whichever
+ * element represents one data row with a "data-ssi-dashboard-row-
+ * domain" attribute (that row's own "row_domain" key, JSON-encoded —
+ * see models/dashboard_data_source.py's "_fetch_data_orm") and this
+ * wrapper does the rest through event delegation on its own root
+ * element (see "onContainerClick"). This is a plain HTML/DOM contract,
+ * not an Owl prop, so a type-specific component that does not (yet)
+ * implement it is entirely unaffected — it simply renders no element
+ * matching that selector, and this handler never fires for it.
  */
 export class DashboardItem extends Component {
     static template = "ssi_dashboard.DashboardItem";
@@ -41,6 +55,11 @@ export class DashboardItem extends Component {
         isAdmin: {type: Boolean, optional: true},
         onEditClick: {type: Function, optional: true},
     };
+
+    setup() {
+        this.orm = useService("orm");
+        this.action = useService("action");
+    }
 
     get Component() {
         return itemWidgetRegistry.get(this.props.item.type, DashboardItemFallback);
@@ -123,5 +142,64 @@ export class DashboardItem extends Component {
      */
     onEditClick() {
         this.props.onEditClick(this.props.item.id);
+    }
+
+    /**
+     * Whether this item exposes "Open Records" clicks at all — mirrors
+     * "props.item.allow_open_records" (see models/dashboard_item.py's
+     * "allow_open_records"). Also drives the pointer cursor on
+     * clickable elements (see dashboard_item.scss) — false here means
+     * no element of this tile shows one, regardless of what the
+     * type-specific component renders.
+     *
+     * @returns {Boolean}
+     */
+    get canOpenRecords() {
+        return Boolean(this.props.item.allow_open_records);
+    }
+
+    /**
+     * Delegated click handler bound on this item's own root element
+     * (".o_ssi_dashboard_item", see the template). See the class
+     * docstring for the "data-ssi-dashboard-row-domain" contract this
+     * relies on. A malformed (non-JSON) attribute value is treated the
+     * same as no match at all — the click is silently ignored rather
+     * than raising in the browser.
+     *
+     * @param {MouseEvent} ev
+     */
+    onContainerClick(ev) {
+        if (!this.canOpenRecords) {
+            return;
+        }
+        const target = ev.target.closest("[data-ssi-dashboard-row-domain]");
+        if (!target) {
+            return;
+        }
+        let rowDomain = null;
+        try {
+            rowDomain = JSON.parse(target.dataset.ssiDashboardRowDomain);
+        } catch {
+            return;
+        }
+        this.openRecords(rowDomain);
+    }
+
+    /**
+     * Calls "action_open_records" (models/dashboard_item.py) with
+     * "rowDomain" and forwards the resulting window action to Odoo's
+     * own action service. The browser never builds or trusts a domain
+     * itself — "action_open_records" rebuilds/ANDs in this item's own
+     * data source domain server-side before returning the action (see
+     * that method's docstring).
+     *
+     * @param {Array} rowDomain
+     */
+    async openRecords(rowDomain) {
+        const action = await this.orm.call("dashboard.item", "action_open_records", [
+            [this.props.item.id],
+            rowDomain,
+        ]);
+        this.action.doAction(action);
     }
 }

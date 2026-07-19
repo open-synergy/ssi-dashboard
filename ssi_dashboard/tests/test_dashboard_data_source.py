@@ -110,6 +110,88 @@ class TestDashboardDataSource(YamlTransactionCase):
         self.assertEqual(counts[country_a.display_name], 2)
         self.assertEqual(counts[country_b.display_name], 1)
 
+    def test_fetch_data_orm_row_domain_matches_group_search_count(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Skenario Uji positif dari issue: data source atas `res.partner`
+        berkelompok `country_id` — `row_domain` dari baris pertama,
+        dijalankan lewat `search_count`, harus menghasilkan angka yang
+        sama persis dengan `__count` baris itu sendiri (Kriteria
+        Penerimaan: 'Jumlah record hasil search_count atas row_domain
+        sama dengan angka baris itu'). Nilai balik `_fetch_data_orm`
+        (kunci `row_domain` per baris) hanya bisa diverifikasi dengan
+        meng-assert hasil pemanggilan method langsung — `action: call`
+        YAML membuang nilai baliknya (L-01) dan tidak bisa meng-assert
+        ekspresi bebas seperti `search_count(row["row_domain"])` (L-02).
+        """
+        partner_model = self.env.ref("base.model_res_partner")
+        country_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.partner"), ("name", "=", "country_id")],
+            limit=1,
+        )
+        country_a = self.env.ref("base.us")
+        country_b = self.env.ref("base.id")
+        partners = self.env["res.partner"].create(
+            [
+                {"name": "Row Domain Partner A1", "country_id": country_a.id},
+                {"name": "Row Domain Partner A2", "country_id": country_a.id},
+                {"name": "Row Domain Partner B1", "country_id": country_b.id},
+            ]
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners By Country Row Domain",
+                "code": "DASH-ROWDOMAIN-COUNTRY-01",
+                "type": "orm",
+                "model_id": partner_model.id,
+                "domain": f"[('id', 'in', {partners.ids!r})]",
+                "group_by_field_id": country_field.id,
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 2)
+        for row in rows:
+            self.assertIn("row_domain", row)
+            self.assertEqual(
+                self.env["res.partner"].search_count(row["row_domain"]),
+                row["__count"],
+            )
+
+    def test_fetch_data_orm_row_domain_without_group_by_equals_base_domain(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Sama seperti di atas: `row_domain` hanya bisa diverifikasi lewat
+        nilai balik method langsung (L-01/L-02). Kriteria Penerimaan:
+        'Setiap baris hasil _fetch_data_orm memuat kunci row_domain' —
+        untuk baris tanpa pengelompokan, Keputusan Desain menyatakan
+        `row_domain` harus sama dengan domain yang benar-benar dipakai
+        untuk membaca data source itu sendiri, dibuktikan lewat
+        `search_count` yang menghasilkan angka sama dengan `__count`.
+        """
+        partner_model = self.env.ref("base.model_res_partner")
+        partners = self.env["res.partner"].create(
+            [
+                {"name": "Row Domain No Group Partner 1"},
+                {"name": "Row Domain No Group Partner 2"},
+            ]
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "All Partners Row Domain",
+                "code": "DASH-ROWDOMAIN-NOGROUP-01",
+                "type": "orm",
+                "model_id": partner_model.id,
+                "domain": f"[('id', 'in', {partners.ids!r})]",
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 1)
+        self.assertIn("row_domain", rows[0])
+        self.assertEqual(
+            self.env["res.partner"].search_count(rows[0]["row_domain"]),
+            rows[0]["__count"],
+        )
+
     def test_fetch_data_orm_without_group_by_returns_one_row(self):
         """Python murni — pemicu P1 (L-01, L-02).
 
@@ -175,6 +257,49 @@ class TestDashboardDataSource(YamlTransactionCase):
         counts = {row["group_label"]: row["__count"] for row in rows}
         self.assertEqual(counts.get("2022"), 2)
         self.assertEqual(counts.get("2023"), 1)
+
+    def test_fetch_data_orm_row_domain_date_group_matches_search_count(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Sama seperti `test_fetch_data_orm_row_domain_matches_group_
+        search_count`, kali ini untuk `group_by_field_id` bertipe
+        tanggal (`res.currency.rate.name`, granularitas `month`) —
+        melatih jalur `_prepare_group_condition_domain_date` (rentang
+        tanggal, bukan kesetaraan tunggal). `row_domain` hanya bisa
+        diverifikasi lewat nilai balik method langsung (L-01/L-02).
+        """
+        currency_rate_model = self.env.ref("base.model_res_currency_rate")
+        date_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.currency.rate"), ("name", "=", "name")],
+            limit=1,
+        )
+        currency = self.env.ref("base.EUR")
+        rates = self.env["res.currency.rate"].create(
+            [
+                {"currency_id": currency.id, "name": "2026-01-05", "rate": 1.1},
+                {"currency_id": currency.id, "name": "2026-01-20", "rate": 1.2},
+                {"currency_id": currency.id, "name": "2026-03-10", "rate": 1.3},
+            ]
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Rates By Month Row Domain",
+                "code": "DASH-ROWDOMAIN-DATE-01",
+                "type": "orm",
+                "model_id": currency_rate_model.id,
+                "domain": f"[('id', 'in', {rates.ids!r})]",
+                "group_by_field_id": date_field.id,
+                "group_by_granularity": "month",
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        self.assertEqual(len(rows), 2)
+        for row in rows:
+            self.assertIn("row_domain", row)
+            self.assertEqual(
+                self.env["res.currency.rate"].search_count(row["row_domain"]),
+                row["__count"],
+            )
 
     def test_fetch_data_orm_groups_by_datetime_field_year_granularity(self):
         """Python murni — pemicu P1 (L-01, L-02).
@@ -847,6 +972,51 @@ class TestDashboardDataSource(YamlTransactionCase):
         self.assertEqual(counts_by_label["January 2026"], 1)
         self.assertEqual(counts_by_label["March 2026"], 1)
 
+    def test_fetch_data_orm_fill_temporal_zero_row_row_domain_matches_search_count(
+        self,
+    ):
+        """Python murni — pemicu P3 (L-02: baris tambahan hasil fill
+        hanya bisa diverifikasi lewat assert nilai balik method
+        langsung).
+
+        Sama seperti test di atas, tapi membuktikan baris nol yang
+        ditambahkan `fill_temporal` juga memuat `row_domain` yang benar
+        — `search_count` atas `row_domain` baris "February 2026" (baris
+        kosong) harus menghasilkan `0`, sama dengan `__count` baris itu.
+        """
+        currency_rate_model = self.env.ref("base.model_res_currency_rate")
+        date_field = self.env["ir.model.fields"].search(
+            [("model", "=", "res.currency.rate"), ("name", "=", "name")],
+            limit=1,
+        )
+        currency = self.env.ref("base.EUR")
+        rates = self.env["res.currency.rate"].create(
+            [
+                {"currency_id": currency.id, "name": "2026-01-15", "rate": 1.1},
+                {"currency_id": currency.id, "name": "2026-03-10", "rate": 1.3},
+            ]
+        )
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Rates By Month Filled Row Domain",
+                "code": "DASH-FILLTEMPORAL-ROWDOMAIN-01",
+                "type": "orm",
+                "model_id": currency_rate_model.id,
+                "domain": f"[('id', 'in', {rates.ids!r})]",
+                "group_by_field_id": date_field.id,
+                "group_by_granularity": "month",
+                "fill_temporal": True,
+            }
+        )
+        rows = data_source._fetch_data(self.env["dashboard.item"])
+        rows_by_label = {row["group_label"]: row for row in rows}
+        zero_row = rows_by_label["February 2026"]
+        self.assertIn("row_domain", zero_row)
+        self.assertEqual(
+            self.env["res.currency.rate"].search_count(zero_row["row_domain"]),
+            zero_row["__count"],
+        )
+
     def test_fetch_data_orm_fill_temporal_ignored_for_non_date_group_by(self):
         """Python murni — pemicu P1 (L-01, L-02).
 
@@ -1120,6 +1290,11 @@ class TestDashboardDataSource(YamlTransactionCase):
         stored`). `industry_id` sekaligus melatih jalur label relasional
         (`display_name`) untuk dimensi kedua, sama seperti `country_id`
         untuk dimensi pertama.
+
+        Juga melatih jalur dua dimensi dari `row_domain`: setiap baris
+        memuat kondisi grup DAN sub grup, dibuktikan lewat
+        `search_count` yang menghasilkan angka sama dengan `__count`
+        baris itu sendiri.
         """
         partner_model = self.env.ref("base.model_res_partner")
         country_field = self.env["ir.model.fields"].search(
@@ -1186,6 +1361,11 @@ class TestDashboardDataSource(YamlTransactionCase):
         for row in rows:
             self.assertIn("sub_group_key", row)
             self.assertIn("sub_group_label", row)
+            self.assertIn("row_domain", row)
+            self.assertEqual(
+                self.env["res.partner"].search_count(row["row_domain"]),
+                row["__count"],
+            )
 
     def test_fetch_data_orm_single_dimension_has_no_sub_group_keys(self):
         """Python murni — pemicu P1 (L-01, L-02).

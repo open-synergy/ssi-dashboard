@@ -67,6 +67,11 @@
                                 <field name="name" />
                                 <field name="type" />
                                 <field name="data_source_id" />
+                                <field
+                                    name="allow_open_records"
+                                    optional="hide"
+                                    widget="boolean_toggle"
+                                />
                                 <field name="column_start" optional="hide" />
                                 <field name="row_start" optional="hide" />
                                 <field name="column_width" />
