@@ -277,6 +277,11 @@ msgid "Data source this item pulls its data from."
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__day
+msgid "Day"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__sequence
 msgid "Determines the display order of items on the dashboard."
 msgstr ""
@@ -346,8 +351,25 @@ msgid "Generated Menu"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__group_by_granularity
+msgid ""
+"Granularity used to group 'Group By Field' when it is a date or datetime "
+"field. Ignored for any other field type."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__group_by_field_id
 msgid "Group By Field"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__group_by_field_is_date
+msgid "Group By Field Is Date"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__group_by_granularity
+msgid "Group By Granularity"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -367,6 +389,11 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__row_height
 msgid "Height of this item's tile, in grid rows."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__hour
+msgid "Hour"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -574,6 +601,11 @@ msgid "Model"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__month
+msgid "Month"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__my_activity_date_deadline
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__my_activity_date_deadline
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__my_activity_date_deadline
@@ -686,6 +718,11 @@ msgid "Placeholder"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__quarter
+msgid "Quarter"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.ui.menu,name:ssi_dashboard.menu_dashboard_report
 msgid "Reporting"
 msgstr ""
@@ -721,6 +758,13 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__aggregate__sum
 msgid "Sum"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__group_by_field_is_date
+msgid ""
+"Technical field. True when 'Group By Field' is a date or datetime field, "
+"used to show/hide 'Group By Granularity' in the form view."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -763,6 +807,11 @@ msgid "Value"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__week
+msgid "Week"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__generate_menu
 msgid ""
 "When enabled, this dashboard also shows up as its own menu item under "
@@ -773,4 +822,9 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__column_width
 msgid "Width of this item's tile, in grid columns out of 12."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__year
+msgid "Year"
 msgstr ""
