@@ -1,0 +1,20 @@
+.o_ssi_dashboard_filter_bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+
+    .o_ssi_dashboard_filter_bar_chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .o_ssi_dashboard_filter_bar_dates {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+    }
+}

@@ -1,0 +1,269 @@
+setup:
+  steps:
+    - step: "Get res.partner email field"
+      action: "search"
+      model: "ir.model.fields"
+      domain: [["model", "=", "res.partner"], ["name", "=", "email"]]
+      save_as: "partner_email_field"
+      limit: 1
+
+scenarios:
+  - name: "Create Predefined Domain Filter"
+    steps:
+      - step: "Create dashboard for filters"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Filter Test Dashboard"
+          code: "DASH-FILTER-DASH-01"
+      - step: "Create domain filter"
+        action: "create"
+        model: "dashboard.filter"
+        save_as: "filter"
+        values:
+          name: "My Records"
+          dashboard_id: "REC: dashboard.id"
+          filter_type: "domain"
+          domain: "[('user_id', '=', %UID)]"
+      - step: "Assert filter created"
+        action: "assert"
+        target: "filter"
+        asserts:
+          id:
+            type: "value"
+            operator: "is_truthy"
+          filter_type:
+            type: "value"
+            expected: "domain"
+          default_active:
+            type: "value"
+            operator: "is_falsy"
+
+  - name: "Create Field Value Filter"
+    steps:
+      - step: "Create dashboard for filters"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Filter Test Dashboard"
+          code: "DASH-FILTER-DASH-02"
+      - step: "Create field value filter"
+        action: "create"
+        model: "dashboard.filter"
+        save_as: "filter"
+        values:
+          name: "Has Email"
+          dashboard_id: "REC: dashboard.id"
+          filter_type: "field"
+          field_id: "REC: partner_email_field.id"
+      - step: "Assert filter references field"
+        action: "assert"
+        target: "filter"
+        asserts:
+          field_id:
+            type: "m2o"
+            expected: "REC: partner_email_field"
+
+  - name: "Create Date Range Filter Without Domain Or Field"
+    steps:
+      - step: "Create dashboard for filters"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Filter Test Dashboard"
+          code: "DASH-FILTER-DASH-03"
+      - step: "Create date range filter"
+        action: "create"
+        model: "dashboard.filter"
+        save_as: "filter"
+        values:
+          name: "Period"
+          dashboard_id: "REC: dashboard.id"
+          filter_type: "date"
+      - step: "Assert stored without domain or field_id"
+        action: "assert"
+        target: "filter"
+        asserts:
+          domain:
+            type: "value"
+            operator: "is_falsy"
+          field_id:
+            type: "value"
+            operator: "is_falsy"
+
+  - name: "Edit Filter Name"
+    steps:
+      - step: "Create dashboard for filters"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Filter Test Dashboard"
+          code: "DASH-FILTER-DASH-04"
+      - step: "Create filter"
+        action: "create"
+        model: "dashboard.filter"
+        save_as: "filter"
+        values:
+          name: "Old Label"
+          dashboard_id: "REC: dashboard.id"
+          filter_type: "domain"
+          domain: "[]"
+      - step: "Rename filter"
+        action: "write"
+        target: "filter"
+        values:
+          name: "New Label"
+      - step: "Assert name updated"
+        action: "assert"
+        target: "filter"
+        asserts:
+          name:
+            type: "value"
+            expected: "New Label"
+
+  - name: "Delete Filter"
+    steps:
+      - step: "Create dashboard for filters"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Filter Test Dashboard"
+          code: "DASH-FILTER-DASH-05"
+      - step: "Create filter"
+        action: "create"
+        model: "dashboard.filter"
+        save_as: "filter"
+        values:
+          name: "Temporary Filter"
+          dashboard_id: "REC: dashboard.id"
+          filter_type: "domain"
+          domain: "[]"
+      - step: "Delete filter"
+        action: "unlink"
+        target: "filter"
+      - step: "Verify deleted"
+        action: "search"
+        model: "dashboard.filter"
+        domain: [["name", "=", "Temporary Filter"]]
+        save_as: "result"
+        expect_count: 0
+
+  - name: "Default Active Defaults To False"
+    steps:
+      - step: "Create dashboard for filters"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Filter Test Dashboard"
+          code: "DASH-FILTER-DASH-06"
+      - step: "Create filter without default_active"
+        action: "create"
+        model: "dashboard.filter"
+        save_as: "filter"
+        values:
+          name: "Not Default Active"
+          dashboard_id: "REC: dashboard.id"
+          filter_type: "domain"
+          domain: "[]"
+      - step: "Assert default_active is False"
+        action: "assert"
+        target: "filter"
+        asserts:
+          default_active:
+            type: "value"
+            expected: false
+
+  - name: "Predefined Domain Filter Without Domain Is Rejected"
+    steps:
+      - step: "Create dashboard for filters"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Filter Test Dashboard"
+          code: "DASH-FILTER-DASH-07"
+      - step: "Create domain filter without domain must be rejected"
+        action: "create"
+        model: "dashboard.filter"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Missing Domain"
+          dashboard_id: "REC: dashboard.id"
+          filter_type: "domain"
+
+  - name: "Field Value Filter Without Field Is Rejected"
+    steps:
+      - step: "Create dashboard for filters"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Filter Test Dashboard"
+          code: "DASH-FILTER-DASH-08"
+      - step: "Create field value filter without field_id must be rejected"
+        action: "create"
+        model: "dashboard.filter"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Missing Field"
+          dashboard_id: "REC: dashboard.id"
+          filter_type: "field"
+
+  - name: "Predefined Domain Filter With Invalid Domain Syntax Is Rejected"
+    steps:
+      - step: "Create dashboard for filters"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Filter Test Dashboard"
+          code: "DASH-FILTER-DASH-09"
+      - step: "Create domain filter with invalid syntax must be rejected"
+        action: "create"
+        model: "dashboard.filter"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Broken Domain"
+          dashboard_id: "REC: dashboard.id"
+          filter_type: "domain"
+          domain: '[("name","=",]'
+
+  - name: "Changing Filter Type To Date Keeps Existing Domain And Field Stored"
+    steps:
+      - step: "Create dashboard for filters"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Filter Test Dashboard"
+          code: "DASH-FILTER-DASH-10"
+      - step: "Create domain filter"
+        action: "create"
+        model: "dashboard.filter"
+        save_as: "filter"
+        values:
+          name: "Switchable Filter"
+          dashboard_id: "REC: dashboard.id"
+          filter_type: "domain"
+          domain: "[]"
+      - step: "Switch to date range type"
+        action: "write"
+        target: "filter"
+        values:
+          filter_type: "date"
+      - step: "Assert filter_type updated"
+        action: "assert"
+        target: "filter"
+        asserts:
+          filter_type:
+            type: "value"
+            expected: "date"

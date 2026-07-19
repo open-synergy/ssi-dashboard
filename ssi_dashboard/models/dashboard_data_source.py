@@ -447,14 +447,29 @@ Solution: Set 'Date Field', or change 'Comparison' back to 'No Comparison'
         ):
             self.sub_group_by_granularity = False
 
-    def _fetch_data(self, item):
+    def _fetch_data(self, item, active_filters=None):
         """Fetch the raw data for a dashboard item.
 
         Dispatches to ``self._fetch_data_<type>(item)``. Extension modules
         implementing a new :attr:`type` only need to add that method —
         this dispatcher stays untouched.
 
+        :attr:`active_filters` is not passed as a positional/keyword
+        argument to ``_fetch_data_<type>`` — that would break every
+        extension module's existing ``_fetch_data_<type>(self, item)``
+        signature. Instead it travels through the ``dashboard_active_
+        filters`` context key, so only :meth:`_fetch_data_orm` (which
+        reads it back via :meth:`_prepare_filter_domain`/
+        :meth:`_prepare_date_domain`) needs to know about it; any other
+        ``_fetch_data_<type>`` keeps working completely unmodified.
+
         :param item: ``dashboard.item`` record requesting the data.
+        :param active_filters: resolved 'active_filters' dict, as built
+            by ``dashboard.dashboard._resolve_active_filters`` — carries
+            ``filter_ids``, ``date_start``, ``date_end``. ``None`` (the
+            default) applies no filter/date override, keeping calls made
+            before this argument existed working unchanged.
+        :type active_filters: dict or None
         :return: list of dict, the raw rows for the item to render.
         :rtype: list
         :raises UserError: when no ``_fetch_data_<type>`` method exists
@@ -462,7 +477,8 @@ Solution: Set 'Date Field', or change 'Comparison' back to 'No Comparison'
         """
         self.ensure_one()
         method_name = f"_fetch_data_{self.type}"
-        method = getattr(self, method_name, None)
+        record = self.with_context(dashboard_active_filters=active_filters)
+        method = getattr(record, method_name, None)
         if method is None:
             error_message = f"""
 Document Type: {self._description}
@@ -1145,24 +1161,51 @@ Solution: Install a module that implements this 'Date Range' value
         local_dt = tz.localize(datetime.datetime.combine(value, time_of_day))
         return local_dt.astimezone(pytz.utc).replace(tzinfo=None)
 
+    def _parse_active_filter_date(self, value):
+        """Parse one ``active_filters`` ``date_start``/``date_end``
+        boundary, as received by :meth:`_prepare_date_domain` through
+        the ``dashboard_active_filters`` context key.
+
+        :param value: ISO date string (e.g. ``'2026-01-31'``), or falsy.
+        :type value: str or None
+        :return: parsed date, or ``None`` when ``value`` is falsy (open
+            bound on that side).
+        :rtype: datetime.date or None
+        """
+        self.ensure_one()
+        if not value:
+            return None
+        return fields.Date.from_string(value)
+
     def _prepare_date_domain(self, date_range_override=None):
         """Build the domain fragment date filtering contributes to
         :meth:`_fetch_data_orm`.
 
+        Three sources are tried in order, the first that applies wins:
+
+        1. ``date_range_override`` — used by :meth:`_fetch_comparison_data`
+           to filter on a comparison range instead of the current one.
+        2. The ``dashboard_active_filters`` context key (set by
+           :meth:`_fetch_data`) — when it carries a non-empty
+           ``date_start`` or ``date_end``, those override this data
+           source's own :attr:`date_range` entirely, letting a
+           dashboard's global date range picker control every data
+           source with a :attr:`date_field_id` at once.
+        3. :attr:`date_range`/:meth:`_prepare_date_range`, exactly as
+           before either of the above existed.
+
         :param date_range_override: optional 2-tuple ``(date_start,
             date_end)`` to build the domain from directly, bypassing
-            :attr:`date_range`/:meth:`_prepare_date_range` entirely —
-            used by :meth:`_fetch_comparison_data` to filter on a
-            comparison range instead of the current one. Either side
-            may be ``None`` for an open-ended bound. When omitted
-            (default), the domain is built from :attr:`date_range` as
-            before this parameter existed.
+            both the active filters and :attr:`date_range` entirely.
+            Either side may be ``None`` for an open-ended bound. Omitted
+            (default) for the current-period read done by
+            :meth:`_fetch_data`.
         :type date_range_override: tuple or None
         :return: list of domain tuples on :attr:`date_field_id`, meant
             to be ANDed (implicit ``&``) with the rest of the domain
             built in :meth:`_fetch_data_orm`. Empty when
-            :attr:`date_field_id` is not set, or (with no override)
-            :attr:`date_range` is ``all_time``.
+            :attr:`date_field_id` is not set, or (with no override in
+            effect) :attr:`date_range` is ``all_time``.
         :rtype: list
         """
         self.ensure_one()
@@ -1171,9 +1214,18 @@ Solution: Install a module that implements this 'Date Range' value
         if date_range_override is not None:
             date_start, date_end = date_range_override
         else:
-            if self.date_range == "all_time":
+            active_filters = self.env.context.get("dashboard_active_filters")
+            override_start = (
+                active_filters.get("date_start") if active_filters else None
+            )
+            override_end = active_filters.get("date_end") if active_filters else None
+            if active_filters and (override_start or override_end):
+                date_start = self._parse_active_filter_date(override_start)
+                date_end = self._parse_active_filter_date(override_end)
+            elif self.date_range == "all_time":
                 return []
-            date_start, date_end = self._prepare_date_range()
+            else:
+                date_start, date_end = self._prepare_date_range()
         field_name = self.date_field_id.name
         is_datetime = self.date_field_id.ttype == "datetime"
         domain = []
@@ -1243,10 +1295,10 @@ Solution: Install a module that implements this 'Date Range' value
         )
         return [spec], {spec: spec}
 
-    def _prepare_domain(self):
-        """Build the domain applied on :attr:`model_id`, substituting the
-        placeholders recognized in the raw :attr:`domain` string before
-        evaluating it.
+    @api.model
+    def _eval_domain_text(self, domain_text):
+        """Evaluate a raw domain string into a domain list, substituting
+        the placeholders recognized in it before evaluating.
 
         Two placeholders are substituted directly on the **string**,
         before ``safe_eval`` runs on it:
@@ -1255,23 +1307,81 @@ Solution: Install a module that implements this 'Date Range' value
         - ``%MYCOMPANY`` — the current company id (``self.env.company.id``).
 
         Any other ``%``-prefixed token is left untouched, so it fails
-        ``safe_eval`` and is caught by :meth:`_check_domain` instead of
-        silently being ignored.
+        ``safe_eval`` and is caught by the caller instead of silently
+        being ignored.
 
+        Shared by :meth:`_prepare_domain` (this data source's own
+        'Domain') and ``dashboard.filter._prepare_domain``/``_check_
+        filter_type_domain`` (a filter's 'Domain', 'Predefined Domain'
+        type), so a filter's domain goes through the exact same
+        substitution and validation as a data source's own domain.
+
+        :param domain_text: raw domain string, as stored in 'Domain'.
+        :type domain_text: str
         :return: domain, ready to use with ``search``/``_read_group``.
         :rtype: list
         :raises Exception: whatever ``safe_eval`` raises when
-            :attr:`domain` (after substitution) is not valid Python
+            ``domain_text`` (after substitution) is not valid Python
             domain syntax — left uncaught here so callers such as
             :meth:`_check_domain` can turn it into a ``ValidationError``.
+        """
+        domain_str = domain_text.replace("%UID", str(self.env.uid)).replace(
+            "%MYCOMPANY", str(self.env.company.id)
+        )
+        return safe_eval(domain_str)
+
+    def _prepare_domain(self):
+        """Build the domain applied on :attr:`model_id`, substituting the
+        ``%UID``/``%MYCOMPANY`` placeholders recognized in the raw
+        :attr:`domain` string before evaluating it. See
+        :meth:`_eval_domain_text` for the substitution/evaluation rules.
+
+        :return: domain, ready to use with ``search``/``_read_group``.
+        :rtype: list
+        :raises Exception: see :meth:`_eval_domain_text`.
         """
         self.ensure_one()
         if not self.domain:
             return []
-        domain_str = self.domain.replace("%UID", str(self.env.uid)).replace(
-            "%MYCOMPANY", str(self.env.company.id)
+        return self._eval_domain_text(self.domain)
+
+    def _prepare_filter_domain(self):
+        """Build the domain fragment the dashboard's active filters (see
+        ``dashboard.filter``) contribute to :meth:`_fetch_data_orm`, for
+        this data source's own :attr:`model_id`.
+
+        Active filter ids are read from the ``dashboard_active_filters``
+        context key (set by :meth:`_fetch_data`). 'Field Value' filters
+        whose :attr:`~dashboard.filter.field_id` does not exist on
+        :attr:`model_id` are skipped for this data source instead of
+        raising — see ``dashboard.filter._is_applicable`` — so one
+        dashboard can mix items pulling from several different models.
+
+        :return: list of domain tuples, meant to be ANDed (implicit
+            ``&``) with the rest of the domain built in
+            :meth:`_fetch_data_orm`. Empty when :attr:`model_id` is not
+            set, no filter is active, or none of the active filters
+            applies to :attr:`model_id`.
+        :rtype: list
+        """
+        self.ensure_one()
+        if not self.model_id:
+            return []
+        active_filters = self.env.context.get("dashboard_active_filters")
+        if not active_filters:
+            return []
+        filter_ids = active_filters.get("filter_ids") or []
+        if not filter_ids:
+            return []
+        domain = []
+        dashboard_filters = (
+            self.env["dashboard.filter"].sudo().browse(filter_ids).exists()
         )
-        return safe_eval(domain_str)
+        for dashboard_filter in dashboard_filters:
+            if not dashboard_filter._is_applicable(self.model_id.model):
+                continue
+            domain += dashboard_filter._prepare_domain()
+        return domain
 
     def _fetch_data_orm(self, item, date_range_override=None):
         """Fetch data for the 'orm' data source type.
@@ -1308,6 +1418,13 @@ Solution: Install a module that implements this 'Date Range' value
         with :attr:`domain`. A data source without :attr:`date_field_id`
         set behaves exactly as before this fragment existed.
 
+        The dashboard's active filters (see ``dashboard.filter``, read
+        through the ``dashboard_active_filters`` context key) contribute
+        a further domain fragment built by :meth:`_prepare_filter_domain`,
+        also ANDed in. A data source read outside of
+        ``dashboard.dashboard.get_dashboard_payload`` (that context key
+        unset) behaves exactly as before filters existed.
+
         As a last step, :meth:`_postprocess_rows` applies
         :attr:`fill_temporal`, :attr:`sort_by`/:attr:`sort_order`, and
         :attr:`limit`, in that order.
@@ -1335,7 +1452,11 @@ Problem: Data source type is 'orm' but no target Model is configured
 Solution: Set the Model field on this data source
 """
             raise UserError(error_message)
-        domain = self._prepare_domain() + self._prepare_date_domain(date_range_override)
+        domain = (
+            self._prepare_domain()
+            + self._prepare_date_domain(date_range_override)
+            + self._prepare_filter_domain()
+        )
         model = self.env[self.model_id.model].sudo()
         aggregates, column_names = self._prepare_aggregate_spec()
         groupby = self._prepare_groupby_spec()

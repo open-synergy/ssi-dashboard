@@ -5,6 +5,11 @@
             <div class="o_ssi_dashboard_header">
                 <h2 class="o_ssi_dashboard_title" t-esc="dashboard.name" />
             </div>
+            <DashboardFilterBar
+                filters="dashboard.filters"
+                activeFilterIds="dashboard.active_filter_ids"
+                onChange.bind="onFilterChange"
+            />
             <div class="o_ssi_dashboard_grid">
                 <DashboardItem
                     t-foreach="dashboard.items"
