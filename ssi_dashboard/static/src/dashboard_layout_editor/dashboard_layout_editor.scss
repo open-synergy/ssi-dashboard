@@ -1,0 +1,57 @@
+.o_ssi_dashboard_layout_editor {
+    .o_ssi_dashboard_layout_editor_toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+
+        .o_ssi_dashboard_layout_editor_hint {
+            flex: 1 1 auto;
+            font-style: italic;
+            opacity: 0.75;
+        }
+    }
+
+    // Reuses the read-only grid's own column/row definition (see
+    // .o_ssi_dashboard_grid in ../dashboard_action/dashboard_action.scss,
+    // whose selector is scoped under .o_ssi_dashboard, an ancestor of
+    // this editor whenever it is mounted) — only the tile appearance
+    // below is specific to edit mode.
+    .o_ssi_dashboard_grid_edit {
+        .o_ssi_dashboard_layout_tile {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed var(--ssi-dashboard-text, #6c757d);
+            border-radius: 4px;
+            background-color: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.08);
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+
+            &:active {
+                cursor: grabbing;
+            }
+
+            .o_ssi_dashboard_layout_tile_name {
+                padding: 0 24px 0 8px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .o_ssi_dashboard_layout_resize_handle {
+                position: absolute;
+                right: 2px;
+                bottom: 2px;
+                width: 14px;
+                height: 14px;
+                border-radius: 2px;
+                background-color: var(--ssi-dashboard-text, #6c757d);
+                cursor: nwse-resize;
+                touch-action: none;
+            }
+        }
+    }
+}

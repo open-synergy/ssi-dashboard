@@ -10,7 +10,9 @@ class DashboardDashboard(models.Model):
     backed by a data source, optionally styled with a color scheme and
     restricted to a set of user groups. :meth:`get_dashboard_payload` is
     the single entry point the browser side calls to render one
-    dashboard.
+    dashboard, and :meth:`save_layout` is the single entry point it
+    calls to persist positions/sizes arranged through the drag-and-resize
+    layout editor.
 
     When :attr:`generate_menu` is set, :meth:`_sync_menu` keeps a matching
     ``ir.ui.menu``/``ir.actions.client`` pair (:attr:`menu_id`,
@@ -284,6 +286,98 @@ Solution: Set 'Parent Menu' or disable 'Generate Menu'
             "date_start": active_filters.get("date_start"),
             "date_end": active_filters.get("date_end"),
         }
+
+    def save_layout(self, layout):
+        """Persist a dashboard layout arranged through the browser's
+        drag-and-resize layout editor.
+
+        Called from the browser side (see
+        ``static/src/dashboard_layout_editor/dashboard_layout_editor.esm.js``)
+        once the user presses 'Save' in the editor. Restricted to
+        :meth:`_check_save_layout_access` regardless of what the browser
+        side hides/shows, and to items that actually belong to this
+        dashboard (see :meth:`_check_layout_item_ids`) — otherwise a
+        user able to call this method could overwrite the coordinates
+        of items on a dashboard they are not editing.
+
+        :param layout: list of dict, one per repositioned/resized item,
+            each with keys ``id`` (int, a ``dashboard.item`` id that
+            must belong to :attr:`item_ids`), ``column_start``,
+            ``row_start``, ``column_width`` and ``row_height`` (int) —
+            the new values written to that item's fields of the same
+            name. Range constraints on those fields (see
+            ``models/dashboard_item.py``) still apply and raise
+            ``ValidationError`` when violated.
+        :type layout: list of dict
+        :return: ``True``
+        :rtype: bool
+        """
+        self.ensure_one()
+        self._check_save_layout_access()
+        items_by_id = {item.id: item for item in self.item_ids}
+        self._check_layout_item_ids(layout, items_by_id)
+        for entry in layout:
+            items_by_id[entry["id"]].write(
+                {
+                    "column_start": entry["column_start"],
+                    "row_start": entry["row_start"],
+                    "column_width": entry["column_width"],
+                    "row_height": entry["row_height"],
+                }
+            )
+        return True
+
+    def _check_save_layout_access(self):
+        """Raise ``UserError`` unless the current user belongs to
+        ``group_dashboard_admin``.
+
+        Called by :meth:`save_layout` itself so the restriction applies
+        no matter how the method is reached — an RPC call bypassing the
+        browser's own 'Edit Layout' button visibility would otherwise
+        let a plain 'Dashboard User' overwrite the layout despite having
+        read-only access rights on ``dashboard.item``.
+
+        :return: None
+        """
+        self.ensure_one()
+        if not self.env.user.has_group("ssi_dashboard.group_dashboard_admin"):
+            error_message = f"""
+Context: Save dashboard layout
+Database ID: {self.id}
+Problem: Current user is not a member of the 'Administrator' dashboard \
+group
+Solution: Ask a dashboard administrator to save the layout, or request \
+'Administrator' access
+"""
+            raise UserError(error_message)
+
+    def _check_layout_item_ids(self, layout, items_by_id):
+        """Raise ``UserError`` when ``layout`` names an ``id`` that is
+        not a key of ``items_by_id`` — i.e. an item that does not
+        belong to this dashboard.
+
+        Runs fully before :meth:`save_layout` writes anything, so a
+        ``layout`` naming one foreign id leaves every item of this
+        dashboard untouched instead of partially applying.
+
+        :param layout: see :meth:`save_layout`.
+        :type layout: list of dict
+        :param items_by_id: this dashboard's :attr:`item_ids` indexed by
+            ``id``, as built by :meth:`save_layout`.
+        :type items_by_id: dict
+        :return: None
+        """
+        self.ensure_one()
+        for entry in layout:
+            if entry["id"] not in items_by_id:
+                error_message = f"""
+Context: Save dashboard layout
+Database ID: {self.id}
+Problem: Item ID {entry["id"]} sent in 'layout' does not belong to \
+this dashboard
+Solution: Reload the dashboard and try arranging the layout again
+"""
+                raise UserError(error_message)
 
     def action_open_dashboard(self):
         for record in self.sudo():

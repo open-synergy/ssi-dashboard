@@ -358,3 +358,120 @@ scenarios:
           name: "Missing Parent"
           code: "DASH-MENU-NOPARENT-01"
           generate_menu: true
+
+  - name: "Save Layout With Foreign Item Id Is Rejected"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-SAVE-LAYOUT-FOREIGN-DS-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create owning dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Owning Dashboard"
+          code: "DASH-SAVE-LAYOUT-FOREIGN-01"
+      - step: "Create item on owning dashboard"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item A"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Create another dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "other_dashboard"
+        values:
+          name: "Other Dashboard"
+          code: "DASH-SAVE-LAYOUT-FOREIGN-02"
+      - step: "Create item on the other dashboard"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "other_item"
+        values:
+          name: "Item B"
+          dashboard_id: "REC: other_dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Saving the other dashboard's item id must be rejected"
+        action: "call"
+        target: "dashboard"
+        method: "save_layout"
+        expect_error:
+          type: "UserError"
+        args:
+          - - id: "REC: other_item.id"
+              column_start: 0
+              row_start: 0
+              column_width: 4
+              row_height: 1
+
+  - name: "Save Layout By Non Admin User Is Rejected"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-SAVE-LAYOUT-NONADMIN-DS-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Non Admin Dashboard"
+          code: "DASH-SAVE-LAYOUT-NONADMIN-01"
+      - step: "Create item"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item A"
+          dashboard_id: "REC: dashboard.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Create a plain dashboard user (not administrator)"
+        action: "create"
+        model: "res.users"
+        save_as: "dashboard_user"
+        values:
+          name: "Dashboard User"
+          login: "dashboard-user-save-layout@example.com"
+          group_ids:
+            - - 6
+              - 0
+              - - "REF: base.group_user"
+                - "REF: ssi_dashboard.group_dashboard_user"
+      - step: "Non admin user saving the layout must be rejected"
+        action: "call"
+        target: "dashboard"
+        method: "save_layout"
+        as_user: "dashboard_user"
+        expect_error:
+          type: "UserError"
+        args:
+          - - id: "REC: item.id"
+              column_start: 1
+              row_start: 1
+              column_width: 4
+              row_height: 1

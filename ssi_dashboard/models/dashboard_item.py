@@ -54,11 +54,33 @@ class DashboardItem(models.Model):
     )
     column_width = fields.Integer(
         default=4,
-        help="Width of this item's tile, in grid columns out of 12.",
+        help="Width of this item's tile, in grid columns out of 12. Must "
+        "be between 1 and 12, and 'Column Start' plus 'Column Width' "
+        "must not exceed 12.",
     )
     row_height = fields.Integer(
         default=1,
-        help="Height of this item's tile, in grid rows.",
+        help="Height of this item's tile, in grid rows. Must be at least 1.",
+    )
+    column_start = fields.Integer(
+        default=0,
+        help="Starting column of this item's tile on the dashboard's "
+        "12-column grid, 0-indexed. Must be between 0 and 11, and "
+        "'Column Start' plus 'Column Width' must not exceed 12. When "
+        "every item of a dashboard has 'Column Start' and 'Row Start' "
+        "at 0 (the state right after installing/updating this module), "
+        "the browser places items flowing in 'Sequence' order instead, "
+        "as before this field existed. As soon as a layout is saved "
+        "through the dashboard's layout editor, every item of that "
+        "dashboard gets explicit coordinates and flowing placement no "
+        "longer applies to it.",
+    )
+    row_start = fields.Integer(
+        default=0,
+        help="Starting row of this item's tile on the dashboard grid, "
+        "0-indexed. See 'Column Start' for the flowing-placement "
+        "fallback rule that applies while this stays 0 on every item "
+        "of the dashboard.",
     )
     active = fields.Boolean(
         default=True,
@@ -198,6 +220,59 @@ Database ID: {item.id}
 Problem: 'Precision Digits' is set to {item.precision_digits}, which is \
 outside the allowed range of 0 to 6
 Solution: Set 'Precision Digits' to a value between 0 and 6
+"""
+                raise ValidationError(error_message)
+
+    @api.constrains("column_start")
+    def _check_column_start_range(self):
+        for item in self:
+            if not 0 <= item.column_start <= 11:
+                error_message = f"""
+Context: Configure dashboard item
+Database ID: {item.id}
+Problem: 'Column Start' is set to {item.column_start}, which is \
+outside the allowed range of 0 to 11
+Solution: Set 'Column Start' to a value between 0 and 11
+"""
+                raise ValidationError(error_message)
+
+    @api.constrains("column_width")
+    def _check_column_width_range(self):
+        for item in self:
+            if not 1 <= item.column_width <= 12:
+                error_message = f"""
+Context: Configure dashboard item
+Database ID: {item.id}
+Problem: 'Column Width' is set to {item.column_width}, which is \
+outside the allowed range of 1 to 12
+Solution: Set 'Column Width' to a value between 1 and 12
+"""
+                raise ValidationError(error_message)
+
+    @api.constrains("column_start", "column_width")
+    def _check_column_start_width_within_grid(self):
+        for item in self:
+            if item.column_start + item.column_width > 12:
+                error_message = f"""
+Context: Configure dashboard item
+Database ID: {item.id}
+Problem: 'Column Start' ({item.column_start}) plus 'Column Width' \
+({item.column_width}) exceeds the dashboard's 12-column grid
+Solution: Reduce 'Column Start' or 'Column Width' so their sum does \
+not exceed 12
+"""
+                raise ValidationError(error_message)
+
+    @api.constrains("row_height")
+    def _check_row_height_minimum(self):
+        for item in self:
+            if item.row_height < 1:
+                error_message = f"""
+Context: Configure dashboard item
+Database ID: {item.id}
+Problem: 'Row Height' is set to {item.row_height}, which is below the \
+minimum of 1
+Solution: Set 'Row Height' to 1 or more
 """
                 raise ValidationError(error_message)
 
@@ -360,7 +435,8 @@ another value
             the dashboard's active filters.
         :type active_filters: dict or None
         :return: dict with keys ``id``, ``name``, ``type``,
-            ``column_width``, ``row_height``, ``active``, ``data`` and
+            ``column_start``, ``row_start``, ``column_width``,
+            ``row_height``, ``active``, ``data`` and
             ``number_format_config`` (see :meth:`_get_number_format_config`).
             ``data`` is an empty list when :attr:`data_source_id` is
             empty (types that override :meth:`_is_data_source_required`
@@ -383,6 +459,8 @@ another value
             "id": self.id,
             "name": self.name,
             "type": self.type,
+            "column_start": self.column_start,
+            "row_start": self.row_start,
             "column_width": self.column_width,
             "row_height": self.row_height,
             "active": self.active,
