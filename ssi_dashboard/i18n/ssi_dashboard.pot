@@ -24,6 +24,11 @@ msgid "# Dashboard"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__data_source_id
+msgid "# Data Source"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__message_needaction
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__message_needaction
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__message_needaction
@@ -73,7 +78,15 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__aggregate
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__aggregate
 msgid "Aggregate"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source_measure__aggregate
+msgid ""
+"Aggregation applied to 'Field' (ignored when set to 'Count', which counts "
+"records instead)."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -109,6 +122,11 @@ msgid "Another data source with that code already exists."
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.constraint,message:ssi_dashboard.constraint_dashboard_data_source_measure_data_source_id_name_uniq
+msgid "Another measure with that name already exists on this data source."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__message_attachment_count
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__message_attachment_count
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__message_attachment_count
@@ -117,6 +135,7 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__aggregate__avg
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source_measure__aggregate__avg
 msgid "Average"
 msgstr ""
 
@@ -199,6 +218,7 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__aggregate__count
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source_measure__aggregate__count
 msgid "Count"
 msgstr ""
 
@@ -207,6 +227,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme_color__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__create_uid
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__create_uid
 msgid "Created by"
 msgstr ""
@@ -216,6 +237,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme_color__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__create_date
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__create_date
 msgid "Created on"
 msgstr ""
@@ -241,6 +263,11 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model,name:ssi_dashboard.model_dashboard_data_source
 msgid "Dashboard Data Source"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model,name:ssi_dashboard.model_dashboard_data_source_measure
+msgid "Dashboard Data Source - Measure"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -277,6 +304,11 @@ msgid "Data source this item pulls its data from."
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source_measure__data_source_id
+msgid "Data source this measure belongs to."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__group_by_granularity__day
 msgid "Day"
 msgstr ""
@@ -294,10 +326,18 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source_measure__sequence
+msgid ""
+"Determines the order this measure is listed in, and so its position among "
+"the aggregate values built per row."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme_color__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__display_name
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__display_name
 msgid "Display Name"
 msgstr ""
@@ -305,6 +345,11 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__domain
 msgid "Domain"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__field_id
+msgid "Field"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -401,6 +446,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme_color__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__id
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__id
 msgid "ID"
 msgstr ""
@@ -479,6 +525,13 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source_measure__name
+msgid ""
+"Label of this measure. Used as the key its aggregate value is stored under "
+"in each row of data returned by the data source."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__name
 msgid "Label shown on the item's tile."
 msgstr ""
@@ -488,6 +541,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme_color__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__write_uid
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__write_uid
 msgid "Last Updated by"
 msgstr ""
@@ -497,6 +551,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme_color__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__write_date
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__write_date
 msgid "Last Updated on"
 msgstr ""
@@ -534,6 +589,7 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__aggregate__max
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source_measure__aggregate__max
 msgid "Maximum"
 msgstr ""
 
@@ -545,6 +601,22 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__measure_field_id
 msgid "Measure Field"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__measure_ids
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_data_source_view_form
+msgid "Measures"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source__measure_ids
+msgid ""
+"Measures computed per row. When at least one row is set here, it is used "
+"instead of 'Measure Field' / 'Aggregate' and each row of data carries one "
+"value per measure, keyed by that measure's 'Name'. Left empty, 'Measure "
+"Field' / 'Aggregate' are used as a single measure, keeping older data "
+"sources working unchanged."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -592,6 +664,7 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__aggregate__min
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source_measure__aggregate__min
 msgid "Minimum"
 msgstr ""
 
@@ -616,6 +689,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__name
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__name
 msgid "Name"
 msgstr ""
@@ -684,6 +758,13 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_data_source_measure__field_id
+msgid ""
+"Numeric field of the data source's 'Model' that 'Aggregate' is computed on. "
+"Left empty is only valid when 'Aggregate' is 'Count'."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__type__orm
 msgid "Odoo Model"
 msgstr ""
@@ -740,6 +821,7 @@ msgid "Row Height"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__sequence
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__sequence
 msgid "Sequence"
 msgstr ""
@@ -757,6 +839,7 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__aggregate__sum
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source_measure__aggregate__sum
 msgid "Sum"
 msgstr ""
 
