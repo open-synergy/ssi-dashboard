@@ -1,0 +1,27 @@
+.o_ssi_dashboard_item_list {
+    height: 100%;
+    padding: 8px;
+    overflow: auto;
+
+    .o_ssi_dashboard_item_list_table {
+        width: 100%;
+        border-collapse: collapse;
+
+        th,
+        td {
+            padding: 4px 8px;
+            text-align: left;
+            border-bottom: 1px solid var(--ssi-dashboard-border, #dee2e6);
+        }
+
+        th {
+            color: var(--ssi-dashboard-muted, #6c757d);
+            font-weight: bold;
+            border-bottom: 2px solid var(--ssi-dashboard-primary, #0d6efd);
+        }
+
+        td {
+            color: var(--ssi-dashboard-text, #212529);
+        }
+    }
+}

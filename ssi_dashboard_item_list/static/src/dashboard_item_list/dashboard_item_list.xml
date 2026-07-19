@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="ssi_dashboard_item_list.DashboardItemList">
+        <div class="o_ssi_dashboard_item_list">
+            <table class="o_ssi_dashboard_item_list_table">
+                <thead>
+                    <tr>
+                        <t
+                            t-foreach="props.item.columns"
+                            t-as="column"
+                            t-key="column.key"
+                        >
+                            <th t-esc="column.label" />
+                        </t>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="props.item.rows" t-as="row" t-key="row_index">
+                        <tr>
+                            <t
+                                t-foreach="props.item.columns"
+                                t-as="column"
+                                t-key="column.key"
+                            >
+                                <td t-esc="cellValue(row, column)" />
+                            </t>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+    </t>
+</templates>
