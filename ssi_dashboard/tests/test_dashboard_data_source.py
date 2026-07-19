@@ -495,6 +495,77 @@ class TestDashboardDataSource(YamlTransactionCase):
         self.assertEqual(date_start, datetime.date(2026, 7, 19))
         self.assertEqual(date_end, datetime.date(2026, 7, 25))
 
+    @freeze_time("2026-07-20 10:00:00")
+    def test_prepare_date_range_computes_every_relative_selection_value(self):
+        """Python murni — pemicu P6 (L-16: pembekuan waktu) dan P11
+        (L-12: tidak ada matriks/parametrisasi kasus data-driven di
+        YAML — setiap varian butuh skenario tertulis tangan sendiri,
+        jadi >=5 varian dengan bentuk assert identik ditulis Python).
+
+        Waktu dibekukan pada Senin, 20 Juli 2026 (lang default `en_US`,
+        awal minggu Minggu — lihat
+        `test_prepare_date_range_this_week_follows_lang_not_hardcoded_monday`).
+        Menguji seluruh nilai `date_range` relatif yang belum dicakup
+        test lain (`all_time`, `custom`, `today`, `last_7_days`,
+        `this_week` sudah diuji tersendiri di atas) sekaligus, karena
+        assert-nya identik — hanya pasangan input/output yang berbeda.
+        """
+        data_source = self.env["dashboard.data_source"].create(
+            {"name": "Every Range Source", "code": "DASH-DATERANGE-MATRIX-01"}
+        )
+        cases = {
+            "yesterday": (datetime.date(2026, 7, 19), datetime.date(2026, 7, 19)),
+            "last_week": (datetime.date(2026, 7, 12), datetime.date(2026, 7, 18)),
+            "next_week": (datetime.date(2026, 7, 26), datetime.date(2026, 8, 1)),
+            "week_to_date": (datetime.date(2026, 7, 19), datetime.date(2026, 7, 20)),
+            "this_month": (datetime.date(2026, 7, 1), datetime.date(2026, 7, 31)),
+            "last_month": (datetime.date(2026, 6, 1), datetime.date(2026, 6, 30)),
+            "next_month": (datetime.date(2026, 8, 1), datetime.date(2026, 8, 31)),
+            "month_to_date": (datetime.date(2026, 7, 1), datetime.date(2026, 7, 20)),
+            "this_quarter": (datetime.date(2026, 7, 1), datetime.date(2026, 9, 30)),
+            "last_quarter": (datetime.date(2026, 4, 1), datetime.date(2026, 6, 30)),
+            "next_quarter": (datetime.date(2026, 10, 1), datetime.date(2026, 12, 31)),
+            "quarter_to_date": (datetime.date(2026, 7, 1), datetime.date(2026, 7, 20)),
+            "this_year": (datetime.date(2026, 1, 1), datetime.date(2026, 12, 31)),
+            "last_year": (datetime.date(2025, 1, 1), datetime.date(2025, 12, 31)),
+            "next_year": (datetime.date(2027, 1, 1), datetime.date(2027, 12, 31)),
+            "year_to_date": (datetime.date(2026, 1, 1), datetime.date(2026, 7, 20)),
+            "last_30_days": (datetime.date(2026, 6, 21), datetime.date(2026, 7, 20)),
+            "last_90_days": (datetime.date(2026, 4, 22), datetime.date(2026, 7, 20)),
+            "last_365_days": (datetime.date(2025, 7, 21), datetime.date(2026, 7, 20)),
+            "past_till_now": (None, datetime.date(2026, 7, 20)),
+            "past_excluding_today": (None, datetime.date(2026, 7, 19)),
+            "future_starting_now": (datetime.date(2026, 7, 20), None),
+            "future_starting_tomorrow": (datetime.date(2026, 7, 21), None),
+        }
+        for date_range, expected in cases.items():
+            data_source.write({"date_range": date_range})
+            with self.subTest(date_range=date_range):
+                self.assertEqual(data_source._prepare_date_range(), expected)
+
+    def test_prepare_date_range_unknown_value_raises_user_error(self):
+        """Python murni — celah terdekat P10 (L-09, L-11), pola yang
+        sama seperti `test_fetch_data_missing_dispatch_raises_user_error`
+        di atas.
+
+        `date_range` adalah Selection tervalidasi ORM (28 nilai
+        terdaftar); tidak ada aksi YAML yang bisa membuat record dengan
+        nilai di luar itu. Untuk menguji guard fallback
+        `_prepare_date_range` itu sendiri, `date_range` diubah lewat SQL
+        langsung (bypass validasi ORM) — transformasi yang mustahil lewat
+        `EVAL:` (L-09/L-11).
+        """
+        data_source = self.env["dashboard.data_source"].create(
+            {"name": "Unknown Range Source", "code": "DASH-DATERANGE-UNKNOWN-01"}
+        )
+        self.env.cr.execute(
+            "UPDATE dashboard_data_source SET date_range = %s WHERE id = %s",
+            ("bogus_range", data_source.id),
+        )
+        data_source.invalidate_recordset()
+        with self.assertRaises(UserError):
+            data_source._prepare_date_range()
+
     @freeze_time("2026-07-19 23:30:00")
     def test_fetch_data_orm_filters_by_datetime_field_uses_user_timezone(self):
         """Python murni — pemicu P6 (L-16).
