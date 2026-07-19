@@ -403,7 +403,9 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__data_source_id
-msgid "Data source this item pulls its data from."
+msgid ""
+"Data source this item pulls its data from. Required unless 'Type' is one "
+"that overrides '_is_data_source_required' to return False."
 msgstr ""
 
 #. module: ssi_dashboard
