@@ -44,9 +44,10 @@ class DashboardItem(models.Model):
     )
     data_source_id = fields.Many2one(
         comodel_name="dashboard.data_source",
-        required=True,
         ondelete="restrict",
-        help="Data source this item pulls its data from.",
+        help="Data source this item pulls its data from. Required unless "
+        "'Type' is one that overrides '_is_data_source_required' to "
+        "return False.",
     )
     config = fields.Text(
         help="JSON configuration specific to this item's 'Type'.",
@@ -145,6 +146,35 @@ class DashboardItem(models.Model):
         default=2,
         help="Number of digits shown after the decimal point. Must be between 0 and 6.",
     )
+
+    def _is_data_source_required(self):
+        """Whether :attr:`data_source_id` must be filled in for this
+        item's :attr:`type`.
+
+        Default implementation always returns ``True``, so every type
+        shipped without overriding this method keeps requiring a data
+        source exactly as before this method existed. Extension modules
+        adding a type that renders without pulling any data (e.g. a
+        static checklist) override this to return ``False`` for that
+        type, and :meth:`_check_data_source_required` enforces it.
+
+        :return: ``True`` when :attr:`data_source_id` is required.
+        :rtype: bool
+        """
+        self.ensure_one()
+        return True
+
+    @api.constrains("data_source_id", "type")
+    def _check_data_source_required(self):
+        for item in self:
+            if item._is_data_source_required() and not item.data_source_id:
+                error_message = f"""
+Context: Configure dashboard item
+Database ID: {item.id}
+Problem: 'Data Source' is empty but 'Type' '{item.type}' requires one
+Solution: Set 'Data Source', or choose a 'Type' that does not require one
+"""
+                raise ValidationError(error_message)
 
     @api.constrains("multiplier")
     def _check_multiplier_not_zero(self):
@@ -320,12 +350,16 @@ another value
         :return: dict with keys ``id``, ``name``, ``type``,
             ``column_width``, ``row_height``, ``active``, ``data`` and
             ``number_format_config`` (see :meth:`_get_number_format_config`).
-            Also carries ``comparison_data`` — list of list of dict,
-            one list per comparison range — when :attr:`data_source_id`
-            has its ``comparison`` field set to anything other than
-            ``none``; absent entirely otherwise, so an item pulling
-            from a data source without comparison configured pays no
-            extra query cost. Also carries ``goal`` — result of
+            ``data`` is an empty list when :attr:`data_source_id` is
+            empty (types that override :meth:`_is_data_source_required`
+            to return ``False``), instead of fetching anything. Also
+            carries ``comparison_data`` — list of list of dict, one
+            list per comparison range — when :attr:`data_source_id` is
+            filled in and its ``comparison`` field is set to anything
+            other than ``none``; absent entirely otherwise, so an item
+            pulling from a data source without comparison configured
+            (or without a data source at all) pays no extra query
+            cost. Also carries ``goal`` — result of
             :meth:`_get_goal_value` for today's date — when
             :attr:`goal_type` is anything other than ``none``; absent
             entirely otherwise, so an item without a target configured
@@ -340,10 +374,12 @@ another value
             "column_width": self.column_width,
             "row_height": self.row_height,
             "active": self.active,
-            "data": self.data_source_id._fetch_data(self),
+            "data": self.data_source_id._fetch_data(self)
+            if self.data_source_id
+            else [],
             "number_format_config": self._get_number_format_config(),
         }
-        if self.data_source_id.comparison != "none":
+        if self.data_source_id and self.data_source_id.comparison != "none":
             payload["comparison_data"] = self.data_source_id._fetch_comparison_data(
                 self
             )
