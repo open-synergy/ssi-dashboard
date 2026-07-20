@@ -213,3 +213,178 @@ class TestDashboardDashboard(YamlTransactionCase):
         with mute_logger("odoo.sql_db"), self.assertRaises(IntegrityError):
             with self.env.cr.savepoint():
                 color_scheme.unlink()
+
+    def test_copy_dashboard_duplicates_items_and_code(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        `copy()` is tested through its own return value (the newly
+        created dashboard record) — `action: call` in YAML discards a
+        method's return value entirely (L-01), and an assert's actual
+        side is always a dotted `getattr` on a record already in the
+        registry (L-02), so there is no way to reach the copy's own
+        `item_ids`/`code` from YAML at all.
+        """
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners",
+                "code": "DASH-COPY-DS-01",
+                "type": "orm",
+                "model_id": self.env["ir.model"]._get("res.partner").id,
+            }
+        )
+        dashboard = self.env["dashboard.dashboard"].create(
+            {
+                "name": "Three Items",
+                "code": "DASH-COPY-01",
+                "item_ids": [
+                    (
+                        0,
+                        0,
+                        {
+                            "name": f"Item {index}",
+                            "type": "placeholder",
+                            "data_source_id": data_source.id,
+                        },
+                    )
+                    for index in range(3)
+                ],
+            }
+        )
+        copy = dashboard.copy()
+        self.assertEqual(len(copy.item_ids), 3)
+        self.assertNotEqual(copy.code, dashboard.code)
+        self.assertEqual(
+            sorted(copy.item_ids.mapped("name")),
+            sorted(dashboard.item_ids.mapped("name")),
+        )
+
+    def test_copy_dashboard_item_goal_ids_preserved(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Sama seperti test di atas: hanya bisa diverifikasi lewat
+        `item_ids`/`goal_ids` milik dashboard hasil `copy()` — nilai
+        balik method yang YAML tidak bisa menangkapnya sama sekali
+        (L-01, L-02).
+        """
+        data_source = self.env["dashboard.data_source"].create(
+            {
+                "name": "Partners",
+                "code": "DASH-COPY-GOAL-DS-01",
+                "type": "orm",
+                "model_id": self.env["ir.model"]._get("res.partner").id,
+            }
+        )
+        dashboard = self.env["dashboard.dashboard"].create(
+            {
+                "name": "Dated Goal Dashboard",
+                "code": "DASH-COPY-GOAL-01",
+                "item_ids": [
+                    (
+                        0,
+                        0,
+                        {
+                            "name": "Item A",
+                            "type": "placeholder",
+                            "data_source_id": data_source.id,
+                            "goal_type": "dated",
+                            "goal_ids": [
+                                (
+                                    0,
+                                    0,
+                                    {
+                                        "date_start": "2026-01-01",
+                                        "date_end": "2026-01-31",
+                                        "value": 100.0,
+                                    },
+                                ),
+                                (
+                                    0,
+                                    0,
+                                    {
+                                        "date_start": "2026-02-01",
+                                        "date_end": "2026-02-28",
+                                        "value": 200.0,
+                                    },
+                                ),
+                            ],
+                        },
+                    )
+                ],
+            }
+        )
+        copy = dashboard.copy()
+        self.assertEqual(len(copy.item_ids), 1)
+        self.assertEqual(len(copy.item_ids.goal_ids), 2)
+        self.assertEqual(
+            sorted(copy.item_ids.goal_ids.mapped("value")),
+            sorted(dashboard.item_ids.goal_ids.mapped("value")),
+        )
+
+    def test_copy_dashboard_filter_ids_preserved(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Sama seperti dua test di atas: `filter_ids` milik dashboard
+        hasil `copy()` hanya bisa dibaca dari nilai balik method itu
+        sendiri (L-01, L-02).
+        """
+        dashboard = self.env["dashboard.dashboard"].create(
+            {
+                "name": "Filtered Dashboard",
+                "code": "DASH-COPY-FILTER-01",
+                "filter_ids": [
+                    (
+                        0,
+                        0,
+                        {
+                            "name": "This Quarter",
+                            "filter_type": "domain",
+                            "domain": "[]",
+                        },
+                    )
+                ],
+            }
+        )
+        copy = dashboard.copy()
+        self.assertEqual(len(copy.filter_ids), 1)
+        self.assertEqual(copy.filter_ids.name, "This Quarter")
+
+    def test_copy_dashboard_defaults_generate_menu_false_and_keeps_original_menu(
+        self,
+    ):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        `generate_menu`/`menu_id`/`client_action_id` of the *copy* are
+        only reachable through `copy()`'s own return value (L-01,
+        L-02). Also asserts the *original* dashboard's generated menu/
+        client action survive the copy untouched — a regression check
+        for the exact bug `copy=False` on `menu_id`/`client_action_id`
+        exists to prevent: if those fields were copied over as-is while
+        `generate_menu` is forced False on the copy, `_sync_menu`
+        running on the copy's own `create` would see a falsy
+        `generate_menu` and unlink the *original*'s still-referenced
+        menu/action out from under it.
+        """
+        dashboard = self.env["dashboard.dashboard"].create(
+            {
+                "name": "Menu Source Dashboard",
+                "code": "DASH-COPY-MENU-01",
+                "generate_menu": True,
+                "parent_menu_id": self.env.ref(
+                    "ssi_dashboard.menu_dashboard_configuration"
+                ).id,
+            }
+        )
+        original_menu = dashboard.menu_id
+        original_client_action = dashboard.client_action_id
+        self.assertTrue(original_menu)
+        self.assertTrue(original_client_action)
+
+        copy = dashboard.copy()
+
+        self.assertFalse(copy.generate_menu)
+        self.assertFalse(copy.menu_id)
+        self.assertFalse(copy.client_action_id)
+        self.assertTrue(original_menu.exists())
+        self.assertTrue(original_client_action.exists())
+        self.assertEqual(dashboard.menu_id, original_menu)
+        self.assertEqual(dashboard.client_action_id, original_client_action)

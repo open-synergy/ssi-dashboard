@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <!-- Deliberately also granted to 'User', not only 'Administrator':
+         the wizard's own actual authorization gate is the explicit
+         group check inside 'action_apply' (see
+         dashboard.item.move._check_move_access), by design (see the
+         module's backlog item) — restricting create/write here as well
+         would turn a plain user's attempt into an AccessError raised
+         by the ORM before 'action_apply' ever runs, instead of the
+         UserError the wizard itself is meant to raise. The bound
+         action's own 'group_ids' still keeps the 'Move / Copy Item(s)'
+         entry out of a plain user's 'Action' menu in the UI. -->
+    <record id="dashboard_item_move_user_access" model="ir.model.access">
+        <field name="name">dashboard.item.move - user</field>
+        <field name="model_id" ref="model_dashboard_item_move" />
+        <field name="group_id" ref="group_dashboard_user" />
+        <field name="perm_read" eval="1" />
+        <field name="perm_write" eval="1" />
+        <field name="perm_create" eval="1" />
+        <field name="perm_unlink" eval="0" />
+    </record>
+
+    <record id="dashboard_item_move_admin_access" model="ir.model.access">
+        <field name="name">dashboard.item.move - admin</field>
+        <field name="model_id" ref="model_dashboard_item_move" />
+        <field name="group_id" ref="group_dashboard_admin" />
+        <field name="perm_read" eval="1" />
+        <field name="perm_write" eval="1" />
+        <field name="perm_create" eval="1" />
+        <field name="perm_unlink" eval="1" />
+    </record>
+</odoo>

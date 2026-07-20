@@ -1,0 +1,208 @@
+scenarios:
+  - name: "Move Wizard Reassigns Item And Resets Coordinates"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-MOVE-DS-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create source dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard_source"
+        values:
+          name: "Move Source Dashboard"
+          code: "DASH-MOVE-SRC-01"
+      - step: "Create destination dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard_target"
+        values:
+          name: "Move Destination Dashboard"
+          code: "DASH-MOVE-DST-01"
+      - step: "Create item on source dashboard with non-zero coordinates"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item A"
+          dashboard_id: "REC: dashboard_source.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+          column_start: 5
+          row_start: 3
+      - step: "Move item to destination dashboard through the wizard"
+        action: "wizard"
+        model: "dashboard.item.move"
+        target: "item"
+        values:
+          dashboard_id: "REC: dashboard_target.id"
+          operation: "move"
+        method: "action_apply"
+        asserts:
+          dashboard_id:
+            type: "m2o"
+            expected: "REC: dashboard_target"
+          column_start:
+            type: "value"
+            expected: 0
+          row_start:
+            type: "value"
+            expected: 0
+      - step: "Assert source dashboard has no items left"
+        action: "assert"
+        target: "dashboard_source"
+        asserts:
+          item_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 0
+      - step: "Assert destination dashboard received the item"
+        action: "assert"
+        target: "dashboard_target"
+        asserts:
+          item_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 1
+
+  - name: "Copy Wizard Leaves Original Item In Place"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-COPYWIZ-DS-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create source dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard_source"
+        values:
+          name: "Copy Source Dashboard"
+          code: "DASH-COPYWIZ-SRC-01"
+      - step: "Create destination dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard_target"
+        values:
+          name: "Copy Destination Dashboard"
+          code: "DASH-COPYWIZ-DST-01"
+      - step: "Create item on source dashboard"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item A"
+          dashboard_id: "REC: dashboard_source.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Copy item to destination dashboard through the wizard"
+        action: "wizard"
+        model: "dashboard.item.move"
+        target: "item"
+        values:
+          dashboard_id: "REC: dashboard_target.id"
+          operation: "copy"
+        method: "action_apply"
+      - step: "Assert source dashboard still has its original item"
+        action: "assert"
+        target: "dashboard_source"
+        asserts:
+          item_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 1
+      - step: "Assert destination dashboard received a copy"
+        action: "assert"
+        target: "dashboard_target"
+        asserts:
+          item_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 1
+
+  - name: "Move Wizard By Non Admin User Is Rejected"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-MOVE-NONADMIN-DS-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create source dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard_source"
+        values:
+          name: "Non Admin Source Dashboard"
+          code: "DASH-MOVE-NONADMIN-SRC-01"
+      - step: "Create destination dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard_target"
+        values:
+          name: "Non Admin Destination Dashboard"
+          code: "DASH-MOVE-NONADMIN-DST-01"
+      - step: "Create item on source dashboard"
+        action: "create"
+        model: "dashboard.item"
+        save_as: "item"
+        values:
+          name: "Item A"
+          dashboard_id: "REC: dashboard_source.id"
+          type: "placeholder"
+          data_source_id: "REC: data_source.id"
+      - step: "Create a plain dashboard user (not administrator)"
+        action: "create"
+        model: "res.users"
+        save_as: "dashboard_user"
+        values:
+          name: "Dashboard User"
+          login: "dashboard-user-move-item@example.com"
+          group_ids:
+            - - 6
+              - 0
+              - - "REF: base.group_user"
+                - "REF: ssi_dashboard.group_dashboard_user"
+      - step: "Non admin user applying the wizard must be rejected"
+        action: "wizard"
+        model: "dashboard.item.move"
+        target: "item"
+        as_user: "dashboard_user"
+        values:
+          dashboard_id: "REC: dashboard_target.id"
+          operation: "move"
+        method: "action_apply"
+        expect_error:
+          type: "UserError"
+      - step: "Assert item was not moved"
+        action: "assert"
+        target: "dashboard_source"
+        asserts:
+          item_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 1
