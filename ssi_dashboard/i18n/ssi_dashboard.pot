@@ -96,6 +96,12 @@ msgid "Active"
 msgstr ""
 
 #. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_action/dashboard_action.esm.js:0
+msgid "Active Filters"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__activity_ids
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__activity_ids
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__activity_ids
@@ -170,6 +176,11 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__allow_open_records
 msgid "Allow Open Records"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__allow_pdf_export
+msgid "Allow PDF Export"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1703,6 +1714,12 @@ msgid "No Unit"
 msgstr ""
 
 #. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_action/dashboard_action.esm.js:0
+msgid "No active filters"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_color_scheme__note
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__note
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source__note
@@ -1896,6 +1913,12 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item__item_theme__primary
 msgid "Primary"
+msgstr ""
+
+#. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_action/dashboard_action.esm.js:0
+msgid "Print"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -2278,6 +2301,19 @@ msgid ""
 "Whether the browser shows a button to display this dashboard in fullscreen "
 "mode, hiding the surrounding Odoo backend chrome while keeping the filter "
 "bar and reload button available."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__allow_pdf_export
+msgid ""
+"Whether the browser shows a button to print this dashboard through the "
+"browser's own print dialog (see "
+"'static/src/dashboard_action/dashboard_action.esm.js', 'onPrintClick'), "
+"letting a user save it as PDF or hand it to a physical printer. The print "
+"stylesheet hides the surrounding Odoo backend chrome, the filter bar and "
+"every action button, keeping only this dashboard's title, a summary of the "
+"filters active at the time of printing, and every item — laid out one full-"
+"width column at a time, ignoring their on-screen grid coordinates."
 msgstr ""
 
 #. module: ssi_dashboard
