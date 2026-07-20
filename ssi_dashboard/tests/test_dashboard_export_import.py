@@ -157,6 +157,19 @@ class TestDashboardExportImport(YamlTransactionCase):
         ds_vals = definition["data_sources"][data_source.code]
         self.assertNotIn("query", ds_vals)
 
+    def test_prepare_export_definition_item_excludes_config_key(self):
+        """Skenario Uji regresi ekspor dari issue #53: item yang diekspor
+        tidak lagi memuat kunci 'config'. Field `dashboard.item.config`
+        sudah dihapus dari model, dan `_prepare_export_item_vals()`
+        berhenti menaruhnya ke dict ekspor. Python murni — pemicu P1
+        (L-01, L-02: nilai balik method).
+        """
+        dashboard, _data_source = self._create_dashboard_with_items("NOCONFIG-01")
+        definition = dashboard.prepare_export_definition()
+        self.assertTrue(definition["items"])
+        for item_vals in definition["items"]:
+            self.assertNotIn("config", item_vals)
+
     def test_action_import_roundtrip_creates_matching_items(self):
         """Python murni — pemicu P1 (L-01, L-02).
 
@@ -213,6 +226,26 @@ class TestDashboardExportImport(YamlTransactionCase):
         data_source_1 = dashboard_1.item_ids[0].data_source_id
         data_source_2 = dashboard_2.item_ids[0].data_source_id
         self.assertNotEqual(data_source_1.code, data_source_2.code)
+
+    def test_action_import_ignores_legacy_config_key(self):
+        """Skenario Uji regresi impor dari issue #53: mengimpor sebuah
+        definisi yang masih memuat kunci 'config' pada salah satu item
+        (persis seperti berkas JSON lama yang diekspor sebelum field
+        `dashboard.item.config` dihapus) tidak menyebabkan error saat
+        `action_import()` — kunci itu diabaikan diam-diam, tidak
+        diteruskan ke `dashboard.item.create()` (yang akan menolaknya
+        karena field 'config' sudah tidak ada pada model). Python murni
+        — pemicu P1 (L-01, L-02: nilai balik method / record baru).
+        """
+        dashboard, _data_source = self._create_dashboard_with_items("LEGACYCFG-01")
+        definition = dashboard.prepare_export_definition()
+        definition["items"][0]["config"] = '{"legacy": true}'
+        wizard = self._wizard_from_definition(definition)
+        action = wizard.action_import()
+        new_dashboard = self.env["dashboard.dashboard"].browse(
+            action["context"]["dashboard_id"]
+        )
+        self.assertEqual(len(new_dashboard.item_ids), 2)
 
     def test_action_import_rejects_unknown_schema_version(self):
         """Skenario Uji negatif dari issue: impor berkas ber-
