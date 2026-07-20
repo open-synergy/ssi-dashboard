@@ -110,4 +110,48 @@
         <field name="perm_create" eval="1" />
         <field name="perm_unlink" eval="1" />
     </record>
+
+    <!-- dashboard.layout is a detail/child of dashboard.dashboard: no
+         group/menu of its own, so its access rows live here. -->
+    <record id="dashboard_layout_user_access" model="ir.model.access">
+        <field name="name">dashboard.layout - user</field>
+        <field name="model_id" ref="model_dashboard_layout" />
+        <field name="group_id" ref="group_dashboard_user" />
+        <field name="perm_read" eval="1" />
+        <field name="perm_write" eval="0" />
+        <field name="perm_create" eval="0" />
+        <field name="perm_unlink" eval="0" />
+    </record>
+
+    <record id="dashboard_layout_admin_access" model="ir.model.access">
+        <field name="name">dashboard.layout - admin</field>
+        <field name="model_id" ref="model_dashboard_layout" />
+        <field name="group_id" ref="group_dashboard_admin" />
+        <field name="perm_read" eval="1" />
+        <field name="perm_write" eval="1" />
+        <field name="perm_create" eval="1" />
+        <field name="perm_unlink" eval="1" />
+    </record>
+
+    <!-- dashboard.layout.position is a detail/child of dashboard.layout:
+         no group/menu/view of its own, so its access rows live here. -->
+    <record id="dashboard_layout_position_user_access" model="ir.model.access">
+        <field name="name">dashboard.layout.position - user</field>
+        <field name="model_id" ref="model_dashboard_layout_position" />
+        <field name="group_id" ref="group_dashboard_user" />
+        <field name="perm_read" eval="1" />
+        <field name="perm_write" eval="0" />
+        <field name="perm_create" eval="0" />
+        <field name="perm_unlink" eval="0" />
+    </record>
+
+    <record id="dashboard_layout_position_admin_access" model="ir.model.access">
+        <field name="name">dashboard.layout.position - admin</field>
+        <field name="model_id" ref="model_dashboard_layout_position" />
+        <field name="group_id" ref="group_dashboard_admin" />
+        <field name="perm_read" eval="1" />
+        <field name="perm_write" eval="1" />
+        <field name="perm_create" eval="1" />
+        <field name="perm_unlink" eval="1" />
+    </record>
 </odoo>

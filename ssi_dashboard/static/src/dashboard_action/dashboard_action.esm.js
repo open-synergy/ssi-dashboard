@@ -67,6 +67,25 @@ import {user} from "@web/core/user";
  * and a failed refresh leaves the last successfully loaded data in
  * place while flipping "state.refreshFailed" (see refreshDashboard()).
  *
+ * Also implements alternate layouts (backlog issue #50): when
+ * "dashboard.layouts" has more than one entry, a layout picker (see
+ * "showLayoutPicker") is shown next to the reload button. Picking a
+ * different layout (see "onLayoutChange") re-fetches the payload with
+ * that layout's id as get_dashboard_payload's "layout_id" argument,
+ * changing every item's on-screen coordinates without navigating away
+ * from this action. The currently selected layout is read from
+ * "dashboard.active_layout_id" (part of the reactive payload state
+ * itself, so the picker's own selection always mirrors what the server
+ * actually resolved — see get_dashboard_payload's docstring) and is
+ * carried forward by refreshDashboard()/onFilterChange()/reloadItem()
+ * so switching filters, an automatic/manual refresh, or editing one
+ * item's form never silently drops back to the default layout. Editing
+ * positions through "DashboardLayoutEditor"/"onSaveLayoutClick" always
+ * writes to each item's own base coordinates regardless of which
+ * layout is selected here — dashboard.dashboard.save_layout's
+ * "layout_id" argument exists for other callers, wiring this editor to
+ * it is out of scope for issue #50 (see its "Ruang Lingkup").
+ *
  * Also implements "Print to PDF" (backlog issue #49): a 'Print' button,
  * only shown when "dashboard.allow_pdf_export" (see
  * models/dashboard_dashboard.py's "allow_pdf_export" field), calls the
@@ -135,6 +154,8 @@ export class DashboardAction extends Component {
             refresh_interval: 0,
             fullscreen_enabled: true,
             allow_pdf_export: true,
+            layouts: [],
+            active_layout_id: false,
             items: [],
         });
         this.state = useState({
@@ -189,13 +210,24 @@ export class DashboardAction extends Component {
      * "_resolve_active_filters"), so this keeps working correctly even
      * before the filter bar has ever been touched.
      *
+     * "layoutId" (backlog issue #50) is forwarded to
+     * get_dashboard_payload's own "layout_id" argument as-is; the
+     * server resolves it the same way regardless of what a caller
+     * passes (falls back to the dashboard's own default layout, then to
+     * each item's base coordinates — see get_dashboard_payload's
+     * docstring), so no local resolution is duplicated here. The
+     * resolved "payload.active_layout_id" ends up in "this.dashboard"
+     * through the Object.assign below, which is what the layout picker
+     * itself reads back (see the "value" of its <select>).
+     *
      * @param {Object} [activeFilters]
+     * @param {Number|Boolean} [layoutId]
      */
-    async loadDashboard(activeFilters = null) {
+    async loadDashboard(activeFilters = null, layoutId = null) {
         const payload = await this.orm.call(
             "dashboard.dashboard",
             "get_dashboard_payload",
-            [[this.dashboardId], activeFilters]
+            [[this.dashboardId], activeFilters, layoutId || null]
         );
         this.currentFilters = {
             filter_ids: payload.active_filter_ids,
@@ -207,12 +239,41 @@ export class DashboardAction extends Component {
     }
 
     /**
-     * Bound to DashboardFilterBar's "onChange" prop.
+     * Bound to DashboardFilterBar's "onChange" prop. Keeps whatever
+     * layout is currently selected (see "dashboard.active_layout_id")
+     * instead of silently dropping back to the default layout every
+     * time the filter selection changes.
      *
      * @param {Object} activeFilters
      */
     onFilterChange(activeFilters) {
-        this.loadDashboard(activeFilters);
+        this.loadDashboard(activeFilters, this.dashboard.active_layout_id);
+    }
+
+    get layoutPickerLabel() {
+        return _t("Layout");
+    }
+
+    /**
+     * Whether the layout picker (backlog issue #50) should be shown —
+     * only once this dashboard actually has more than one layout to
+     * choose from (Keputusan Desain), so a dashboard without alternate
+     * layouts renders exactly as before this feature existed.
+     *
+     * @returns {Boolean}
+     */
+    get showLayoutPicker() {
+        return this.dashboard.layouts.length > 1;
+    }
+
+    /**
+     * Bound to the layout picker's "change" event.
+     *
+     * @param {Event} ev
+     */
+    onLayoutChange(ev) {
+        const layoutId = Number(ev.target.value) || null;
+        this.loadDashboard(this.currentFilters, layoutId);
     }
 
     /**
@@ -220,8 +281,10 @@ export class DashboardAction extends Component {
      * currently active on the filter bar, so an automatic or manual
      * refresh never silently drops it back to the server-side default
      * (see models/dashboard_dashboard.py, get_dashboard_payload()'s
-     * docstring). Bound to the manual reload button and to the
-     * auto-refresh timer (autoRefreshTick()).
+     * docstring) — and with "dashboard.active_layout_id", so it never
+     * silently drops back to the default layout either (backlog issue
+     * #50). Bound to the manual reload button and to the auto-refresh
+     * timer (autoRefreshTick()).
      *
      * Unlike loadDashboard(): skips outright when a previous refresh is
      * still in flight ("state.isRefreshing") instead of queueing one,
@@ -235,7 +298,10 @@ export class DashboardAction extends Component {
         }
         this.state.isRefreshing = true;
         try {
-            await this.loadDashboard(this.currentFilters);
+            await this.loadDashboard(
+                this.currentFilters,
+                this.dashboard.active_layout_id
+            );
         } catch {
             this.state.refreshFailed = true;
         } finally {
@@ -648,13 +714,17 @@ export class DashboardAction extends Component {
      * deleted through the dialog), its tile is removed instead of
      * being left showing stale data.
      *
+     * Also reuses "dashboard.active_layout_id" (backlog issue #50), so
+     * the merged entry is positioned exactly like every other tile
+     * currently showing, whichever layout is selected.
+     *
      * @param {Number} itemId
      */
     async reloadItem(itemId) {
         const payload = await this.orm.call(
             "dashboard.dashboard",
             "get_dashboard_payload",
-            [[this.dashboardId], this.currentFilters]
+            [[this.dashboardId], this.currentFilters, this.dashboard.active_layout_id]
         );
         const updated = payload.items.find((item) => item.id === itemId);
         const index = this.dashboard.items.findIndex((item) => item.id === itemId);

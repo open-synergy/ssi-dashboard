@@ -56,6 +56,13 @@
             align-items: center;
             gap: 8px;
             margin-left: auto;
+
+            // Layout picker (backlog issue #50) — capped so a long
+            // layout name never pushes the reload/fullscreen/print
+            // buttons off the header.
+            .o_ssi_dashboard_layout_picker {
+                max-width: 200px;
+            }
         }
     }
 

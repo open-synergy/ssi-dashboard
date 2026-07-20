@@ -1,0 +1,210 @@
+scenarios:
+  - name: "Create Layout"
+    steps:
+      - step: "Create dashboard for layouts"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Layout Test Dashboard"
+          code: "DASH-LAYOUT-DASH-01"
+      - step: "Create layout"
+        action: "create"
+        model: "dashboard.layout"
+        save_as: "layout"
+        values:
+          name: "Executive"
+          dashboard_id: "REC: dashboard.id"
+          sequence: 10
+      - step: "Assert layout created"
+        action: "assert"
+        target: "layout"
+        asserts:
+          id:
+            type: "value"
+            operator: "is_truthy"
+          dashboard_id:
+            type: "m2o"
+            expected: "REC: dashboard"
+          is_default:
+            type: "value"
+            operator: "is_falsy"
+
+  - name: "Default Layout Defaults To False"
+    steps:
+      - step: "Create dashboard for layouts"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Layout Test Dashboard"
+          code: "DASH-LAYOUT-DASH-02"
+      - step: "Create layout without is_default"
+        action: "create"
+        model: "dashboard.layout"
+        save_as: "layout"
+        values:
+          name: "Branch Manager"
+          dashboard_id: "REC: dashboard.id"
+      - step: "Assert is_default is False"
+        action: "assert"
+        target: "layout"
+        asserts:
+          is_default:
+            type: "value"
+            expected: false
+
+  - name: "Edit Layout Name"
+    steps:
+      - step: "Create dashboard for layouts"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Layout Test Dashboard"
+          code: "DASH-LAYOUT-DASH-03"
+      - step: "Create layout"
+        action: "create"
+        model: "dashboard.layout"
+        save_as: "layout"
+        values:
+          name: "Old Label"
+          dashboard_id: "REC: dashboard.id"
+      - step: "Rename layout"
+        action: "write"
+        target: "layout"
+        values:
+          name: "New Label"
+      - step: "Assert name updated"
+        action: "assert"
+        target: "layout"
+        asserts:
+          name:
+            type: "value"
+            expected: "New Label"
+
+  - name: "Delete Layout"
+    steps:
+      - step: "Create dashboard for layouts"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Layout Test Dashboard"
+          code: "DASH-LAYOUT-DASH-04"
+      - step: "Create layout"
+        action: "create"
+        model: "dashboard.layout"
+        save_as: "layout"
+        values:
+          name: "Temporary Layout"
+          dashboard_id: "REC: dashboard.id"
+      - step: "Delete layout"
+        action: "unlink"
+        target: "layout"
+      - step: "Verify deleted"
+        action: "search"
+        model: "dashboard.layout"
+        domain: [["name", "=", "Temporary Layout"]]
+        save_as: "result"
+        expect_count: 0
+
+  - name: "Two Layouts With Different Names On Same Dashboard Are Allowed"
+    steps:
+      - step: "Create dashboard for layouts"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Layout Test Dashboard"
+          code: "DASH-LAYOUT-DASH-05"
+      - step: "Create first layout"
+        action: "create"
+        model: "dashboard.layout"
+        save_as: "layout_one"
+        values:
+          name: "Executive"
+          dashboard_id: "REC: dashboard.id"
+      - step: "Create second layout with different name"
+        action: "create"
+        model: "dashboard.layout"
+        save_as: "layout_two"
+        values:
+          name: "Branch Manager"
+          dashboard_id: "REC: dashboard.id"
+      - step: "Assert both layouts exist"
+        action: "assert"
+        target: "layout_two"
+        asserts:
+          id:
+            type: "value"
+            operator: "is_truthy"
+
+  - name: "Second Default Layout On Same Dashboard Is Rejected"
+    steps:
+      - step: "Create dashboard for layouts"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Layout Test Dashboard"
+          code: "DASH-LAYOUT-DASH-06"
+      - step: "Create default layout"
+        action: "create"
+        model: "dashboard.layout"
+        save_as: "layout_default"
+        values:
+          name: "Executive"
+          dashboard_id: "REC: dashboard.id"
+          is_default: true
+      - step: "Create second default layout must be rejected"
+        action: "create"
+        model: "dashboard.layout"
+        expect_error:
+          type: "ValidationError"
+        values:
+          name: "Branch Manager"
+          dashboard_id: "REC: dashboard.id"
+          is_default: true
+
+  - name: "Unsetting Then Setting Default On Another Layout Is Allowed"
+    steps:
+      - step: "Create dashboard for layouts"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Layout Test Dashboard"
+          code: "DASH-LAYOUT-DASH-07"
+      - step: "Create default layout"
+        action: "create"
+        model: "dashboard.layout"
+        save_as: "layout_default"
+        values:
+          name: "Executive"
+          dashboard_id: "REC: dashboard.id"
+          is_default: true
+      - step: "Create second, non-default layout"
+        action: "create"
+        model: "dashboard.layout"
+        save_as: "layout_other"
+        values:
+          name: "Branch Manager"
+          dashboard_id: "REC: dashboard.id"
+      - step: "Unset default on first layout"
+        action: "write"
+        target: "layout_default"
+        values:
+          is_default: false
+      - step: "Set default on second layout"
+        action: "write"
+        target: "layout_other"
+        values:
+          is_default: true
+      - step: "Assert second layout is now default"
+        action: "assert"
+        target: "layout_other"
+        asserts:
+          is_default:
+            type: "value"
+            expected: true

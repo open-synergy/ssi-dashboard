@@ -10,6 +10,21 @@
                     t-esc="refreshFailedLabel"
                 />
                 <div class="o_ssi_dashboard_header_actions">
+                    <select
+                        t-if="showLayoutPicker &amp;&amp; !state.editMode"
+                        class="form-select form-select-sm o_ssi_dashboard_layout_picker"
+                        t-att-aria-label="layoutPickerLabel"
+                        t-on-change="onLayoutChange"
+                    >
+                        <option
+                            t-foreach="dashboard.layouts"
+                            t-as="layout"
+                            t-key="layout.id"
+                            t-att-value="layout.id"
+                            t-att-selected="layout.id === dashboard.active_layout_id"
+                            t-esc="layout.name"
+                        />
+                    </select>
                     <button
                         type="button"
                         class="btn btn-secondary o_ssi_dashboard_refresh"
