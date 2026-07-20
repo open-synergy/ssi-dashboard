@@ -46,6 +46,14 @@ msgid "'Date Start' must not be after 'Date End'."
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item_move__operation
+msgid ""
+"'Move' reassigns 'Items' to 'Destination Dashboard' in place, removing them "
+"from their current dashboard. 'Copy' instead creates a full duplicate of "
+"each item on 'Destination Dashboard', leaving the originals untouched."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_dashboard__refresh_interval__60
 msgid "1 Minute"
 msgstr ""
@@ -202,6 +210,11 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_item_move_view_form
+msgid "Apply"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sort_order__asc
 msgid "Ascending"
 msgstr ""
@@ -265,6 +278,7 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/ssi_dashboard/static/src/dashboard_layout_editor/dashboard_layout_editor.esm.js:0
 #: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_import_view_form
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_item_move_view_form
 msgid "Cancel"
 msgstr ""
 
@@ -272,7 +286,8 @@ msgstr ""
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__client_action_id
 msgid ""
 "Client action generated for this dashboard's menu item. Managed by "
-"'_sync_menu', do not edit manually."
+"'_sync_menu', do not edit manually. Never copied to a duplicate of this "
+"dashboard — see 'menu_id'."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -399,6 +414,11 @@ msgid "Configure Goals"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item_move__operation__copy
+msgid "Copy"
+msgstr ""
+
+#. module: ssi_dashboard
 #. odoo-python
 #: code:addons/ssi_dashboard/models/dashboard_data_source.py:0
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__aggregate__count
@@ -417,6 +437,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__create_uid
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_move__create_uid
 msgid "Created by"
 msgstr ""
 
@@ -431,6 +452,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__create_date
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_move__create_date
 msgid "Created on"
 msgstr ""
 
@@ -485,6 +507,11 @@ msgstr ""
 #: model:ir.module.category,name:ssi_dashboard.dashboard_module_category
 #: model:res.groups.privilege,name:ssi_dashboard.res_groups_privilege_dashboard
 msgid "Dashboard"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item_move__dashboard_id
+msgid "Dashboard 'Items' are moved or copied to."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -644,6 +671,11 @@ msgid "Descending"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_move__dashboard_id
+msgid "Destination Dashboard"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_filter__sequence
 msgid "Determines the display order of filters on the filter bar."
 msgstr ""
@@ -685,6 +717,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__display_name
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_move__display_name
 msgid "Display Name"
 msgstr ""
 
@@ -1035,6 +1068,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__id
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_move__id
 msgid "ID"
 msgstr ""
 
@@ -1101,6 +1135,11 @@ msgid "Is Follower"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_move__item_ids
+msgid "Item"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__item_border_color
 msgid "Item Border Color"
 msgstr ""
@@ -1119,6 +1158,13 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__item_ids
 #: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_dashboard_view_form
 msgid "Items"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item_move__item_ids
+msgid ""
+"Items being moved or copied. Pre-filled from the list view's current "
+"selection when this wizard is opened through 'Move / Copy Item(s)'."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1246,6 +1292,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__write_uid
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_move__write_uid
 msgid "Last Updated by"
 msgstr ""
 
@@ -1260,6 +1307,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__write_date
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_move__write_date
 msgid "Last Updated on"
 msgstr ""
 
@@ -1373,7 +1421,11 @@ msgstr ""
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__menu_id
 msgid ""
 "Menu item generated for this dashboard. Managed by '_sync_menu', do not edit"
-" manually."
+" manually. Never copied to a duplicate of this dashboard: since "
+"'generate_menu' itself is never copied either (see that field's help), a "
+"copy that still carried this over would point at the *original* dashboard's "
+"menu, and '_sync_menu' running on the copy's own 'create' would then unlink "
+"it out from under the original."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1418,6 +1470,22 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__month_to_date
 msgid "Month to Date"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_item_move__operation__move
+msgid "Move"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model,name:ssi_dashboard.model_dashboard_item_move
+msgid "Move / Copy Dashboard Item(s)"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.actions.act_window,name:ssi_dashboard.dashboard_item_move_action
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_item_move_view_form
+msgid "Move / Copy Item(s)"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1607,6 +1675,11 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_dashboard_view_form
 #: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_dashboard_view_list
 msgid "Open Dashboard"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_move__operation
+msgid "Operation"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -2000,7 +2073,9 @@ msgstr ""
 msgid ""
 "When enabled, this dashboard also shows up as its own menu item under "
 "'Parent Menu', in addition to being reachable from the 'Open Dashboard' "
-"button here."
+"button here. Never copied to a duplicate of this dashboard (see 'copy_data')"
+" — a copy always starts with this off, so duplicating a dashboard never "
+"silently spawns a second menu with the same name."
 msgstr ""
 
 #. module: ssi_dashboard
