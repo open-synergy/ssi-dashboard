@@ -189,6 +189,16 @@ msgid "Allowed Groups"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_dashboard__layout_ids
+msgid ""
+"Alternate arrangements of this dashboard's own 'Items' — every layout shows "
+"the same items, only their coordinates differ (see "
+"'dashboard.layout.position'). Left empty, the dashboard keeps rendering from"
+" each item's own base coordinates, exactly as before this field existed — "
+"see 'get_dashboard_payload'."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.constraint,message:ssi_dashboard.constraint_dashboard_color_scheme_dashboard_color_scheme_code_uniq
 msgid "Another color scheme with that code already exists."
 msgstr ""
@@ -212,6 +222,11 @@ msgstr ""
 #: model:ir.model.constraint,message:ssi_dashboard.constraint_dashboard_item_drilldown_item_id_sequence_uniq
 msgid ""
 "Another drill-down level with that 'Sequence' already exists on this item."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.constraint,message:ssi_dashboard.constraint_dashboard_layout_dashboard_layout_dashboard_name_uniq
+msgid "Another layout with that name already exists on this dashboard."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -370,11 +385,13 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__column_start
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout_position__column_start
 msgid "Column Start"
 msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__column_width
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout_position__column_width
 msgid "Column Width"
 msgstr ""
 
@@ -482,6 +499,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_move__create_uid
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout__create_uid
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout_position__create_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_template__create_uid
 msgid "Created by"
 msgstr ""
@@ -499,6 +518,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_move__create_date
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout__create_date
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout_position__create_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_template__create_date
 msgid "Created on"
 msgstr ""
@@ -551,6 +572,7 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.actions.client,name:ssi_dashboard.dashboard_dashboard_client_action
 #: model:ir.model,name:ssi_dashboard.model_dashboard_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout__dashboard_id
 #: model:ir.module.category,name:ssi_dashboard.dashboard_module_category
 #: model:res.groups.privilege,name:ssi_dashboard.res_groups_privilege_dashboard
 msgid "Dashboard"
@@ -609,6 +631,16 @@ msgid "Dashboard Item Goal"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model,name:ssi_dashboard.model_dashboard_layout
+msgid "Dashboard Layout"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model,name:ssi_dashboard.model_dashboard_layout_position
+msgid "Dashboard Layout Position"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model,name:ssi_dashboard.model_dashboard_template
 msgid "Dashboard Template"
 msgstr ""
@@ -621,6 +653,16 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item_drilldown__item_id
 msgid "Dashboard item this drill-down level belongs to."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_layout_position__item_id
+msgid "Dashboard item this position row overrides the coordinates of."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_layout__dashboard_id
+msgid "Dashboard this alternate layout belongs to."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -732,6 +774,11 @@ msgid "Default Active"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout__is_default
+msgid "Default Layout"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__sort_order__desc
 msgid "Descending"
 msgstr ""
@@ -755,6 +802,11 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__sequence
 msgid "Determines the display order of items on the dashboard."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_layout__sequence
+msgid "Determines the display order of layouts in the layout picker."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -791,6 +843,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_move__display_name
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout__display_name
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout_position__display_name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_template__display_name
 msgid "Display Name"
 msgstr ""
@@ -1108,6 +1162,12 @@ msgid "Has Message"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_layout_position__row_height
+msgid ""
+"Height of this item's tile on this layout, in grid rows. Must be at least 1."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__row_height
 msgid "Height of this item's tile, in grid rows. Must be at least 1."
 msgstr ""
@@ -1148,6 +1208,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_move__id
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout__id
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout_position__id
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_template__id
 msgid "ID"
 msgstr ""
@@ -1231,6 +1293,7 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_move__item_ids
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout_position__item_id
 msgid "Item"
 msgstr ""
 
@@ -1247,6 +1310,14 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__item_theme
 msgid "Item Theme"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_layout__position_ids
+msgid ""
+"Item coordinates specific to this layout. An item of this layout's dashboard"
+" with no row here still renders, using its own base coordinates instead — "
+"see 'dashboard.dashboard.get_dashboard_payload'."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1342,6 +1413,11 @@ msgid "Label shown for this filter on the filter bar."
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_layout__name
+msgid "Label shown for this layout in the layout picker."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__name
 msgid "Label shown on the item's tile."
 msgstr ""
@@ -1389,6 +1465,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_move__write_uid
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout__write_uid
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout_position__write_uid
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_template__write_uid
 msgid "Last Updated by"
 msgstr ""
@@ -1406,6 +1484,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_goal__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_move__write_date
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout__write_date
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout_position__write_date
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_template__write_date
 msgid "Last Updated on"
 msgstr ""
@@ -1423,6 +1503,32 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item_goal__date_end
 msgid "Last date (inclusive) this target's 'Value' applies to."
+msgstr ""
+
+#. module: ssi_dashboard
+#. odoo-javascript
+#: code:addons/ssi_dashboard/static/src/dashboard_action/dashboard_action.esm.js:0
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout_position__layout_id
+msgid "Layout"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_layout__is_default
+msgid ""
+"Layout resolved when the dashboard is opened without explicitly picking one "
+"(see 'get_dashboard_payload'). At most one layout of the same dashboard can "
+"have this set — see '_check_single_default_layout'."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_layout_position__layout_id
+msgid "Layout this position row belongs to."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_dashboard__layout_ids
+#: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_dashboard_view_form
+msgid "Layouts"
 msgstr ""
 
 #. module: ssi_dashboard
@@ -1640,6 +1746,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_data_source_measure__name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__name
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout__name
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_template__name
 msgid "Name"
 msgstr ""
@@ -1882,6 +1989,11 @@ msgid "Placeholder"
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout__position_ids
+msgid "Positions"
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__precision_digits
 msgid "Precision Digits"
 msgstr ""
@@ -1966,11 +2078,13 @@ msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__row_height
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout_position__row_height
 msgid "Row Height"
 msgstr ""
 
 #. module: ssi_dashboard
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__row_start
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout_position__row_start
 msgid "Row Start"
 msgstr ""
 
@@ -1990,6 +2104,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_filter__sequence
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__sequence
 #: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item_drilldown__sequence
+#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_layout__sequence
 msgid "Sequence"
 msgstr ""
 
@@ -2041,11 +2156,24 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_layout_position__column_start
+msgid ""
+"Starting column of this item's tile on this layout's 12-column grid, "
+"0-indexed. Must be between 0 and 11, and 'Column Start' plus 'Column Width' "
+"must not exceed 12."
+msgstr ""
+
+#. module: ssi_dashboard
 #: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__row_start
 msgid ""
 "Starting row of this item's tile on the dashboard grid, 0-indexed. See "
 "'Column Start' for the flowing-placement fallback rule that applies while "
 "this stays 0 on every item of the dashboard."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_layout_position__row_start
+msgid "Starting row of this item's tile on this layout's grid, 0-indexed."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -2161,6 +2289,11 @@ msgstr ""
 #. module: ssi_dashboard
 #: model:ir.model.fields.selection,name:ssi_dashboard.selection__dashboard_data_source__date_range__this_year
 msgid "This Year"
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.constraint,message:ssi_dashboard.constraint_dashboard_layout_position_dashboard_layout_position_la_a108b811
+msgid "This item already has a position on this layout."
 msgstr ""
 
 #. module: ssi_dashboard
@@ -2323,6 +2456,14 @@ msgid ""
 "(see 'prepare_export_data' and 'controllers/export.py'). Untick to disable "
 "download for this item — both export endpoints reject the request outright "
 "when this is off, regardless of what the browser shows."
+msgstr ""
+
+#. module: ssi_dashboard
+#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_layout_position__column_width
+msgid ""
+"Width of this item's tile on this layout, in grid columns out of 12. Must be"
+" between 1 and 12, and 'Column Start' plus 'Column Width' must not exceed "
+"12."
 msgstr ""
 
 #. module: ssi_dashboard
