@@ -118,6 +118,27 @@ class TestDashboardDashboard(YamlTransactionCase):
         self.assertIn("fullscreen_enabled", payload)
         self.assertFalse(payload["fullscreen_enabled"])
 
+    def test_get_dashboard_payload_includes_allow_pdf_export(self):
+        """Python murni — pemicu P1 (L-01, L-02).
+
+        Sama seperti test payload lain di atas: nilai balik method,
+        bukan efek samping pada record (L-01, L-02). Payload harus
+        memuat kunci 'allow_pdf_export' bertipe boolean, persis sama
+        dengan field 'allow_pdf_export' milik dashboard (Kriteria
+        Penerimaan, backlog issue #49).
+        """
+        dashboard = self.env["dashboard.dashboard"].create(
+            {
+                "name": "Pdf Export Payload Dashboard",
+                "code": "DASH-PAYLOAD-PDF-EXPORT-01",
+                "allow_pdf_export": False,
+            }
+        )
+        payload = dashboard.get_dashboard_payload()
+        self.assertIn("allow_pdf_export", payload)
+        self.assertIsInstance(payload["allow_pdf_export"], bool)
+        self.assertFalse(payload["allow_pdf_export"])
+
     def test_action_open_dashboard_returns_client_action(self):
         """Python murni — pemicu P1 (L-01, L-02).
 

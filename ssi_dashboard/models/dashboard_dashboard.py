@@ -152,6 +152,20 @@ class DashboardDashboard(models.Model):
         "backend chrome while keeping the filter bar and reload button "
         "available.",
     )
+    allow_pdf_export = fields.Boolean(
+        string="Allow PDF Export",
+        default=True,
+        help="Whether the browser shows a button to print this dashboard "
+        "through the browser's own print dialog (see "
+        "'static/src/dashboard_action/dashboard_action.esm.js', "
+        "'onPrintClick'), letting a user save it as PDF or hand it to a "
+        "physical printer. The print stylesheet hides the surrounding "
+        "Odoo backend chrome, the filter bar and every action button, "
+        "keeping only this dashboard's title, a summary of the filters "
+        "active at the time of printing, and every item — laid out one "
+        "full-width column at a time, ignoring their on-screen grid "
+        "coordinates.",
+    )
     is_locked = fields.Boolean(
         default=False,
         readonly=True,
@@ -391,7 +405,8 @@ Solution: Locked dashboards cannot be deleted — delete the \
             browser can pre-select them), ``refresh_interval`` (int,
             :attr:`refresh_interval` converted to seconds; ``0`` means
             auto-refresh is off), ``fullscreen_enabled`` (bool,
-            :attr:`fullscreen_enabled` as-is) and ``items`` (list of
+            :attr:`fullscreen_enabled` as-is), ``allow_pdf_export`` (bool,
+            :attr:`allow_pdf_export` as-is) and ``items`` (list of
             :meth:`dashboard.item._prepare_render_payload` results,
             ordered by ``sequence``, each filtered per
             ``active_filters``).
@@ -414,6 +429,7 @@ Solution: Locked dashboards cannot be deleted — delete the \
             "active_filter_ids": resolved_filters["filter_ids"],
             "refresh_interval": int(self.refresh_interval),
             "fullscreen_enabled": self.fullscreen_enabled,
+            "allow_pdf_export": self.allow_pdf_export,
             "items": [
                 item._prepare_render_payload(active_filters=resolved_filters)
                 for item in items

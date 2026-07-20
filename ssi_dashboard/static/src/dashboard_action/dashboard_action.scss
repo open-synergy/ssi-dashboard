@@ -1,3 +1,34 @@
+// Shared by both print triggers below (the "o_ssi_dashboard_print_mode"
+// class set by onPrintClick()/onAfterPrint() in dashboard_action.esm.js,
+// and the "@media print" block further down) so the two never drift
+// apart -- one hides the surrounding backend chrome, the filter bar and
+// every action button, shows the print-only title/filter summary
+// instead, and switches the item grid to a single full-width column,
+// ignoring the on-screen 12-column grid coordinates entirely (Keputusan
+// Desain, backlog issue #49).
+@mixin ssi-dashboard-print-layout {
+    .o_ssi_dashboard_header,
+    .o_ssi_dashboard_filter_bar,
+    .o_ssi_dashboard_item_toolbar,
+    .o_ssi_dashboard_item_drilldown_trail {
+        display: none !important;
+    }
+
+    .o_ssi_dashboard_print_summary {
+        display: block;
+    }
+
+    .o_ssi_dashboard_grid {
+        display: block;
+    }
+
+    .o_ssi_dashboard_item {
+        width: 100%;
+        margin-bottom: 16px;
+        page-break-inside: avoid;
+    }
+}
+
 .o_ssi_dashboard {
     padding: 16px;
     min-height: 100%;
@@ -28,6 +59,25 @@
         }
     }
 
+    // Print-only title + active filter summary (see
+    // dashboard_action.esm.js's "printFilterSummary") -- hidden on
+    // screen, only shown while ".o_ssi_dashboard_print_mode" is set or
+    // while actually printing (see the mixin above).
+    .o_ssi_dashboard_print_summary {
+        display: none;
+        margin-bottom: 16px;
+
+        .o_ssi_dashboard_print_title {
+            margin: 0 0 4px;
+            color: var(--ssi-dashboard-title, inherit);
+        }
+
+        .o_ssi_dashboard_print_filters {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+    }
+
     .o_ssi_dashboard_grid {
         display: grid;
         grid-template-columns: repeat(12, 1fr);
@@ -36,10 +86,33 @@
     }
 
     // Applies while this element is shown through the native Fullscreen
-    // API (see dashboard_action.esm.js, onFullscreenClick()) — the
+    // API (see dashboard_action.esm.js, onFullscreenChange()) — the
     // element already fills the screen at that point, this only makes
     // sure its own content can scroll instead of being clipped.
     &:fullscreen {
         overflow: auto;
+    }
+
+    // Set by onPrintClick()/removed by onAfterPrint() in
+    // dashboard_action.esm.js, right before/after "window.print()" --
+    // applies the same layout as the "@media print" block below on the
+    // screen itself, which is what makes it possible for a tour test to
+    // assert on it (browser test automation cannot emulate "print" media).
+    &.o_ssi_dashboard_print_mode {
+        @include ssi-dashboard-print-layout;
+    }
+}
+
+// Static image dropped in place of a chart's "canvas" right before
+// printing (see dashboard_action.esm.js's "preparePrintSnapshot") --
+// most browsers print an empty box in place of a "canvas" otherwise.
+.o_ssi_dashboard_print_canvas_image {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+@media print {
+    .o_ssi_dashboard {
+        @include ssi-dashboard-print-layout;
     }
 }
