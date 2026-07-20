@@ -73,6 +73,17 @@ class DashboardDashboard(models.Model):
         "filter narrows every item's data on top of that item's own "
         "data source configuration.",
     )
+    layout_ids = fields.One2many(
+        string="Layouts",
+        comodel_name="dashboard.layout",
+        inverse_name="dashboard_id",
+        help="Alternate arrangements of this dashboard's own "
+        "'Items' — every layout shows the same items, only their "
+        "coordinates differ (see 'dashboard.layout.position'). Left "
+        "empty, the dashboard keeps rendering from each item's own base "
+        "coordinates, exactly as before this field existed — see "
+        "'get_dashboard_payload'.",
+    )
     group_ids = fields.Many2many(
         string="Allowed Groups",
         comodel_name="res.groups",
@@ -376,7 +387,7 @@ Solution: Locked dashboards cannot be deleted — delete the \
         else:
             record.menu_id.write(menu_values)
 
-    def get_dashboard_payload(self, active_filters=None):
+    def get_dashboard_payload(self, active_filters=None, layout_id=None):
         """Build the payload the browser uses to render this dashboard.
 
         This is the single entry point called from the browser side.
@@ -395,6 +406,15 @@ Solution: Locked dashboards cannot be deleted — delete the \
             see :meth:`_resolve_active_filters` — so a call made before
             this argument existed keeps behaving exactly the same.
         :type active_filters: dict or None
+        :param layout_id: optional ``dashboard.layout`` id to render
+            item coordinates from (see :meth:`_resolve_active_layout`).
+            ``None`` (the default) — or an id that does not belong to
+            this dashboard's :attr:`layout_ids` — resolves to this
+            dashboard's ``is_default`` layout, falling back to each
+            item's own base coordinates when this dashboard has no
+            layout at all, so a call made before this argument existed
+            keeps behaving exactly the same.
+        :type layout_id: int or None
         :return: dict with keys ``id``, ``name``, ``color_scheme`` (result
             of :meth:`dashboard.color_scheme._prepare_css_variables`, or
             ``{}`` when :attr:`color_scheme_id` is empty), ``filters``
@@ -406,10 +426,17 @@ Solution: Locked dashboards cannot be deleted — delete the \
             :attr:`refresh_interval` converted to seconds; ``0`` means
             auto-refresh is off), ``fullscreen_enabled`` (bool,
             :attr:`fullscreen_enabled` as-is), ``allow_pdf_export`` (bool,
-            :attr:`allow_pdf_export` as-is) and ``items`` (list of
-            :meth:`dashboard.item._prepare_render_payload` results,
-            ordered by ``sequence``, each filtered per
-            ``active_filters``).
+            :attr:`allow_pdf_export` as-is), ``layouts`` (list of dict
+            with keys ``id``/``name``, one per row of :attr:`layout_ids`
+            ordered by ``sequence`` — so the browser can build a layout
+            picker), ``active_layout_id`` (the resolved layout's ``id``,
+            or ``False`` when this dashboard has no layout at all) and
+            ``items`` (list of :meth:`dashboard.item._prepare_render_payload`
+            results, ordered by ``sequence``, each filtered per
+            ``active_filters`` and positioned per the resolved layout —
+            an item with no matching ``dashboard.layout.position`` row on
+            that layout keeps rendering at its own base coordinates,
+            never hidden).
         :rtype: dict
         """
         self.ensure_one()
@@ -419,8 +446,13 @@ Solution: Locked dashboards cannot be deleted — delete the \
             if self.color_scheme_id
             else {}
         )
+        layout = self._resolve_active_layout(layout_id)
+        positions_by_item_id = {
+            position.item_id.id: position for position in layout.position_ids
+        }
         items = self.item_ids.sorted("sequence")
         filters = self.filter_ids.sorted("sequence")
+        layouts = self.layout_ids.sorted("sequence")
         return {
             "id": self.id,
             "name": self.name,
@@ -430,10 +462,64 @@ Solution: Locked dashboards cannot be deleted — delete the \
             "refresh_interval": int(self.refresh_interval),
             "fullscreen_enabled": self.fullscreen_enabled,
             "allow_pdf_export": self.allow_pdf_export,
+            "layouts": [
+                {"id": layout_.id, "name": layout_.name} for layout_ in layouts
+            ],
+            "active_layout_id": layout.id if layout else False,
             "items": [
-                item._prepare_render_payload(active_filters=resolved_filters)
+                item._prepare_render_payload(
+                    active_filters=resolved_filters,
+                    position=self._prepare_item_position_vals(
+                        positions_by_item_id.get(item.id)
+                    ),
+                )
                 for item in items
             ],
+        }
+
+    def _resolve_active_layout(self, layout_id):
+        """Resolve the ``dashboard.layout`` :meth:`get_dashboard_payload`
+        renders item coordinates from.
+
+        :param layout_id: see :meth:`get_dashboard_payload`.
+        :type layout_id: int or None
+        :return: recordset with 0 or 1 record of :attr:`layout_ids` — the
+            row whose ``id`` is ``layout_id`` when it belongs to this
+            dashboard; otherwise the row with ``is_default`` set (at
+            most one, see ``dashboard.layout._check_single_default_layout``);
+            empty when neither matches (including when this dashboard
+            has no layout at all).
+        :rtype: dashboard.layout recordset
+        """
+        self.ensure_one()
+        if layout_id:
+            requested = self.layout_ids.filtered(lambda layout: layout.id == layout_id)
+            if requested:
+                return requested
+        return self.layout_ids.filtered("is_default")
+
+    def _prepare_item_position_vals(self, position):
+        """Build the ``position`` argument passed to
+        ``dashboard.item._prepare_render_payload`` for one item.
+
+        :param position: the ``dashboard.layout.position`` row matching
+            an item on the resolved layout, or ``None``/empty recordset
+            when that item has no row there.
+        :type position: dashboard.layout.position recordset or None
+        :return: dict with keys ``column_start``, ``row_start``,
+            ``column_width``, ``row_height``, or ``None`` when
+            ``position`` is falsy — see
+            ``dashboard.item._prepare_render_payload``'s own ``position``
+            argument for how each is applied.
+        :rtype: dict or None
+        """
+        if not position:
+            return None
+        return {
+            "column_start": position.column_start,
+            "row_start": position.row_start,
+            "column_width": position.column_width,
+            "row_height": position.row_height,
         }
 
     def _resolve_active_filters(self, active_filters):
@@ -467,7 +553,7 @@ Solution: Locked dashboards cannot be deleted — delete the \
             "date_end": active_filters.get("date_end"),
         }
 
-    def save_layout(self, layout):
+    def save_layout(self, layout, layout_id=None):
         """Persist a dashboard layout arranged through the browser's
         drag-and-resize layout editor.
 
@@ -483,17 +569,46 @@ Solution: Locked dashboards cannot be deleted — delete the \
         :param layout: list of dict, one per repositioned/resized item,
             each with keys ``id`` (int, a ``dashboard.item`` id that
             must belong to :attr:`item_ids`), ``column_start``,
-            ``row_start``, ``column_width`` and ``row_height`` (int) —
-            the new values written to that item's fields of the same
-            name. Range constraints on those fields (see
-            ``models/dashboard_item.py``) still apply and raise
+            ``row_start``, ``column_width`` and ``row_height`` (int).
+            Range constraints on those fields (see
+            ``models/dashboard_item.py``/``models/
+            dashboard_layout_position.py``) still apply and raise
             ``ValidationError`` when violated.
         :type layout: list of dict
+        :param layout_id: optional ``dashboard.layout`` id belonging to
+            :attr:`layout_ids`. When filled in, ``layout`` is written to
+            that layout's :attr:`~dashboard.layout.position_ids` instead
+            of this dashboard's own items — see
+            :meth:`_save_layout_to_position`. ``None`` (the default)
+            writes straight to :attr:`item_ids`' own fields, exactly as
+            before this argument existed — see
+            :meth:`_save_layout_to_item`.
+        :type layout_id: int or None
         :return: ``True``
         :rtype: bool
+        :raises UserError: when ``layout_id`` is filled in but does not
+            belong to :attr:`layout_ids` — see
+            :meth:`_check_layout_id`.
         """
         self.ensure_one()
         self._check_save_layout_access()
+        if layout_id:
+            self._save_layout_to_position(layout, layout_id)
+        else:
+            self._save_layout_to_item(layout)
+        return True
+
+    def _save_layout_to_item(self, layout):
+        """Write ``layout`` straight to :attr:`item_ids`' own
+        coordinate fields — :meth:`save_layout`'s behavior when its
+        ``layout_id`` argument is empty, unchanged from before that
+        argument existed.
+
+        :param layout: see :meth:`save_layout`.
+        :type layout: list of dict
+        :return: None
+        """
+        self.ensure_one()
         items_by_id = {item.id: item for item in self.item_ids}
         self._check_layout_item_ids(layout, items_by_id)
         for entry in layout:
@@ -505,7 +620,73 @@ Solution: Locked dashboards cannot be deleted — delete the \
                     "row_height": entry["row_height"],
                 }
             )
-        return True
+
+    def _save_layout_to_position(self, layout, layout_id):
+        """Write ``layout`` to ``layout_id``'s own
+        ``dashboard.layout.position`` rows instead of :attr:`item_ids`'
+        own fields — :meth:`save_layout`'s behavior when its
+        ``layout_id`` argument is filled in.
+
+        :param layout: see :meth:`save_layout`.
+        :type layout: list of dict
+        :param layout_id: see :meth:`save_layout`.
+        :type layout_id: int
+        :return: None
+        :raises UserError: when ``layout_id`` does not belong to
+            :attr:`layout_ids` (see :meth:`_check_layout_id`), or
+            when ``layout`` names an item that does not belong to this
+            dashboard (see :meth:`_check_layout_item_ids`).
+        """
+        self.ensure_one()
+        target_layout = self._check_layout_id(layout_id)
+        items_by_id = {item.id: item for item in self.item_ids}
+        self._check_layout_item_ids(layout, items_by_id)
+        existing_by_item_id = {
+            position.item_id.id: position for position in target_layout.position_ids
+        }
+        Position = self.env["dashboard.layout.position"]
+        for entry in layout:
+            vals = {
+                "column_start": entry["column_start"],
+                "row_start": entry["row_start"],
+                "column_width": entry["column_width"],
+                "row_height": entry["row_height"],
+            }
+            existing = existing_by_item_id.get(entry["id"])
+            if existing:
+                existing.write(vals)
+            else:
+                vals.update({"layout_id": target_layout.id, "item_id": entry["id"]})
+                Position.create(vals)
+
+    def _check_layout_id(self, layout_id):
+        """Raise ``UserError`` unless ``layout_id`` belongs to
+        :attr:`layout_ids`.
+
+        Called by :meth:`_save_layout_to_position` before writing
+        anything, so a ``layout_id`` naming a foreign layout leaves
+        every layout of this dashboard untouched instead of partially
+        applying.
+
+        :param layout_id: see :meth:`save_layout`.
+        :type layout_id: int
+        :return: the matching record of :attr:`layout_ids`.
+        :rtype: dashboard.layout recordset
+        :raises UserError: when ``layout_id`` does not belong to
+            :attr:`layout_ids`.
+        """
+        self.ensure_one()
+        target_layout = self.layout_ids.filtered(lambda layout: layout.id == layout_id)
+        if not target_layout:
+            error_message = f"""
+Context: Save dashboard layout
+Database ID: {self.id}
+Problem: Layout ID {layout_id} sent in 'layout_id' does not belong to this \
+dashboard
+Solution: Reload the dashboard and try arranging the layout again
+"""
+            raise UserError(error_message)
+        return target_layout
 
     def _check_save_layout_access(self):
         """Raise ``UserError`` unless the current user belongs to

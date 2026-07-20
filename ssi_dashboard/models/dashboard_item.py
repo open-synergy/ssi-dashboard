@@ -760,7 +760,7 @@ Solution: Request a level between 0 and {chain_length}
             "border_color": border_color,
         }
 
-    def _prepare_render_payload(self, active_filters=None):
+    def _prepare_render_payload(self, active_filters=None, position=None):
         """Build the payload the browser uses to render this item.
 
         Fetches the item's data through :attr:`data_source_id`, then
@@ -781,6 +781,16 @@ Solution: Request a level between 0 and {chain_length}
             is still computed from its own configuration, regardless of
             the dashboard's active filters.
         :type active_filters: dict or None
+        :param position: dict with any of the keys ``column_start``,
+            ``row_start``, ``column_width``, ``row_height`` — when a key
+            is present, it overrides this item's own field of the same
+            name for this call only, e.g. a ``dashboard.layout.position``
+            row's coordinates (see ``dashboard.dashboard.
+            get_dashboard_payload``). ``None`` (the default) — or a dict
+            missing a given key — falls back to this item's own field,
+            keeping calls made before this argument existed working
+            unchanged.
+        :type position: dict or None
         :return: dict with keys ``id``, ``name``, ``type``,
             ``column_start``, ``row_start``, ``column_width``,
             ``row_height``, ``active``, ``allow_open_records``,
@@ -810,14 +820,15 @@ Solution: Request a level between 0 and {chain_length}
         :rtype: dict
         """
         self.ensure_one()
+        position = position or {}
         payload = {
             "id": self.id,
             "name": self.name,
             "type": self.type,
-            "column_start": self.column_start,
-            "row_start": self.row_start,
-            "column_width": self.column_width,
-            "row_height": self.row_height,
+            "column_start": position.get("column_start", self.column_start),
+            "row_start": position.get("row_start", self.row_start),
+            "column_width": position.get("column_width", self.column_width),
+            "row_height": position.get("row_height", self.row_height),
             "active": self.active,
             "allow_open_records": self.allow_open_records,
             "allow_export": self.allow_export,

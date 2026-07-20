@@ -5,6 +5,7 @@
 from . import test_dashboard_color_scheme
 from . import test_dashboard_data_source
 from . import test_dashboard_filter
+from . import test_dashboard_layout
 from . import test_dashboard_dashboard
 from . import test_dashboard_template
 from . import test_dashboard_item
