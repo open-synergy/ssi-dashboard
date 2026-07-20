@@ -66,6 +66,31 @@ import {user} from "@web/core/user";
  * filter/date-range selection is currently active ("currentFilters"),
  * and a failed refresh leaves the last successfully loaded data in
  * place while flipping "state.refreshFailed" (see refreshDashboard()).
+ *
+ * Also implements "Print to PDF" (backlog issue #49): a 'Print' button,
+ * only shown when "dashboard.allow_pdf_export" (see
+ * models/dashboard_dashboard.py's "allow_pdf_export" field), calls the
+ * browser's own print dialog — no PDF-generating JS library is added.
+ * Pressing it (see onPrintClick()) first adds the
+ * "o_ssi_dashboard_print_mode" class to this component's own root
+ * element ("rootRef"), which the SCSS in "dashboard_action.scss" keys
+ * off (in addition to a matching "@media print" block, for the actual
+ * printed page) to hide the surrounding Odoo backend chrome, the filter
+ * bar and every action button, and to show a print-only summary of this
+ * dashboard's title and its currently active filters
+ * ("printFilterSummary") instead. Every chart's "canvas" element is then
+ * swapped for a static "img" built from that canvas' own "toDataURL()"
+ * (see preparePrintSnapshot()) — most browsers print an empty box in
+ * place of a "canvas" otherwise — and every ".o_ssi_dashboard_item"
+ * tile's current on-screen height is frozen as an inline style, so the
+ * print layout's single full-width column (see the SCSS) still gives
+ * each tile's content a definite height to lay out against, exactly the
+ * height it already had on screen. "window.print()" is only called once
+ * all of that is in place. The browser's own "afterprint" event (see
+ * onAfterPrint()) restores every canvas/height and removes the print
+ * mode class once the print dialog is dismissed — printing whatever
+ * drill-down level an item currently shows, since nothing here resets
+ * "DashboardItem"'s own "drilldown" state.
  */
 export class DashboardAction extends Component {
     static template = "ssi_dashboard.DashboardAction";
@@ -93,8 +118,15 @@ export class DashboardAction extends Component {
         // rendered directly itself.
         this.currentFilters = null;
         this.refreshTimerId = null;
+        // Non-reactive on purpose, same reasoning as "currentFilters":
+        // one cleanup closure per element touched by preparePrintSnapshot()
+        // (canvas → img swaps, frozen tile heights), popped and run by
+        // restorePrintSnapshot() — never rendered, so it does not need to
+        // go through useState().
+        this.printRestoreQueue = [];
         this.onVisibilityChange = this.onVisibilityChange.bind(this);
         this.onFullscreenChange = this.onFullscreenChange.bind(this);
+        this.onAfterPrint = this.onAfterPrint.bind(this);
         this.dashboard = useState({
             name: "",
             color_scheme: {},
@@ -102,6 +134,7 @@ export class DashboardAction extends Component {
             active_filter_ids: [],
             refresh_interval: 0,
             fullscreen_enabled: true,
+            allow_pdf_export: true,
             items: [],
         });
         this.state = useState({
@@ -125,6 +158,10 @@ export class DashboardAction extends Component {
         );
         onWillUnmount(() =>
             document.removeEventListener("fullscreenchange", this.onFullscreenChange)
+        );
+        onMounted(() => window.addEventListener("afterprint", this.onAfterPrint));
+        onWillUnmount(() =>
+            window.removeEventListener("afterprint", this.onAfterPrint)
         );
     }
 
@@ -336,6 +373,153 @@ export class DashboardAction extends Component {
      */
     onFullscreenChange() {
         this.state.isFullscreen = document.fullscreenElement === this.rootRef.el;
+    }
+
+    get printLabel() {
+        return _t("Print");
+    }
+
+    get printFilterSummaryLabel() {
+        return _t("Active Filters");
+    }
+
+    get noActiveFiltersLabel() {
+        return _t("No active filters");
+    }
+
+    /**
+     * Names of "dashboard.filters" currently active, in the order the
+     * filter bar itself lists them — the toggleable-chip part of
+     * "printFilterSummary".
+     *
+     * @returns {Array}
+     */
+    get activePrintFilterNames() {
+        const activeIds = new Set(this.dashboard.active_filter_ids || []);
+        return this.dashboard.filters
+            .filter((filter) => activeIds.has(filter.id))
+            .map((filter) => filter.name);
+    }
+
+    /**
+     * Human-readable date range part of "printFilterSummary", built from
+     * "currentFilters" (see loadDashboard()) — the same selection every
+     * tile on screen was last rendered with. Empty string when neither
+     * bound is set, so "printFilterSummary" can skip it entirely.
+     *
+     * @returns {String}
+     */
+    get printDateRangeText() {
+        const dateStart = this.currentFilters && this.currentFilters.date_start;
+        const dateEnd = this.currentFilters && this.currentFilters.date_end;
+        if (!dateStart && !dateEnd) {
+            return "";
+        }
+        return `${dateStart || "…"} – ${dateEnd || "…"}`;
+    }
+
+    /**
+     * Single-line summary of every filter active at the time of
+     * printing — required to print alongside this dashboard's title
+     * (Keputusan Desain, backlog issue #49: a PDF without it is a set
+     * of numbers with no context). Rendered by the print-only
+     * ".o_ssi_dashboard_print_summary" block (see the template).
+     *
+     * @returns {String}
+     */
+    get printFilterSummary() {
+        const parts = [...this.activePrintFilterNames];
+        const dateRange = this.printDateRangeText;
+        if (dateRange) {
+            parts.push(dateRange);
+        }
+        return parts.length ? parts.join(", ") : this.noActiveFiltersLabel;
+    }
+
+    /**
+     * Bound to the 'Print' button, only shown when
+     * "dashboard.allow_pdf_export" (see models/dashboard_dashboard.py's
+     * "allow_pdf_export" field). See the class docstring for the full
+     * sequence — this only orders the three steps.
+     */
+    onPrintClick() {
+        this.rootRef.el.classList.add("o_ssi_dashboard_print_mode");
+        this.preparePrintSnapshot();
+        window.print();
+    }
+
+    /**
+     * Prepares this dashboard's current DOM for printing, right before
+     * "onPrintClick" calls "window.print()":
+     *
+     * - Every ".o_ssi_dashboard_item" tile's current on-screen height is
+     *   frozen as an inline "height" (restored afterwards) — the print
+     *   layout switches the grid to a single full-width column (see the
+     *   SCSS), so a tile's content can no longer size itself off the
+     *   original CSS grid area; freezing the height it already had on
+     *   screen keeps every chart's container a non-zero size instead.
+     * - Every "canvas" element (drawn by chart item widgets such as
+     *   "ssi_dashboard_item_chart") is replaced by a same-sized "img"
+     *   built from that canvas' own "toDataURL()", and the canvas itself
+     *   is hidden — most browsers print an empty box in place of a
+     *   "canvas" otherwise.
+     *
+     * Every change made here is paired with a matching restore closure
+     * pushed onto "this.printRestoreQueue", popped and run in order by
+     * "restorePrintSnapshot()" once "onAfterPrint" fires.
+     */
+    preparePrintSnapshot() {
+        const gridEl = this.gridRef.el;
+        if (!gridEl) {
+            return;
+        }
+        gridEl.querySelectorAll(":scope > .o_ssi_dashboard_item").forEach((itemEl) => {
+            const height = itemEl.getBoundingClientRect().height;
+            const previousHeight = itemEl.style.height;
+            itemEl.style.height = `${height}px`;
+            this.printRestoreQueue.push(() => {
+                itemEl.style.height = previousHeight;
+            });
+        });
+        gridEl.querySelectorAll("canvas").forEach((canvas) => {
+            let dataUrl = null;
+            try {
+                dataUrl = canvas.toDataURL("image/png");
+            } catch {
+                return;
+            }
+            const image = document.createElement("img");
+            image.src = dataUrl;
+            image.className = "o_ssi_dashboard_print_canvas_image";
+            canvas.insertAdjacentElement("afterend", image);
+            const previousDisplay = canvas.style.display;
+            canvas.style.display = "none";
+            this.printRestoreQueue.push(() => {
+                canvas.style.display = previousDisplay;
+                image.remove();
+            });
+        });
+    }
+
+    /**
+     * Runs every restore closure queued by "preparePrintSnapshot()", in
+     * reverse (last change made, first undone), and empties the queue.
+     */
+    restorePrintSnapshot() {
+        while (this.printRestoreQueue.length) {
+            this.printRestoreQueue.pop()();
+        }
+    }
+
+    /**
+     * Bound to the browser's own "afterprint" event (see setup()),
+     * fired once the print dialog is dismissed regardless of how it was
+     * opened. Always safe to call even when "onPrintClick" was never
+     * pressed — "printRestoreQueue" is simply empty in that case.
+     */
+    onAfterPrint() {
+        this.rootRef.el.classList.remove("o_ssi_dashboard_print_mode");
+        this.restorePrintSnapshot();
     }
 
     /**

@@ -31,7 +31,21 @@
                         t-on-click="onFullscreenClick"
                         t-esc="fullscreenLabel"
                     />
+                    <button
+                        t-if="dashboard.allow_pdf_export"
+                        type="button"
+                        class="btn btn-secondary o_ssi_dashboard_print"
+                        t-on-click="onPrintClick"
+                        t-esc="printLabel"
+                    />
                 </div>
+            </div>
+            <div class="o_ssi_dashboard_print_summary">
+                <h2 class="o_ssi_dashboard_print_title" t-esc="dashboard.name" />
+                <p class="o_ssi_dashboard_print_filters">
+                    <strong t-esc="printFilterSummaryLabel" />:
+                    <span t-esc="printFilterSummary" />
+                </p>
             </div>
             <t t-if="!state.editMode">
                 <DashboardFilterBar

@@ -796,3 +796,42 @@ scenarios:
             type: "o2m"
             check: "count"
             expected_count: 2
+
+  - name: "Creating Dashboard Defaults Allow Pdf Export To True"
+    steps:
+      - step: "Create dashboard without setting allow_pdf_export"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Default Pdf Export Dashboard"
+          code: "DASH-PDF-EXPORT-DEFAULT-01"
+      - step: "Assert allow_pdf_export defaults to True"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          allow_pdf_export:
+            type: "value"
+            operator: "is_truthy"
+
+  - name: "Writing Allow Pdf Export False Is Accepted"
+    steps:
+      - step: "Create dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Pdf Export Toggle Dashboard"
+          code: "DASH-PDF-EXPORT-WRITE-01"
+      - step: "Write allow_pdf_export to False"
+        action: "write"
+        target: "dashboard"
+        values:
+          allow_pdf_export: false
+      - step: "Assert allow_pdf_export was saved as False"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          allow_pdf_export:
+            type: "value"
+            operator: "is_falsy"

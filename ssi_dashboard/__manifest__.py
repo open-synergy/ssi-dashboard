@@ -48,5 +48,8 @@
             "ssi_dashboard/static/src/dashboard_item_preview/*",
             "ssi_dashboard/static/src/dashboard_layout_editor/*",
         ],
+        "web.assets_tests": [
+            "ssi_dashboard/static/tests/tours/*",
+        ],
     },
 }

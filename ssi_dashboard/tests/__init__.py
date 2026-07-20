@@ -13,3 +13,4 @@ from . import test_dashboard_item_move
 from . import test_dashboard_item_export
 from . import test_controller_export
 from . import test_dashboard_export_import
+from . import test_dashboard_print_tour
