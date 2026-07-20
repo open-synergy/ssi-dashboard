@@ -1,0 +1,120 @@
+scenarios:
+  - name: "Create Template"
+    steps:
+      - step: "Create source dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "source_dashboard"
+        values:
+          name: "Mold Dashboard"
+          code: "TPL-CREATE-SOURCE-01"
+      - step: "Create template"
+        action: "create"
+        model: "dashboard.template"
+        save_as: "template"
+        values:
+          name: "Sales Mold"
+          code: "TPL-CREATE-01"
+          source_dashboard_id: "REC: source_dashboard.id"
+      - step: "Assert created"
+        action: "assert"
+        target: "template"
+        asserts:
+          id:
+            type: "value"
+            operator: "is_truthy"
+          name:
+            type: "value"
+            expected: "Sales Mold"
+          source_dashboard_id:
+            type: "m2o"
+            expected: "REC: source_dashboard"
+
+  - name: "Edit Template Name"
+    steps:
+      - step: "Create source dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "source_dashboard"
+        values:
+          name: "Mold Dashboard"
+          code: "TPL-EDIT-SOURCE-01"
+      - step: "Create template"
+        action: "create"
+        model: "dashboard.template"
+        save_as: "template"
+        values:
+          name: "Sales Mold"
+          code: "TPL-EDIT-01"
+          source_dashboard_id: "REC: source_dashboard.id"
+      - step: "Write new name"
+        action: "write"
+        target: "template"
+        values:
+          name: "Sales Mold v2"
+      - step: "Assert name updated"
+        action: "assert"
+        target: "template"
+        asserts:
+          name:
+            type: "value"
+            expected: "Sales Mold v2"
+
+  - name: "Delete Template"
+    steps:
+      - step: "Create source dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "source_dashboard"
+        values:
+          name: "Mold Dashboard"
+          code: "TPL-DELETE-SOURCE-01"
+      - step: "Create template"
+        action: "create"
+        model: "dashboard.template"
+        save_as: "template"
+        values:
+          name: "Temporary"
+          code: "TPL-DELETE-01"
+          source_dashboard_id: "REC: source_dashboard.id"
+      - step: "Delete template"
+        action: "unlink"
+        target: "template"
+      - step: "Verify deleted"
+        action: "search"
+        model: "dashboard.template"
+        domain: [["code", "=", "TPL-DELETE-01"]]
+        save_as: "result"
+        expect_count: 0
+
+  - name: "Creating Template Locks Source Dashboard"
+    steps:
+      - step: "Create source dashboard (unlocked)"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "source_dashboard"
+        values:
+          name: "Unlocked Mold"
+          code: "TPL-LOCK-SOURCE-01"
+      - step: "Assert source starts unlocked"
+        action: "assert"
+        target: "source_dashboard"
+        asserts:
+          is_locked:
+            type: "value"
+            expected: false
+      - step: "Create template referencing the source"
+        action: "create"
+        model: "dashboard.template"
+        save_as: "template"
+        values:
+          name: "Mold Template"
+          code: "TPL-LOCK-TEMPLATE-01"
+          source_dashboard_id: "REC: source_dashboard.id"
+      - step: "Assert source dashboard is now locked"
+        action: "assert"
+        target: "source_dashboard"
+        asserts:
+          is_locked:
+            type: "value"
+            expected: true

@@ -7,14 +7,21 @@ Dashboard
 =========
 
 Core module of the SSI Dashboard framework. Provides the ``dashboard.dashboard``,
-``dashboard.item``, ``dashboard.data_source`` and ``dashboard.color_scheme`` models,
-with three extension seams (item type, data source type, color scheme) that other
-modules build on without editing this one: new tile kinds add a
-``dashboard.item.type`` selection value plus a matching
+``dashboard.item``, ``dashboard.data_source``, ``dashboard.color_scheme`` and
+``dashboard.template`` models, with three extension seams (item type, data source
+type, color scheme) that other modules build on without editing this one: new tile
+kinds add a ``dashboard.item.type`` selection value plus a matching
 ``_prepare_render_payload_<type>`` method, new data feeds add a
 ``dashboard.data_source.type`` selection value plus a matching
 ``_fetch_data_<type>`` method, and new palettes are just
 ``dashboard.color_scheme`` records.
+
+A ``dashboard.template`` points at a ``dashboard.dashboard`` that acts as its mold;
+the ``dashboard.create.from.template`` wizard duplicates that mold into a new
+dashboard with its own name/code. A dashboard referenced this way, and this
+module's own built-in "My Dashboard", are marked ``is_locked``: their ``Code``
+cannot be changed and they cannot be deleted, though their name, items and layout
+stay freely editable.
 
 This module ships one built-in data source type (``orm``, reading an Odoo model
 through ``_read_group``) and one built-in item type (``placeholder``) so it can be
