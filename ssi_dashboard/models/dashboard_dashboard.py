@@ -81,9 +81,13 @@ class DashboardDashboard(models.Model):
     )
     generate_menu = fields.Boolean(
         default=False,
+        copy=False,
         help="When enabled, this dashboard also shows up as its own menu "
         "item under 'Parent Menu', in addition to being reachable from "
-        "the 'Open Dashboard' button here.",
+        "the 'Open Dashboard' button here. Never copied to a duplicate "
+        "of this dashboard (see 'copy_data') — a copy always starts "
+        "with this off, so duplicating a dashboard never silently "
+        "spawns a second menu with the same name.",
     )
     menu_name = fields.Char(
         help="Label of the generated menu item. Leave empty to reuse this "
@@ -105,16 +109,24 @@ class DashboardDashboard(models.Model):
         comodel_name="ir.ui.menu",
         readonly=True,
         ondelete="set null",
+        copy=False,
         help="Menu item generated for this dashboard. Managed by "
-        "'_sync_menu', do not edit manually.",
+        "'_sync_menu', do not edit manually. Never copied to a "
+        "duplicate of this dashboard: since 'generate_menu' itself is "
+        "never copied either (see that field's help), a copy that "
+        "still carried this over would point at the *original* "
+        "dashboard's menu, and '_sync_menu' running on the copy's own "
+        "'create' would then unlink it out from under the original.",
     )
     client_action_id = fields.Many2one(
         string="Generated Client Action",
         comodel_name="ir.actions.client",
         readonly=True,
         ondelete="set null",
+        copy=False,
         help="Client action generated for this dashboard's menu item. "
-        "Managed by '_sync_menu', do not edit manually.",
+        "Managed by '_sync_menu', do not edit manually. Never copied "
+        "to a duplicate of this dashboard — see 'menu_id'.",
     )
     refresh_interval = fields.Selection(
         string="Auto-Refresh Interval",
@@ -181,6 +193,48 @@ Solution: Set 'Parent Menu' or disable 'Generate Menu'
             if record.client_action_id:
                 record.client_action_id.sudo().unlink()
         return super().unlink()
+
+    def copy_data(self, default=None):
+        """Build this dashboard's own copy vals for :meth:`copy`
+        (inherited from ``mixin.master_data``, which suffixes ``code``
+        with ``" (copy)"`` through ``default`` before calling this).
+
+        Rebuilds :attr:`item_ids` and :attr:`filter_ids` explicitly —
+        both left out of the default result, since a One2many's
+        ``copy`` attribute defaults to ``False`` in the ORM (see
+        ``odoo.fields.One2many``). Without this override, duplicating a
+        dashboard would leave the copy's 'Items'/'Filters' empty.
+
+        Every model detail nested under an item (:attr:`dashboard.item.
+        goal_ids`, :attr:`~dashboard.item.drilldown_ids` — themselves
+        One2many, same reasoning) is rebuilt the same way, one level
+        down, by :meth:`dashboard.item._prepare_copy_vals`. Extension
+        modules that add their own one2many detail field to
+        ``dashboard.item`` (e.g. ``ssi_dashboard_item_list``'s
+        ``column_ids``) extend copying by overriding that method
+        instead of this one.
+
+        :attr:`generate_menu`, :attr:`menu_id` and
+        :attr:`client_action_id` need no handling here — they are
+        excluded from copying at the field level (``copy=False``, see
+        their own definitions), so a duplicate always starts with
+        'Generate Menu' off and no menu/action of its own.
+
+        :param default: see ``models.Model.copy_data``.
+        :type default: dict or None
+        :return: list of vals dict, one per record of ``self``, in the
+            same order.
+        :rtype: list
+        """
+        vals_list = super().copy_data(default=default)
+        for dashboard, vals in zip(self, vals_list, strict=True):
+            vals["item_ids"] = [
+                (0, 0, item._prepare_copy_vals()) for item in dashboard.item_ids
+            ]
+            vals["filter_ids"] = [
+                (0, 0, filter_vals) for filter_vals in dashboard.filter_ids.copy_data()
+            ]
+        return vals_list
 
     def _sync_menu(self):
         """Reconcile :attr:`menu_id`/:attr:`client_action_id` with the

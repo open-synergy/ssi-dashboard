@@ -22,6 +22,7 @@
         "security/ir_model_access/dashboard_data_source.xml",
         "security/ir_model_access/dashboard_color_scheme.xml",
         "security/ir_model_access/dashboard_import.xml",
+        "security/ir_model_access/dashboard_item_move.xml",
         "security/ir_rule/dashboard_dashboard.xml",
         "security/ir_rule/dashboard_data_source.xml",
         "menu.xml",
@@ -30,6 +31,7 @@
         "views/dashboard_item.xml",
         "views/dashboard_dashboard.xml",
         "wizard/dashboard_import_views.xml",
+        "wizard/dashboard_item_move_views.xml",
     ],
     "assets": {
         "web.assets_backend": [

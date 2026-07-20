@@ -223,6 +223,50 @@ class DashboardItem(models.Model):
         "and only shown, when 'Item Theme' is 'Custom Colors'.",
     )
 
+    def _prepare_copy_vals(self):
+        """Build this item's own ``(0, 0, vals)`` payload for
+        ``dashboard.dashboard.copy_data``'s ``item_ids`` key — also
+        reused directly by ``dashboard.item.move``'s copy operation
+        (see ``_apply_copy``).
+
+        Starts from :meth:`copy_data`'s own result, then rebuilds
+        :attr:`goal_ids` and :attr:`drilldown_ids` explicitly — both
+        left out of the default result, since a One2many's ``copy``
+        attribute defaults to ``False`` in the ORM, the exact same
+        reasoning ``dashboard.dashboard.copy_data`` applies to
+        :attr:`~dashboard.dashboard.item_ids` itself.
+
+        :attr:`dashboard_id` is left pointing at this item's current
+        dashboard in the returned vals; that is harmless wherever this
+        method is used — when nested as a ``(0, 0, ...)``/``(0, 0,
+        ...)`` command under a *different* dashboard's own
+        :attr:`~dashboard.dashboard.item_ids`, the ORM reassigns a
+        one2many child's inverse field to its actual new parent
+        regardless of what the child's own vals carries for it (the
+        same mechanism ``models.BaseModel.copy_data`` itself relies on
+        for one2many lines); when used directly by ``dashboard.item.
+        move``, the caller overrides ``dashboard_id`` in the vals
+        before calling ``create``.
+
+        Extension modules that add their own one2many detail field to
+        this model (e.g. ``ssi_dashboard_item_list``'s
+        :attr:`column_ids`) extend copying the same way: override this
+        method, call ``super()._prepare_copy_vals()``, and add their
+        own key to the returned dict.
+
+        :return: dict accepted by ``dashboard.item.create``.
+        :rtype: dict
+        """
+        self.ensure_one()
+        vals = self.copy_data()[0]
+        vals["goal_ids"] = [
+            (0, 0, goal_vals) for goal_vals in self.goal_ids.copy_data()
+        ]
+        vals["drilldown_ids"] = [
+            (0, 0, drilldown_vals) for drilldown_vals in self.drilldown_ids.copy_data()
+        ]
+        return vals
+
     def _is_data_source_required(self):
         """Whether :attr:`data_source_id` must be filled in for this
         item's :attr:`type`.
