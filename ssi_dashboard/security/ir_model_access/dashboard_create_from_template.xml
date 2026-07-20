@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<odoo>
+    <!-- Restricted to 'Administrator' only, per the module's backlog
+         item — unlike 'dashboard.item.move', this wizard has no
+         explicit group check of its own inside 'action_create', so
+         'Create' access must be gated here. The bound action's own
+         'group_ids' also keeps the 'Create Dashboard from Template'
+         entry out of a plain user's 'Action' menu in the UI. -->
+    <record id="dashboard_create_from_template_admin_access" model="ir.model.access">
+        <field name="name">dashboard.create.from.template - admin</field>
+        <field name="model_id" ref="model_dashboard_create_from_template" />
+        <field name="group_id" ref="group_dashboard_admin" />
+        <field name="perm_read" eval="1" />
+        <field name="perm_write" eval="1" />
+        <field name="perm_create" eval="1" />
+        <field name="perm_unlink" eval="1" />
+    </record>
+</odoo>

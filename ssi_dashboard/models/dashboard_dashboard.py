@@ -152,6 +152,23 @@ class DashboardDashboard(models.Model):
         "backend chrome while keeping the filter bar and reload button "
         "available.",
     )
+    is_locked = fields.Boolean(
+        default=False,
+        readonly=True,
+        copy=False,
+        help="Marks this dashboard as protected: 'unlink' rejects "
+        "deleting it (see '_check_unlink_not_locked') and 'write' "
+        "rejects changing its 'Code' while this is set (see "
+        "'_check_write_code_not_locked'). 'Name', items and layout "
+        "stay freely editable either way — locking protects this "
+        "record's identity, not its content. Set on this module's "
+        "built-in 'My Dashboard' and on every dashboard referenced by "
+        "a 'dashboard.template' (see that model's 'source_dashboard_id' "
+        "and '_lock_source_dashboard'). Never copied to a duplicate of "
+        "this dashboard ('copy=False') — a copy is a brand new record "
+        "no template points at yet, so it always starts unlocked. Never "
+        "set through the UI directly (read-only).",
+    )
 
     @api.constrains("generate_menu", "parent_menu_id")
     def _check_generate_menu_parent(self):
@@ -180,19 +197,72 @@ Solution: Set 'Parent Menu' or disable 'Generate Menu'
         return records
 
     def write(self, vals):
+        if "code" in vals:
+            self._check_write_code_not_locked()
         result = super().write(vals)
         if self._menu_sync_fields & set(vals):
             for record in self:
                 record._sync_menu()
         return result
 
+    def _check_write_code_not_locked(self):
+        """Raise ``UserError`` for any record of ``self`` whose
+        :attr:`is_locked` is set.
+
+        Called by :meth:`write` itself, only when ``'code'`` is one of
+        the keys being written — locking never blocks any other field,
+        including 'Name', items or layout (see :attr:`is_locked`'s own
+        help).
+
+        :return: None
+        :raises UserError: when at least one record of ``self`` is
+            locked.
+        """
+        for record in self:
+            if record.is_locked:
+                error_message = f"""
+Document Type: {record._description}
+Context: Update dashboard
+Database ID: {record.id}
+Problem: Dashboard is locked ('is_locked' is enabled), 'Code' cannot be \
+changed
+Solution: Leave 'Code' unchanged — locking protects this record's \
+identity, which 'dashboard.template' and other records rely on
+"""
+                raise UserError(error_message)
+
     def unlink(self):
+        self._check_unlink_not_locked()
         for record in self:
             if record.menu_id:
                 record.menu_id.sudo().unlink()
             if record.client_action_id:
                 record.client_action_id.sudo().unlink()
         return super().unlink()
+
+    def _check_unlink_not_locked(self):
+        """Raise ``UserError`` for any record of ``self`` whose
+        :attr:`is_locked` is set.
+
+        Called by :meth:`unlink` itself, before it touches the menu/
+        client action of any record in ``self`` — a locked dashboard
+        stays fully intact, not partially torn down.
+
+        :return: None
+        :raises UserError: when at least one record of ``self`` is
+            locked.
+        """
+        for record in self:
+            if record.is_locked:
+                error_message = f"""
+Document Type: {record._description}
+Context: Delete dashboard
+Database ID: {record.id}
+Problem: Dashboard is locked ('is_locked' is enabled)
+Solution: Locked dashboards cannot be deleted — delete the \
+'dashboard.template' or other record protecting it instead
+"""
+                raise UserError(error_message)
 
     def copy_data(self, default=None):
         """Build this dashboard's own copy vals for :meth:`copy`

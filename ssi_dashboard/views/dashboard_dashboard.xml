@@ -28,6 +28,7 @@
             <data>
                 <xpath expr="//field[@name='name']" position="after">
                     <field name="color_scheme_id" optional="show" />
+                    <field name="is_locked" optional="hide" widget="boolean_toggle" />
                 </xpath>
                 <xpath expr="//list" position="inside">
                     <button
@@ -129,6 +130,7 @@
                             <field name="group_ids" widget="many2many_tags" />
                             <field name="refresh_interval" />
                             <field name="fullscreen_enabled" />
+                            <field name="is_locked" widget="boolean_toggle" />
                         </group>
                         <group name="dashboard_dashboard_menu" string="Menu">
                             <field name="generate_menu" />

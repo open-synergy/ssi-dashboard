@@ -11,3 +11,4 @@ from . import dashboard_item_drilldown  # noqa: F401
 from . import dashboard_item  # noqa: F401
 from . import dashboard_filter  # noqa: F401
 from . import dashboard_dashboard  # noqa: F401
+from . import dashboard_template  # noqa: F401

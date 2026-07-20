@@ -649,3 +649,150 @@ scenarios:
               row_start: 1
               column_width: 4
               row_height: 1
+
+  - name: "Built-In My Dashboard Is Locked With Two Items"
+    steps:
+      - step: "Find the built-in My Dashboard"
+        action: "search"
+        model: "dashboard.dashboard"
+        domain: [["name", "=", "My Dashboard"]]
+        save_as: "my_dashboard"
+        expect_count: 1
+      - step: "Assert locked with two items"
+        action: "assert"
+        target: "my_dashboard"
+        asserts:
+          is_locked:
+            type: "value"
+            expected: true
+          item_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 2
+
+  - name: "Unlink Locked Dashboard Is Rejected"
+    steps:
+      - step: "Create locked dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Locked Dashboard"
+          code: "DASH-LOCK-UNLINK-01"
+          is_locked: true
+      - step: "Unlink must be rejected"
+        action: "unlink"
+        target: "dashboard"
+        expect_error:
+          type: "UserError"
+          message_contains: "locked"
+
+  - name: "Write Code On Locked Dashboard Is Rejected"
+    steps:
+      - step: "Create locked dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Locked Dashboard"
+          code: "DASH-LOCK-CODE-01"
+          is_locked: true
+      - step: "Write new code must be rejected"
+        action: "write"
+        target: "dashboard"
+        expect_error:
+          type: "UserError"
+          message_contains: "locked"
+        values:
+          code: "DASH-LOCK-CODE-02"
+
+  - name: "Write Name On Locked Dashboard Is Allowed"
+    steps:
+      - step: "Create locked dashboard"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "dashboard"
+        values:
+          name: "Locked Dashboard"
+          code: "DASH-LOCK-NAME-01"
+          is_locked: true
+      - step: "Write new name is allowed"
+        action: "write"
+        target: "dashboard"
+        values:
+          name: "Renamed Locked Dashboard"
+      - step: "Assert name updated"
+        action: "assert"
+        target: "dashboard"
+        asserts:
+          name:
+            type: "value"
+            expected: "Renamed Locked Dashboard"
+
+  - name: "Create Dashboard From Template Wizard"
+    steps:
+      - step: "Get res.partner model"
+        action: "ref"
+        xml_id: "base.model_res_partner"
+        save_as: "res_partner_model"
+      - step: "Create data source for items"
+        action: "create"
+        model: "dashboard.data_source"
+        save_as: "data_source"
+        values:
+          name: "Partners"
+          code: "DASH-TEMPLATE-WIZ-DS-01"
+          type: "orm"
+          model_id: "REC: res_partner_model.id"
+      - step: "Create source dashboard with two items"
+        action: "create"
+        model: "dashboard.dashboard"
+        save_as: "source_dashboard"
+        values:
+          name: "Mold Dashboard"
+          code: "DASH-TEMPLATE-WIZ-SOURCE-01"
+          item_ids:
+            - - 0
+              - 0
+              - name: "Item A"
+                type: "placeholder"
+                data_source_id: "REC: data_source.id"
+            - - 0
+              - 0
+              - name: "Item B"
+                type: "placeholder"
+                data_source_id: "REC: data_source.id"
+      - step: "Create template from source dashboard"
+        action: "create"
+        model: "dashboard.template"
+        save_as: "template"
+        values:
+          name: "Mold Template"
+          code: "DASH-TEMPLATE-WIZ-TEMPLATE-01"
+          source_dashboard_id: "REC: source_dashboard.id"
+      - step: "Run wizard from template"
+        action: "wizard"
+        model: "dashboard.create.from.template"
+        target: "template"
+        as_user: "base.user_admin"
+        values:
+          name: "New From Template"
+          code: "DASH-TEMPLATE-WIZ-RESULT-01"
+        method: "action_create"
+      - step: "Find the new dashboard created by the wizard"
+        action: "search"
+        model: "dashboard.dashboard"
+        domain: [["code", "=", "DASH-TEMPLATE-WIZ-RESULT-01"]]
+        save_as: "new_dashboard"
+        expect_count: 1
+      - step: "Assert new dashboard has the same items and its own code"
+        action: "assert"
+        target: "new_dashboard"
+        asserts:
+          code:
+            type: "value"
+            expected: "DASH-TEMPLATE-WIZ-RESULT-01"
+          item_ids:
+            type: "o2m"
+            check: "count"
+            expected_count: 2

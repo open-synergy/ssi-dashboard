@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2026 OpenSynergy Indonesia
+     Copyright 2026 PT. Simetri Sinergi Indonesia
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+<!-- noupdate="1": these are the module's built-in dashboard/data
+     sources — a user is free to rename/rearrange them after install,
+     and a later module update must never overwrite that. Only 'res.
+     partner'/'res.users' are used as data sources, since those are the
+     only two models guaranteed to exist on every Odoo database (see
+     the module's backlog item). -->
+<odoo noupdate="1">
+    <record
+        id="dashboard_data_source_my_dashboard_partner"
+        model="dashboard.data_source"
+    >
+        <field name="name">Contacts</field>
+        <field name="code">MY-DASHBOARD-DS-PARTNER</field>
+        <field name="type">orm</field>
+        <field name="model_id" ref="base.model_res_partner" />
+    </record>
+
+    <record id="dashboard_data_source_my_dashboard_user" model="dashboard.data_source">
+        <field name="name">Users</field>
+        <field name="code">MY-DASHBOARD-DS-USER</field>
+        <field name="type">orm</field>
+        <field name="model_id" ref="base.model_res_users" />
+    </record>
+
+    <!-- 'is_locked'=True: this is the module's built-in dashboard, see
+         'dashboard.dashboard.is_locked'. 'generate_menu' is left at its
+         default (False) — it only shows up under 'Dashboards', not as
+         its own separate menu item. -->
+    <record id="dashboard_dashboard_my_dashboard" model="dashboard.dashboard">
+        <field name="name">My Dashboard</field>
+        <field name="code">MY-DASHBOARD</field>
+        <field name="is_locked" eval="True" />
+        <field
+            name="item_ids"
+            eval="[
+                (0, 0, {
+                    'name': 'Contacts',
+                    'type': 'placeholder',
+                    'sequence': 10,
+                    'data_source_id': ref('dashboard_data_source_my_dashboard_partner'),
+                }),
+                (0, 0, {
+                    'name': 'Users',
+                    'type': 'placeholder',
+                    'sequence': 20,
+                    'data_source_id': ref('dashboard_data_source_my_dashboard_user'),
+                }),
+            ]"
+        />
+    </record>
+</odoo>
