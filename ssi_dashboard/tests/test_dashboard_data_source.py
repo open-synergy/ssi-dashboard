@@ -783,6 +783,7 @@ class TestDashboardDataSource(YamlTransactionCase):
             [("company_id", "=", self.env.company.id)],
         )
 
+    @freeze_time("2026-07-19 10:00:00")
     def test_fetch_data_orm_filters_by_date_field_today(self):
         """Python murni — pemicu P6 (L-16).
 
