@@ -681,7 +681,6 @@ references, then import again
                 "sequence": vals.get("sequence") or 10,
                 "type": vals.get("type") or "placeholder",
                 "data_source_id": data_source.id if data_source else False,
-                "config": vals.get("config") or False,
                 "column_width": vals.get("column_width") or 4,
                 "row_height": vals.get("row_height") or 1,
                 "column_start": vals.get("column_start") or 0,

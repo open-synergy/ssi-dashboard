@@ -49,9 +49,6 @@ class DashboardItem(models.Model):
         "'Type' is one that overrides '_is_data_source_required' to "
         "return False.",
     )
-    config = fields.Text(
-        help="JSON configuration specific to this item's 'Type'.",
-    )
     column_width = fields.Integer(
         default=4,
         help="Width of this item's tile, in grid columns out of 12. Must "
@@ -1005,7 +1002,7 @@ configuration
         every database, instead of a numeric id.
 
         :return: dict with keys ``name``, ``sequence``, ``type``,
-            ``data_source`` (``code`` or ``False``), ``config``,
+            ``data_source`` (``code`` or ``False``),
             ``column_width``, ``row_height``, ``column_start``,
             ``row_start``, ``active``, ``allow_open_records``,
             ``allow_export``, ``goal_type``, ``goal_value``,
@@ -1024,7 +1021,6 @@ configuration
             "sequence": self.sequence,
             "type": self.type,
             "data_source": self.data_source_id.code or False,
-            "config": self.config,
             "column_width": self.column_width,
             "row_height": self.row_height,
             "column_start": self.column_start,
