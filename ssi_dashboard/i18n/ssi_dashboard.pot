@@ -440,11 +440,6 @@ msgid ""
 msgstr ""
 
 #. module: ssi_dashboard
-#: model:ir.model.fields,field_description:ssi_dashboard.field_dashboard_item__config
-msgid "Config"
-msgstr ""
-
-#. module: ssi_dashboard
 #: model:ir.ui.menu,name:ssi_dashboard.menu_dashboard_configuration
 #: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_dashboard_view_form
 #: model_terms:ir.ui.view,arch_db:ssi_dashboard.dashboard_data_source_view_form
@@ -1331,11 +1326,6 @@ msgstr ""
 msgid ""
 "Items being moved or copied. Pre-filled from the list view's current "
 "selection when this wizard is opened through 'Move / Copy Item(s)'."
-msgstr ""
-
-#. module: ssi_dashboard
-#: model:ir.model.fields,help:ssi_dashboard.field_dashboard_item__config
-msgid "JSON configuration specific to this item's 'Type'."
 msgstr ""
 
 #. module: ssi_dashboard
